@@ -49,7 +49,8 @@ public class Song
         }
         while(true)
         {
-            total => now;
+//            total => now;
+            5::second => now;
         }
 
     }
@@ -159,12 +160,11 @@ public class Part
                     generateNote(song, i, j) => int note;
                     note => notesToPlay[index];
                 } else {
-                    0 => velocitiesToPlay[index % velocities.cap()];
+                    0 => velocitiesToPlay[index];
                     0 => notesToPlay[index];
                 }
             }
         }
-
         // Now Play the notes, determining note length.
         for( 0 => int i; i < notesToPlay.cap(); i++) 
         {
@@ -175,6 +175,14 @@ public class Part
                 if (legato) 
                 {
                     0::ms => duration;
+                }
+                if (i % notesPerMeasure == notesPerMeasure - 1) 
+                {
+//                    <<< "End of bar" >>>;
+                }
+                if (i == notesToPlay.cap() -1 )
+                {
+//                    <<< "end of Part" >>>;
                 }
                 patch.noteOn(note, velocitiesToPlay[i], duration);
             }

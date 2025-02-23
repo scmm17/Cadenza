@@ -32,6 +32,27 @@ public class NoteCollection
         return minorChordNotes;
     }
 
+    fun static NoteCollection I_notes()
+    {
+        [0,7,12,16,19,24] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection IV_notes()
+    {
+        [0,5,12,17,21,24] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection bVII_notes()
+    {
+        [-2,5,10,14,17,22] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
     fun NoteCollection(int theNotes[])
     {
         theNotes @=> notes;

@@ -73,7 +73,7 @@ public class SequentialMelody extends Melody
 
     fun int generateNote(Song song, int measure, int noteInMeasure)
     {
-        measure * song.beatsPerMeasure + noteInMeasure => int noteToPlay;
+        measure * notesPerMeasure + noteInMeasure => int noteToPlay;
         scale.getMidiNote(song, noteToPlay, 0) => int note;
         return note;
     }
@@ -84,7 +84,8 @@ public class DrumMachine extends Melody
     float useNoteFromChordProbability;
     fun DrumMachine(NoteCollection initSale, int npm, int numMeasures, float probabilities[])
     {
-        BehringerRD6 drums;
+        RolandSH4d drums(10);
+        // BehringerRD6 drums;
         drums @=> patch;
         initSale @=> scale;
         probabilities @=> rhythmProbabilities;
@@ -96,7 +97,7 @@ public class DrumMachine extends Melody
 
     fun int generateNote(Song song, int measure, int noteInMeasure)
     {
-        measure * song.beatsPerMeasure + noteInMeasure => int noteToPlay;
+        measure * notesPerMeasure + noteInMeasure => int noteToPlay;
         scale.getMidiNote(song, noteToPlay, -song.rootNote) => int note;
         return note;
     }

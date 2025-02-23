@@ -17,7 +17,7 @@ public class Patch
     fun void setPreset() {
     }
 
-    fun void programChange(int program, int bank)
+    fun void programChangeHydra(int program, int bank)
     {
         MidiMsg msg;
         0xB0 | midiChannel => msg.data1;
@@ -32,6 +32,26 @@ public class Patch
 
         0xC0 | midiChannel => msg.data1;
         0 => msg.data2;
+        program => msg.data3;
+        gma.send(msg);
+    }
+
+    fun void programChangeS1(int program)
+    {
+        MidiMsg msg;
+
+        0xC0 | 15 => msg.data1;
+        program => msg.data2;
+        0 => msg.data3;
+        gma.send(msg);
+    }
+
+    fun void programChangeSH4d(int program)
+    {
+        MidiMsg msg;
+
+        0xC0 | 15 => msg.data1;
+        86 => msg.data2;
         program => msg.data3;
         gma.send(msg);
     }
@@ -84,25 +104,67 @@ public class Hydrasynth extends Patch
             presetName.substring(1) => string programStr;
             bankStr.charAt(0) - "A".charAt(0) => int bank;
             programStr.toInt() => int program;
-            programChange(program-1, bank);
+            programChangeHydra(program-1, bank);
         }
     }
 }
 
 public class RolandS1 extends Patch
 {
-    string presetName;
+    int program;
+    int bank;
 
-    fun RolandS1(string preset)
+    fun RolandS1(int b, int p)
     {
         "S-1 MIDI IN" => deviceName;
         2 => midiChannel;
-        preset => presetName;
+        p => program;
+        b => bank;
         Patch();
     }
 
     fun void setPreset()
     {
+        (bank - 1) * 16 + program - 1 => int preset; 
+        <<< "S1 preset: ", preset >>>;
+        programChangeS1(preset);
+    }
+}
+
+public class RolandSH4d extends Patch
+{
+    int program;
+    int bank;
+    int programChange;
+
+    fun RolandSH4d(int channel, int b, int p)
+    {
+        "SH-4d" => deviceName;
+        channel - 1 => midiChannel;
+        p => program;
+        b => bank;
+        true => programChange;
+        Patch();
+    }
+
+    fun RolandSH4d(int channel)
+    {
+        "SH-4d" => deviceName;
+        channel - 1 => midiChannel;
+        0 => program;
+        0 => bank;
+        false => programChange;
+        Patch();
+    }
+
+    fun void setPreset()
+    {
+        if (programChange) 
+        {
+            (bank - 1) * 16 + program - 1 => int preset; 
+            <<< "S1 preset: ", preset >>>;
+            programChangeSH4d(preset);
+        }
     }
 }
 
