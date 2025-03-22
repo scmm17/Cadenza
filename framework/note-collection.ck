@@ -53,6 +53,48 @@ public class NoteCollection
         return chord;
     }
 
+    fun static NoteCollection I7_notes()
+    {
+        [0, 4, 7, 10] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection IV7_notes()
+    {
+        [-7, -3, 0, 3] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection V7_notes()
+    {
+        [-5, -1, 2, 5] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+    
+    fun static NoteCollection I7_bass_notes()
+    {
+        [0, 4, 7, 9, 10, 9, 7, 4] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection IV7_bass_notes()
+    {
+        [5, 9, 12, 14, 15, 14, 12, 9, 5] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection V7_bass_notes()
+    {
+        [7, 11, 14, 16, 17, 16, 14, 11, 7] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+    
     fun NoteCollection(int theNotes[])
     {
         theNotes @=> notes;

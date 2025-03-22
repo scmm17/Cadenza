@@ -23,7 +23,7 @@ public class ChordProgression extends Part
 
     // If true, play the chord in sequence, otherwise play as a chord.
     int arpeggiated;
-
+    int random;
     dur noteDuration; 
 
     fun ChordProgression(
@@ -42,6 +42,7 @@ public class ChordProgression extends Part
         probabilities @=> rhythmProbabilities;
         npm => notesPerMeasure;
         numMeasures => numberOfMeasures;
+        false => random;
     }
 
     fun dur totalDuration(Song song)
@@ -90,8 +91,15 @@ public class ChordProgression extends Part
     fun int generateNote(Song song, int measure, int noteInMeasure)
     {
         chords[measure % chords.cap()] @=> Chord chord;
-        chord.getMidiNote(song, noteInMeasure, offsets[measure] + chord.octave * 12) => int note;
-        return note;
+        if (random)
+        {
+            Math.random2(0, chord.notes.cap()-1) => int index;
+            chord.getMidiNote(song, index, offsets[measure] + chord.octave * 12) => int note;
+            return note;
+        } else {
+            chord.getMidiNote(song, noteInMeasure, offsets[measure] + chord.octave * 12) => int note;
+            return note;
+        }
     }
 
 }

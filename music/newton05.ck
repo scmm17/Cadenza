@@ -10,11 +10,11 @@
 // Midi devices
 // Hydrasynth hydrasynth("F005");
 //Hydrasynth hydrasynth("F006");
-Hydrasynth hydrasynth("A093");
+Hydrasynth hydrasynth("E088");
 //RolandS1 s1(2, 8);
 RolandS1 s1(2, 10);
 //RolandS1 s1(2, 9);
-RolandSH4d sh4d_1(1, 3, 1);
+RolandSH4d sh4d_1(1, 3, 3 );
 RolandSH4d sh4d_2(2);
 RolandSH4d sh4d_3(3);
 
@@ -52,14 +52,14 @@ velocities2 @=> prog2.velocities;
 // true => prog2.legato;
 
 // Melody
-[1.0, 0.25, 1.0, 0.35] @=> float probabilities[];
+[1.0, 0.65, 1.0, 0.35] @=> float probabilities[];
 [120, 90, 90, 90] @=> int velocities5[];
-AleatoricMelody melody(sh4d_3, IV_Low, 16, 4, probabilities);
+AleatoricMelody melody(sh4d_3, IV_Low, 32, 4, probabilities);
 // true => melody.legato;
 velocities5 @=> melody.velocities;
 
 [1.0, 1.0, 0.0, 0.25] @=> float probabilities5[];
-[80, 80, 110, 120] @=> int velocities6[];
+[125, 90, 110, 90] @=> int velocities6[];
 AleatoricMelody melody2(hydrasynth, IV_Low, 32, 4, probabilities5);
 // true => melody.legato;
 velocities6 @=> melody2.velocities;

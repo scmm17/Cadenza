@@ -10,11 +10,11 @@
 // Midi devices
 // Hydrasynth hydrasynth("F005");
 //Hydrasynth hydrasynth("F006");
-Hydrasynth hydrasynth("A093");
+Hydrasynth hydrasynth("F007");
 //RolandS1 s1(2, 8);
 RolandS1 s1(2, 10);
 //RolandS1 s1(2, 9);
-RolandSH4d sh4d_1(1, 3, 1);
+RolandSH4d sh4d_1(1, 3, 2);
 RolandSH4d sh4d_2(2);
 RolandSH4d sh4d_3(3);
 

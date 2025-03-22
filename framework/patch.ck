@@ -162,7 +162,7 @@ public class RolandSH4d extends Patch
         if (programChange) 
         {
             (bank - 1) * 16 + program - 1 => int preset; 
-            <<< "S1 preset: ", preset >>>;
+            <<< "SH4d preset: ", preset >>>;
             programChangeSH4d(preset);
         }
     }
