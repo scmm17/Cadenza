@@ -18,11 +18,6 @@ public class Melody extends Part
         numMeasures => numberOfMeasures;
     }
 
-    fun dur totalDuration(Song song)
-    {
-        return song.whole() * numberOfMeasures;
-    }
-
     fun play(Song song)
     {
         playMelody(song);

@@ -41,15 +41,10 @@ public class Song
         for(0 => int i; i < parts.cap(); i++) 
         {
             parts[i] @=> Part part;
-            if (part.totalDuration(this) > total) 
-            {
-                part.totalDuration(this) => total;
-            }
             spork ~ playPart(part);
         }
         while(true)
         {
-//            total => now;
             5::second => now;
         }
 
@@ -126,12 +121,6 @@ public class Part
    fun void play(Song song)
     {
         <<< "Part::play() Not Implemented!!" >>>;
-    }
-
-    fun dur totalDuration(Song song)
-    {
-        <<< "totalDuration not implemented!" >>>;
-        return 1::second;
     }
 
     fun void playProbabilityRhythm(Song song)
