@@ -9,9 +9,9 @@
 
 // Midi devices
 //Hydrasynth hydrasynth("F006");
-Hydrasynth hydrasynth("A011");
+Hydrasynth hydrasynth("B017");
 RolandS1 s1(2, 1);
-RolandSH4d sh4d_1(1, 3, 4);
+RolandSH4d sh4d_1(1, 3, 7);
 RolandSH4d sh4d_2(2);
 RolandSH4d sh4d_3(3);
 
@@ -39,13 +39,13 @@ velocities1 @=> prog4.velocities;
 // Chord Progression
 [1.0] @=> float probabilities2[];
 [100] @=> int velocities2[];
-ChordProgression prog2(sh4d_2, chordsL, progression, false, 1, 8, probabilities2);
+ChordProgression prog2(sh4d_2, chordsL, progression, false, 1, 4, probabilities2);
 velocities2 @=> prog2.velocities;
 true => prog2.random;
 // true => prog2.legato;
 
 // Melody
-[1.0, 0.65, 1.0, 0.35] @=> float probabilities[];
+[1.0, 0.0, 0.25, 1.0, 1.0, 0.65, 1.0, 0.35] @=> float probabilities[];
 [120, 90, 90, 90] @=> int velocities5[];
 AleatoricMelody melody(sh4d_3, IV_Low, 32, 4, probabilities);
 // true => melody.legato;
@@ -53,7 +53,7 @@ velocities5 @=> melody.velocities;
 
 [1.0, .25, 1.0, 0.0] @=> float probabilities5[];
 [125, 90, 110, 90] @=> int velocities6[];
-AleatoricMelody melody2(hydrasynth, IV_Low, 32, 4, probabilities5);
+AleatoricMelody melody2(hydrasynth, IV_Low, 32, 2, probabilities5);
 // true => melody.legato;
 velocities6 @=> melody2.velocities;
 
@@ -74,9 +74,46 @@ NoteCollection drumNotesCollection(drumNotes);
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities4);
 velocities4 @=> drums.velocities;
 
-[prog, prog2, prog4, melody, melody2, drums] @=> Part parts[];
-// [drums] @=> Part parts[];
+[drums] @=> Part parts1[];
+Song song1(BPM, root, beatsPerMeasure, parts1);
 
-Song song(BPM, root, beatsPerMeasure, parts);
-true => song.forever;
+[prog2, drums] @=> Part parts2[];
+Song song2(BPM, root, beatsPerMeasure, parts2);
+
+[prog2, prog4, drums] @=> Part parts3[];
+Song song3(BPM, root, beatsPerMeasure, parts3);
+
+[prog2, prog4, prog, drums] @=> Part parts4[];
+Song song4(BPM, root, beatsPerMeasure, parts4);
+
+[prog, prog2, prog4, melody, drums] @=> Part parts5[];
+Song song5(BPM, root, beatsPerMeasure, parts5);
+
+[prog, prog2, prog4, melody, melody2, drums] @=> Part parts6[];
+Song song6(BPM, root, beatsPerMeasure, parts6);
+
+// Fragment frag1(1, song1);
+Fragment frag1(1, song1);
+Fragment frag2(1, song2);
+Fragment frag3(1, song3);
+Fragment frag4(1, song4);
+Fragment frag5(1, song5);
+Fragment frag6(4, song6);
+
+FragmentTransition ft1(frag1, 1.0);
+FragmentTransition ft2(frag2, 1.0);
+FragmentTransition ft3(frag3, 1.0);
+FragmentTransition ft4(frag4, 1.0);
+FragmentTransition ft5(frag5, 1.0);
+FragmentTransition ft6(frag6, 1.0);
+
+[ft2] @=> frag1.nextFragments;
+[ft3] @=> frag2.nextFragments;
+[ft4] @=> frag3.nextFragments;
+[ft5] @=> frag4.nextFragments;
+[ft6] @=> frag5.nextFragments;
+[ft1] @=> frag6.nextFragments;
+
+Song song(BPM, root, beatsPerMeasure, frag1);
+
 song.play();

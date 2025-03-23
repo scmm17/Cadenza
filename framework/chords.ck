@@ -45,8 +45,13 @@ public class ChordProgression extends Part
         false => random;
     }
 
-    fun play(Song song)
-    {
+    fun dur totalDuration(Song song)
+     {
+         return song.whole() * numberOfMeasures;
+     }
+     
+     fun play(Song song)
+     {
         if (arpeggiated) 
         {
             song.whole()/notesPerMeasure => noteDuration;
