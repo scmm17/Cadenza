@@ -48,17 +48,13 @@ public class Song
 
     fun void play()
     {
-        <<< "Song.play(): ", startFragment, " parts: ", parts >>>;
         if (parts != null) 
         {
-            <<< "parts play" >>>;
             playParts();
         } else if (startFragment != null) {
-            <<< "Fragment.play()" >>>;
             for( startFragment @=>  Fragment frag; 
                  frag != null; 
                  frag.play() @=> frag) {
-                    <<< "Playing fragment" >>>;
                  }
         }
     }
@@ -66,7 +62,7 @@ public class Song
     // play the song
     fun void playParts()
     {
-        <<< "Starting song" >>>;
+        <<< "Starting song, num parts: ", parts.cap() >>>;
         0::second => dur total;
         Shred shreds[parts.cap()];
         for(0 => int i; i < parts.cap(); i++) 
@@ -95,7 +91,6 @@ public class Song
 
     fun void playPart(Part part)
     {
-        <<< "starting part, num parts", parts.cap() >>>;
             while (true)
             {
                 part.play(this);
@@ -270,7 +265,8 @@ public class Fragment
     {
         Math.random2f(0.0, 1.0) => float r;
         nextFragments[0].probability => float prob;
-        for(0 => int i; i++; i < nextFragments.cap())
+
+        for(0 => int i; i < nextFragments.cap(); i++)
         {
             nextFragments[i] @=> FragmentTransition frag;
             if (r <= prob)
@@ -279,7 +275,6 @@ public class Fragment
             }
             frag.probability + prob => prob;
         }
-        <<< "Should never happen" >>>;
         return nextFragments[0].nextFragment;
     }
 
