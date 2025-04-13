@@ -82,4 +82,5 @@ velocities3 @=> drums.velocities;
 [prog, prog2, /*melody, */ drums] @=> Part parts[];
 
 Song song(BPM, root, beatsPerMeasure, parts);
+true => song.forever;
 song.play();

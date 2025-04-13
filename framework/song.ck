@@ -264,16 +264,20 @@ public class Fragment
     fun Fragment getNextSongFragment()
     {
         Math.random2f(0.0, 1.0) => float r;
-        nextFragments[0].probability => float prob;
+        0 => float prob;
 
+        <<< "Random: ", r >>>;
+        <<< "Num next fragments: " + nextFragments.cap() >>>;
         for(0 => int i; i < nextFragments.cap(); i++)
         {
             nextFragments[i] @=> FragmentTransition frag;
+            frag.probability + prob => prob;
+            <<< "NF Prob: ", nextFragments[i].probability, "Prob: ", prob >>>;
             if (r <= prob)
             {
+                <<< "Picked number: ", i >>>;
                 return frag.nextFragment;
             }
-            frag.probability + prob => prob;
         }
         return nextFragments[0].nextFragment;
     }

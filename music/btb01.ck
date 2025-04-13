@@ -111,4 +111,5 @@ velocities4 @=> drums.velocities;
 // [drums] @=> Part parts[];
 
 Song song(BPM, root, beatsPerMeasure, parts);
+true => song.forever;
 song.play();
