@@ -91,10 +91,10 @@ public class Song
 
     fun void playPart(Part part)
     {
-            while (true)
-            {
-                part.play(this);
-            }
+        while (true)
+        {
+            part.play(this);
+        }
     }
 
     fun dur whole()
@@ -267,7 +267,7 @@ public class Fragment
         0 => float prob;
 
         <<< "Random: ", r >>>;
-        <<< "Num next fragments: " + nextFragments.cap() >>>;
+        <<< "Num next fragments: ", nextFragments.cap() >>>;
         for(0 => int i; i < nextFragments.cap(); i++)
         {
             nextFragments[i] @=> FragmentTransition frag;

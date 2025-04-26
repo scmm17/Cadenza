@@ -56,6 +56,25 @@ public class Patch
         gma.send(msg);
     }
 
+    fun void programChangeV3GrandPiano(int program, int bank)
+    {
+        MidiMsg msg;
+        0xB0 | midiChannel => msg.data1;
+        0 => msg.data2;
+        bank => msg.data3;
+        gma.send(msg);
+
+        0xB0 | midiChannel => msg.data1;
+        32 => msg.data2;
+        0 => msg.data3;
+        gma.send(msg);
+
+        0xC0 | midiChannel => msg.data1;
+        0 => msg.data2;
+        program => msg.data3;
+        gma.send(msg);
+    }
+
     fun void noteOn(int note, int velocity, dur duration)
     {
         MidiMsg msg;
@@ -181,6 +200,41 @@ public class BehringerRD6 extends Patch
 
     fun void setPreset()
     {
+    }
+}
+
+public class V3GrandPiano extends Patch
+{
+    int program;
+    int bank;
+    int programChange;
+
+    fun V3GrandPiano(int channel, int b, int p)
+    {
+        "U2MIDI Pro" => deviceName;
+        channel - 1 => midiChannel;
+        p => program;
+        b => bank;
+        true => programChange;
+        Patch();
+    }
+
+    fun V3GrandPiano(int channel)
+    {
+        "U2MIDI Pro" => deviceName;
+        channel - 1 => midiChannel;
+        0 => program;
+        0 => bank;
+        false => programChange;
+        Patch();
+    }
+
+    fun void setPreset()
+    {
+        if (programChange) 
+        {
+            programChangeV3GrandPiano(program, bank);
+        }
     }
 }
 

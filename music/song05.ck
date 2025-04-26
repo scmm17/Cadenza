@@ -1,40 +1,24 @@
-// MidiIn min;
-// MidiMsg msg;
-
-// // open midi receiver, exit on fail
-// if ( !min.open("HYDRASYNTH EXPLORER") ) me.exit(); 
-
-// <<< "Opened!" >>>;
-
-// while( true )
-// {
-//     // wait on midi event
-//     min => now;
-
-//     // receive midimsg(s)
-//     while( min.recv( msg ) )
-//     {
-//         // print content
-//     	<<< msg.data1, msg.data2, msg.data3 >>>;
-//     }
-// }
-
 @import "../framework/song.ck"
 @import "../framework/chords.ck"
 @import "../framework/melody.ck"
 @import "../framework/midi-events.ck"
 
 // Global parameters
-50 => float BPM;          // Beats per minute
+60 => float BPM;          // Beats per minute
 4 => int beatsPerMeasure; // Beats in a measure
 57 => int root;           // A below Middle C as the root note
 
 // Midi devices
 // Hydrasynth hydrasynth("D010");
-Hydrasynth hydrasynth("D025");
+Hydrasynth hydrasynth("D035");
 RolandS1 s1(1, 13);
-RolandSH4d sh4d_1(1, 3, 9);
+RolandSH4d sh4d_1(1, 3, 10);
 RolandSH4d sh4d_2(2);
+V3GrandPiano piano(1, 3, 11);
+V3GrandPiano bass(2, 3, 5);
+V3GrandPiano ooh(3, 4, 65);
+
+
 
 // Chords
 Chord majorChord(NoteCollection.majorChordNotes(), -1);
@@ -48,34 +32,34 @@ Chord minorChordH(NoteCollection.minorChordNotes(), 0);
 [majorChord, minorChord, majorChord, majorChord] @=> Chord chords1[];
 [0.65, 0, .65, 0, .65, 0, .65, 0, 
  0.65, 0, .30, 0, .65, .35, 1.0, 1.0] @=> float probabilities1[];
-[124, 100, 120, 100] @=> int velocities1[];
-ChordProgression prog(s1, chords1, progression, true, 16, 4, probabilities1);
+[100, 80, 100, 70] @=> int velocities1[];
+ChordProgression prog(bass, chords1, progression, true, 16, 4, probabilities1);
 velocities1 @=> prog.velocities;
 // true => prog.random;
 
 [majorChordH, minorChordH, majorChordH, majorChordH] @=> Chord chords2[];
-ChordProgression prog3(s1, chords2, progression, true, 32, 4, probabilities1);
+ChordProgression prog3(bass, chords2, progression, true, 32, 4, probabilities1);
 velocities1 @=> prog3.velocities;
 true => prog3.random;
 
 // Chord Progression
 [1.0] @=> float probabilities2[];
-[75] @=> int velocities2[];
-ChordProgression prog2(hydrasynth, chords1, progression, false, 1, 4, probabilities2);
+[55] @=> int velocities2[];
+ChordProgression prog2(ooh, chords1, progression, false, 1, 4, probabilities2);
 velocities2 @=> prog2.velocities;
 
-[127] @=> int velocities4[];
-ChordProgression prog5(sh4d_2, chords1, progression, true, 16, 4, probabilities2);
+[60] @=> int velocities4[];
+ChordProgression prog5(piano, chords1, progression, true, 16, 4, probabilities2);
 velocities4 @=> prog5.velocities;
 
 // Melody
-[1.0, 0.15, 0.25, 0.15] @=> float probabilities[];
-[124, 120, 130, 120] @=> int velocities[];
-AleatoricMelody melody(sh4d_1, majorChordH, 16, 4, probabilities);
+[1.0, 0.15, 0.65, 0.35] @=> float probabilities[];
+[110, 75, 75, 100] @=> int velocities[];
+AleatoricMelody melody(piano, majorChordH, 16, 4, probabilities);
 // true => melody.legato;
 velocities @=> melody.velocities;
 
-ChordProgression prog4(sh4d_1, chords2, progression, true, 32, 4, probabilities);
+ChordProgression prog4(piano, chords2, progression, true, 32, 4, probabilities);
 velocities @=> prog4.velocities;
 true => prog4.random;
 
@@ -121,8 +105,6 @@ true => prog4.random;
 NoteCollection drumNotesCollection(drumNotes);
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities3);
 velocities3 @=> drums.velocities;
-
-[prog, prog2, prog3, prog4, /* melody, */ drums] @=> Part parts[];
 
 [prog2] @=> Part parts1[];
 Song song1(BPM, root, beatsPerMeasure, parts1);
@@ -182,10 +164,14 @@ FragmentTransition ft7_2(frag2, 0.25);
 [ft1] @=> frag7.nextFragments;
 
 
+// [prog, prog2, prog3, prog4, prog5] @=> Part parts[];
+
 // Song song(BPM, root, beatsPerMeasure, parts);
 // true => song.forever;
 // song.play();
 
+MidiMapper hydraEvents("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1);
+spork ~ hydraEvents.startEventLoop();
 
 Song song(BPM, root, beatsPerMeasure, frag1);
 song.play();

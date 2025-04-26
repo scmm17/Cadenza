@@ -31,9 +31,9 @@
 
 // Midi devices
 // Hydrasynth hydrasynth("D010");
-Hydrasynth hydrasynth("D025");
+Hydrasynth hydrasynth("D035");
 RolandS1 s1(1, 13);
-RolandSH4d sh4d_1(1, 3, 9);
+RolandSH4d sh4d_1(1, 3, 10);
 RolandSH4d sh4d_2(2);
 
 // Chords
