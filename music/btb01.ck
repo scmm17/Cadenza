@@ -15,6 +15,7 @@
 RolandS1 s1(2, 10);
 //RolandS1 s1(2, 9);
 RolandSH4d sh4d_1(1, 3, 5);
+V3GrandPiano piano(1, "Grand Piano Vienna - Rock");
 RolandSH4d sh4d_2(2);
 RolandSH4d sh4d_3(3);
 
@@ -72,20 +73,20 @@ ChordProgression prog6(s1, chordsBassH, progression, true, 8, 12, probabilities1
 velocities1 @=> prog6.velocities;
 
 [1.0, 0.0, .45, .5] @=> float probabilities3[];
-ChordProgression prog4(sh4d_3, chordsMelody, progression, true, 16, 12, probabilities3);
+ChordProgression prog4(piano, chordsMelody, progression, true, 16, 12, probabilities3);
 [120, 100] @=> int velocities2[];
 true => prog4.random;
 true => prog4.legato;
 velocities2 @=> prog4.velocities;
 
 [1.0, 0.25, .45, .5] @=> float probabilities9[];
-ChordProgression prog5(sh4d_3, chordsMelody, progression, true, 16, 12, probabilities9);
+ChordProgression prog5(piano, chordsMelody, progression, true, 16, 12, probabilities9);
 velocities2 @=> prog5.velocities;
 true => prog5.random;
 true => prog5.legato;
 // Chord Progression
 [1.0, 0.0, 1.0, .5] @=> float probabilities2[];
-ChordProgression prog2(sh4d_2, chordsL, progression, false, 2, 12, probabilities2);
+ChordProgression prog2(piano, chordsL, progression, false, 2, 12, probabilities2);
 velocities2 @=> prog2.velocities;
 // true => prog2.legato;
 
@@ -103,7 +104,8 @@ velocities2 @=> prog2.velocities;
     0
   ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-DrumMachine drums(drumNotesCollection, 16, 12, probabilities4);
+RolandSH4d drumKit(10);
+DrumMachine drums(drumNotesCollection, 16, 12, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 
 //[prog, prog2, prog4, melody, melody2, drums] @=> Part parts[];

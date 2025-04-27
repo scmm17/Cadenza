@@ -10,20 +10,15 @@
 
 // Midi devices
 // Hydrasynth hydrasynth("D010");
-// Hydrasynth hydrasynth("D035");
-// RolandS1 s1(1, 13);
-// RolandSH4d sh4d_1(1, 3, 10);
-// RolandSH4d sh4d_2(2);
-// V3GrandPiano piano(1, "Marimba");
-// V3GrandPiano bass(2, "Vibraphone Tremolo soft");
-// V3GrandPiano ooh(3, "Classic Choir Aah Filter");
-// V3GrandPiano piano(2, "Girls Doo");  
-// V3GrandPiano bass(3, "Boys Doo Bass");
-// V3GrandPiano bass(3, "Choir Ooh Filter"); 
-// V3GrandPiano ooh(1, "Boys & Girls Octave Ahh");  
-V3GrandPiano piano(1, "Girls Doo");  
-V3GrandPiano bass(2, "Boys Doo Bass");  
-V3GrandPiano ooh(3, "Choir Ooh Filter");  
+Hydrasynth hydrasynth("D035");
+RolandS1 s1(1, 13);
+RolandSH4d sh4d_1(1, 3, 10);
+RolandSH4d sh4d_2(2);
+V3GrandPiano piano(1, 3, 11);
+V3GrandPiano bass(2, 3, 5);
+V3GrandPiano ooh(3, 4, 65);
+
+
 
 // Chords
 Chord majorChord(NoteCollection.majorChordNotes(), -1);
@@ -68,34 +63,51 @@ ChordProgression prog4(piano, chords2, progression, true, 32, 4, probabilities);
 velocities @=> prog4.velocities;
 true => prog4.random;
 
+
 // Drums
 [1.0] @=> float probabilities3[];
-[80, 120, 134, 120, 80, 100, 100, 100] @=> int velocities3[];
+[127, 120, 134, 120, 94, 120, 120, 120] @=> int velocities3[];
 [
- 47,  0,  0,  0,
- 34,  0,  0,  0,
- 47,  0,  0,  0,
- 39,  0, 39,  0,
- 47,  0,  0,  0,
- 34,  0, 34,  0,
- 47,  0, 82,  0,
- 82, 82, 82, 82,
+ DrumMachine.BassDrum(),
+ 0,
+ 0,
+ 0,
+ DrumMachine.SnareDrum(),
+ 0,
+ 0,
+ 0,
+ DrumMachine.BassDrum(),
+ 0,
+ 0,
+ 0,
+ DrumMachine.Clap(),
+ 0,
+ DrumMachine.Clap(),
+ 0,
+ DrumMachine.BassDrum(),
+ 0,
+ 0, 
+ 0,
+ DrumMachine.SnareDrum(),
+ 0,
+ DrumMachine.SnareDrum(),
+ 0,
+ DrumMachine.BassDrum(),
+ 0,
+ DrumMachine.ClosedHat(),
+ 0,
+ DrumMachine.ClosedHat(),
+ DrumMachine.ClosedHat(),
+ DrumMachine.ClosedHat(),
+ DrumMachine.ClosedHat()
+
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-// RolandSH4d drumKit(10);
-V3GrandPiano drumKit(4, "Voice Kit (page 43)"); 
-
+RolandSH4d drumKit(10);
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 
-[1.0] @=> float probabilities7[];
-[80] @=> int velocities7[];
-[ 25, 0, 26, 0, 25, 26, 27, 28,  ] @=> int drumNotes7[];
-NoteCollection drumNotesCollection7(drumNotes7);
-DrumMachine drumsIntro(drumNotesCollection7, 8, 1, probabilities7, drumKit);
-velocities7 @=> drumsIntro.velocities;
-
-[drumsIntro] @=> Part parts1[];
+[prog2] @=> Part parts1[];
 Song song1(BPM, root, beatsPerMeasure, parts1);
 
 [prog2, prog5, drums] @=> Part parts2[];
@@ -107,14 +119,11 @@ Song song3(BPM, root, beatsPerMeasure, parts3);
 [prog2, prog3, prog4, prog, drums] @=> Part parts4[];
 Song song4(BPM, root, beatsPerMeasure, parts4);
 
-[prog4, prog5, melody] @=> Part parts5[];
+[prog4, prog5, melody, drums] @=> Part parts5[];
 Song song5(BPM, root, beatsPerMeasure, parts5);
 
 [prog, prog2, prog3, prog4, prog5, melody, drums] @=> Part parts6[];
 Song song6(BPM, root, beatsPerMeasure, parts6);
-
-[prog, prog4] @=> Part parts7[];
-Song song7(BPM, root, beatsPerMeasure, parts7);
 
 // Fragment frag1(1, song1);
 Fragment frag1(1, song1);
@@ -123,17 +132,17 @@ Fragment frag3(1, song3);
 Fragment frag4(1, song4);
 Fragment frag5(1, song5);
 Fragment frag6(3, song6);
-Fragment frag7(1, song7);
+Fragment frag7(1, song4);
 
 FragmentTransition ft1(frag1, 1.0);
 FragmentTransition ft2(frag2, 1.0);
 
-FragmentTransition ft3_1(frag3, 0.55);
-FragmentTransition ft3_2(frag4, 0.25);
-FragmentTransition ft3_3(frag2, 0.20);
+FragmentTransition ft3_1(frag3, 0.75);
+FragmentTransition ft3_2(frag2, 0.15);
+FragmentTransition ft3_3(frag4, 0.10);
 
-FragmentTransition ft4_1(frag4, 0.8);
-FragmentTransition ft4_2(frag3, 0.1);
+FragmentTransition ft4_1(frag4, 0.6);
+FragmentTransition ft4_2(frag3, 0.3);
 FragmentTransition ft4_3(frag5, 0.1);
 
 FragmentTransition ft5_1(frag5, 0.6);
@@ -162,6 +171,8 @@ FragmentTransition ft7_2(frag2, 0.25);
 // true => song.forever;
 // song.play();
 
-Song song(BPM, root, beatsPerMeasure, frag1);
+MidiMapper hydraEvents("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1);
+spork ~ hydraEvents.startEventLoop();
 
+Song song(BPM, root, beatsPerMeasure, frag1);
 song.play();

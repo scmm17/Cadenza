@@ -89,7 +89,8 @@ velocities @=> melody.velocities;
 
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-DrumMachine drums(drumNotesCollection, 32, 1, probabilities4);
+RolandSH4d drumKit(10);
+DrumMachine drums(drumNotesCollection, 32, 1, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 
 [prog, prog2,  prog3, /* melody, */ drums] @=> Part parts[];

@@ -22,7 +22,7 @@ Chord bVII_Low(NoteCollection.bVII_notes(), -1);
 Chord I_High(NoteCollection.I_notes(), 0);
 Chord IV_High(NoteCollection.IV_notes(), 0);
 Chord bVII_High(NoteCollection.bVII_notes(), 0);
-
+// 
 
 // Chord progression, arpeggiated
 [0, 0, 0, 0] @=> int progression[];
@@ -71,7 +71,8 @@ velocities6 @=> melody2.velocities;
  0,
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-DrumMachine drums(drumNotesCollection, 32, 1, probabilities4);
+RolandSH4d drumKit(10);
+DrumMachine drums(drumNotesCollection, 32, 1, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 
 [drums] @=> Part parts1[];

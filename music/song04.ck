@@ -119,7 +119,8 @@ true => prog4.random;
 
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-DrumMachine drums(drumNotesCollection, 32, 1, probabilities3);
+RolandSH4d drumKit(10);
+DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 
 [prog, prog2, prog3, prog4, /* melody, */ drums] @=> Part parts[];
