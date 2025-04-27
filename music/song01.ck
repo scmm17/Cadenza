@@ -4,7 +4,6 @@
 
 // Global parameters
 55 => float BPM;          // Beats per minute
-4 => int beatsPerMeasure; // Beats in a measure
 60 => int root;           // Middle C as the root note
 
 // Midi devices
@@ -76,22 +75,22 @@ DrumMachine drums(drumNotesCollection, 32, 1, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 
 [drums] @=> Part parts1[];
-Song song1(BPM, root, beatsPerMeasure, parts1);
+Song song1(BPM, root, parts1);
 
 [prog2, drums] @=> Part parts2[];
-Song song2(BPM, root, beatsPerMeasure, parts2);
+Song song2(BPM, root, parts2);
 
 [prog2, prog4, drums] @=> Part parts3[];
-Song song3(BPM, root, beatsPerMeasure, parts3);
+Song song3(BPM, root, parts3);
 
 [prog2, prog4, prog, drums] @=> Part parts4[];
-Song song4(BPM, root, beatsPerMeasure, parts4);
+Song song4(BPM, root, parts4);
 
 [prog, prog2, prog4, melody, drums] @=> Part parts5[];
-Song song5(BPM, root, beatsPerMeasure, parts5);
+Song song5(BPM, root, parts5);
 
 [prog, prog2, prog4, melody, melody2, drums] @=> Part parts6[];
-Song song6(BPM, root, beatsPerMeasure, parts6);
+Song song6(BPM, root, parts6);
 
 // Fragment frag1(1, song1);
 Fragment frag1(1, song1);
@@ -115,6 +114,6 @@ FragmentTransition ft6(frag6, 1.0);
 [ft6] @=> frag5.nextFragments;
 [ft1] @=> frag6.nextFragments;
 
-Song song(BPM, root, beatsPerMeasure, frag1);
+Song song(BPM, root, frag1);
 
 song.play();

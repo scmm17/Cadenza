@@ -5,20 +5,12 @@
 
 // Global parameters
 60 => float BPM;          // Beats per minute
-4 => int beatsPerMeasure; // Beats in a measure
 57 => int root;           // A below Middle C as the root note
 
 // Midi devices
-// Hydrasynth hydrasynth("D010");
-Hydrasynth hydrasynth("D035");
-RolandS1 s1(1, 13);
-RolandSH4d sh4d_1(1, 3, 10);
-RolandSH4d sh4d_2(2);
 V3GrandPiano piano(1, 3, 11);
 V3GrandPiano bass(2, 3, 5);
 V3GrandPiano ooh(3, 4, 65);
-
-
 
 // Chords
 Chord majorChord(NoteCollection.majorChordNotes(), -1);
@@ -108,22 +100,22 @@ DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 
 [prog2] @=> Part parts1[];
-Song song1(BPM, root, beatsPerMeasure, parts1);
+Song song1(BPM, root, parts1);
 
 [prog2, prog5, drums] @=> Part parts2[];
-Song song2(BPM, root, beatsPerMeasure, parts2);
+Song song2(BPM, root, parts2);
 
 [prog2, prog3, drums] @=> Part parts3[];
-Song song3(BPM, root, beatsPerMeasure, parts3);
+Song song3(BPM, root, parts3);
 
 [prog2, prog3, prog4, prog, drums] @=> Part parts4[];
-Song song4(BPM, root, beatsPerMeasure, parts4);
+Song song4(BPM, root, parts4);
 
 [prog4, prog5, melody, drums] @=> Part parts5[];
-Song song5(BPM, root, beatsPerMeasure, parts5);
+Song song5(BPM, root, parts5);
 
 [prog, prog2, prog3, prog4, prog5, melody, drums] @=> Part parts6[];
-Song song6(BPM, root, beatsPerMeasure, parts6);
+Song song6(BPM, root, parts6);
 
 // Fragment frag1(1, song1);
 Fragment frag1(1, song1);
@@ -167,12 +159,12 @@ FragmentTransition ft7_2(frag2, 0.25);
 
 // [prog, prog2, prog3, prog4, prog5] @=> Part parts[];
 
-// Song song(BPM, root, beatsPerMeasure, parts);
+// Song song(BPM, root, parts);
 // true => song.forever;
 // song.play();
 
 MidiMapper hydraEvents("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1);
 spork ~ hydraEvents.startEventLoop();
 
-Song song(BPM, root, beatsPerMeasure, frag1);
+Song song(BPM, root, frag1);
 song.play();

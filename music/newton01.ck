@@ -4,7 +4,6 @@
 
 // Global parameters
 85 => float BPM;          // Beats per minute
-6 => int beatsPerMeasure; // Beats in a measure
 60 => int root;           // Middle C as the root note
 
 // Midi devices
@@ -60,5 +59,5 @@ velocities4 @=> drums.velocities;
 [prog, prog2, drums] @=> Part parts[];
 // [prog, prog2, melody, drums] @=> Part parts[];
 
-Song song(BPM, root, beatsPerMeasure, parts);
+Song song(BPM, root, parts);
 song.play();

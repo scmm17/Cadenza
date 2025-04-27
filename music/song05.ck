@@ -5,22 +5,9 @@
 
 // Global parameters
 60 => float BPM;          // Beats per minute
-4 => int beatsPerMeasure; // Beats in a measure
 57 => int root;           // A below Middle C as the root note
 
 // Midi devices
-// Hydrasynth hydrasynth("D010");
-// Hydrasynth hydrasynth("D035");
-// RolandS1 s1(1, 13);
-// RolandSH4d sh4d_1(1, 3, 10);
-// RolandSH4d sh4d_2(2);
-// V3GrandPiano piano(1, "Marimba");
-// V3GrandPiano bass(2, "Vibraphone Tremolo soft");
-// V3GrandPiano ooh(3, "Classic Choir Aah Filter");
-// V3GrandPiano piano(2, "Girls Doo");  
-// V3GrandPiano bass(3, "Boys Doo Bass");
-// V3GrandPiano bass(3, "Choir Ooh Filter"); 
-// V3GrandPiano ooh(1, "Boys & Girls Octave Ahh");  
 V3GrandPiano piano(1, "Girls Doo");  
 V3GrandPiano bass(2, "Boys Doo Bass");  
 V3GrandPiano ooh(3, "Choir Ooh Filter");  
@@ -96,25 +83,25 @@ DrumMachine drumsIntro(drumNotesCollection7, 8, 1, probabilities7, drumKit);
 velocities7 @=> drumsIntro.velocities;
 
 [drumsIntro] @=> Part parts1[];
-Song song1(BPM, root, beatsPerMeasure, parts1);
+Song song1(BPM, root, parts1);
 
 [prog2, prog5, drums] @=> Part parts2[];
-Song song2(BPM, root, beatsPerMeasure, parts2);
+Song song2(BPM, root, parts2);
 
 [prog2, prog3, drums] @=> Part parts3[];
-Song song3(BPM, root, beatsPerMeasure, parts3);
+Song song3(BPM, root, parts3);
 
 [prog2, prog3, prog4, prog, drums] @=> Part parts4[];
-Song song4(BPM, root, beatsPerMeasure, parts4);
+Song song4(BPM, root, parts4);
 
 [prog4, prog5, melody] @=> Part parts5[];
-Song song5(BPM, root, beatsPerMeasure, parts5);
+Song song5(BPM, root, parts5);
 
 [prog, prog2, prog3, prog4, prog5, melody, drums] @=> Part parts6[];
-Song song6(BPM, root, beatsPerMeasure, parts6);
+Song song6(BPM, root, parts6);
 
 [prog, prog4] @=> Part parts7[];
-Song song7(BPM, root, beatsPerMeasure, parts7);
+Song song7(BPM, root, parts7);
 
 // Fragment frag1(1, song1);
 Fragment frag1(1, song1);
@@ -158,10 +145,10 @@ FragmentTransition ft7_2(frag2, 0.25);
 
 // [prog, prog2, prog3, prog4, prog5] @=> Part parts[];
 
-// Song song(BPM, root, beatsPerMeasure, parts);
+// Song song(BPM, root, parts);
 // true => song.forever;
 // song.play();
 
-Song song(BPM, root, beatsPerMeasure, frag1);
+Song song(BPM, root, frag1);
 
 song.play();
