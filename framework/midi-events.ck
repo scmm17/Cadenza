@@ -40,7 +40,7 @@ public class MidiMapper
             // receive midimsg(s)
             while( min.recv( msg ) )
             {
-                <<< "In d1:", msg.data1, "d2:", msg.data2, "d3:", msg.data3 >>>;
+                // <<< "In d1:", msg.data1, "d2:", msg.data2, "d3:", msg.data3 >>>;
                 if (msg.data1 == 144) 
                 {
                     0x90 | (outputChannel) => msg.data1;
@@ -52,7 +52,7 @@ public class MidiMapper
                 {
                     0x80 | (outputChannel) => msg.data1;
                     mout.send(msg);
-                    <<< "Out d1:", msg.data1, "d2:", msg.data2, "d3:", msg.data3  >>>;
+                    // <<< "Out d1:", msg.data1, "d2:", msg.data2, "d3:", msg.data3  >>>;
                 }
             }
         }

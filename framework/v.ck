@@ -1,68 +1,104 @@
-Prg. Pedal down reso. Noise V
-0 Grand Piano Vienna - - - 3
-1 Grand Piano Hamburg - - - 3
-2 Grand Piano Vienna Rock - - 3
-3 Grand Piano Hamburg Rock - - 3
-4 Grand Piano Vienna - original - 5
-5 Grand Piano Hamburg - original - 5
-6 Grand Piano Vienna - softer - 5
-7 Grand Piano Hamburg - softer - 5
-8 Honky Tonk - - - 3
-9 Upright Piano Variation - - - 5
-10 Grand Latin Vienna Octave - - 4
-11 Grand Latin Hamburg Octave - - 4
-Prg. Pedal down reso. Noise V
-12 Grand Vienna Layered EP-FM - - 4
-13 Grand Hamburg Layered MKS - - 3
-14 Grand Vienna Layered E-Piano - - 3
-15 Grand Hamburg Layered MKS + CP80 Attack - - 3
-16 Grand Vienna Layered Pad - - 4
-17 Grand Hamburg Layered Pad - - 4
-18 Grand Vienna Layered Strings - - 4
-19 Grand Hamburg Layered Strings - - 4
-20 Grand Vienna Dream Sus Resonance - - 3
-21 Grand Hamburg Dream Sus Resonance - - 3
-Prg. Pedal down reso. Noise V
-22 Electric Grand - - - 3
-23 Electric Grand Rock layer - hard attack - - 4
-24 Electric Grand Tremolo 1 - - 3
-25 Electric Grand Tremolo 2 - - 3
-26 Electric Grand Layered MKS - - 2
-27 Electric Grand Layered MKS Rock - - 4
-28 Electric Grand use as layer Microphon Attack - dynamic curve - - 1
-Prg. V
-29 E-Piano MK1 Dyno - velocity splits 9 2
-30 E-Piano MK1 Dyno soft velocity splits 6 2
-31 E-Piano MK1 Dyno Tremolo velocity splits 9 2
-32 E-Piano MK1 Dyno Layered Pad velocity splits 9 4
-33 E-Piano MK1 Dyno Layered FM velocity splits 9 5
-34 E-Piano MK1 Dyno Layered MKS Sus. velocity splits 9 3
-35 E-Piano MK1 Classic - velocity splits 2
-36 E-Piano MK1 Classic soft velocity splits 2
-37 E-Piano MK1 Classic Tremolo velocity splits 2
-38 E-Piano MK1 Classic Layered Bell velocity splits 4
-39 E-Piano MK1 Classic Layered FM velocity splits 5
-40 E-Piano MK1 Classic Layered MKS Atk. velocity splits 3
-41 E-Piano Wurl. A200 - velocity splits 2
-42 E-Piano Wurl. A200 soft velocity splits 2
-43 E-Piano Wurl. A200 Tremolo 1 velocity splits 2
-44 E-Piano Wurl. A200 Tremolo 2 velocity splits 4
-45 E-Piano Wurl. A200 Tremolo 3 velocity splits 5
-46 E-Piano Wurl. A200 no tines velocity splits 3
-47 E-Piano DX Classic - note-off 5
-48 E-Piano FM - note-off 4
-49 E-Piano FM Tremolo note-off 4
-50 E-Piano FM Layered Pad - 5
-51 E-Piano FM & MKS - Repetition Attack 4
-52 E-Piano V3 Bella - velocity splits 1
-53 E-Piano V3 Bella Note off 1 Oct. up velocity splits 2
-54 E-Piano V3 Bella Layered Cortales velocity splits 3
-55 E-Piano V3 Bella Layered Pad velocity splits 4
-Prg. V
-56 Clavinet - 2
-57 Harpsichord - 2
-Bank MSB 0
-Bank MSB 0
-Bank MSB 0
-Bank MSB 0
-Bank MSB 0
+Brass
+0 Trumpet velo. split 48 - 96
+1 Trumpet velo. split 64
+2 Trumpet piano
+3 Trumpet mezzo
+4 Trumpet forte
+5 Trumpet fall Split velo. 116-127 fall
+6 Trumpet goup Split velo. 116-127 goup
+7 Trumpet Slide velo. 116-127 Slide
+8 Forte Trumpet vibrato Repetition
+9 Cornet Repetition
+10 Cornet soft Repetition
+11 Cornet hard Repetition
+12 Cornet porta attack Repetition
+13 Trumpet mute
+14 Trumpet mute AV
+15 Flugelhorn
+16 Trombone
+17 Horn
+18 Bariton horn vibrato
+19 Bariton horn staccato
+20 Tuba
+21 Tuba soft
+Brass Section
+32 US Trumpet Section dynamic split
+33 US Trumpet Section forte forte
+34 US Trumpet Section mezzo mezzo
+35 US Trumpet Section fast fall fast fall
+36 US Trumpet Section Split velo. 116-127 fall
+37 US Trombone Section dynamic split
+38 US Trombone Section forte forte
+39 US Trombone Section mezzo mezzo
+40 US Trombone Section fast fall fast fall
+41 US Trombone Section Split velo. 116-127 fall
+42 US Trump. & Trombone Section dynamic split
+43 US Trump. & Trombone Section forte forte
+44 US Trump. & Trombone Section mz mezzo
+45 Classic Trumpet Ensemble dynamic split
+46 Classic Trumpet Ensemble piano piano
+47 Classic Trombone Ensemble dynamic split
+48 Classic Trombone Ensemble piano
+49 Classic Horn Ensemble
+50 Classic Full Brass dynamic split
+51 Classic Full Brass+ forte
+Saxophone
+63 Soprano Saxophone dynamic split
+64 Soprano Saxophone softer softer zones
+65 Soprano Saxophone harder harder zones
+66 Soprano Saxophone breath breath noise
+67 Soprano Saxophone Slide velo. 116-127 slide
+68 Soprano 2 more Vibrato
+69 Alto Saxophone dynamic split
+70 Alto Saxophone softer softer zones
+71 Alto Saxophone harder harder zones
+72 Alto Saxophone breath breath noise
+73 Alto Saxophone Slide velo. 116-127 slide
+74 Tenor Saxophone dynamic split
+75 Tenor Saxophone softer softer zones
+76 Tenor Saxophone harder harder zones
+77 Tenor Saxophone breath breath noise
+78 Tenor Saxophone Slide velo. 116-127 slide
+79 Max Jazz Tenor velo. split 116 Random Key & breath noise
+80 Max Jazz Tenor velo. split 64 Random Key & breath noise
+81 Max Jazz Tenor soft soft only Random Key & breath noise
+82 Max Jazz Tenor velo. split 96
+83 Max Jazz Tenor Vibrato less delay velo. split 96
+84 Max Jazz Tenor soft soft only breath noise
+85 Max Jazz Tenor Slide velo. 116-127 slide Random Key & breath noise
+86 Max Jazz Tenor Slide soft velo. 116-127 slide Random Key & breath noise
+87 Tenor Saxophone Funky
+88 Tenor Saxophone Funky growl
+89 Tenor Saxophone Funky Split velo. split 116
+90 Baritone Saxophone
+91 Saxophone Section 1
+92 Saxophone Section 2
+Winds
+93 Oboe
+94 Englishhorn
+95 Bassoon
+96 Clarinet
+97 Clarinet soft
+98 Cla. Slide (velo. 116-127) velo. 116-127 Slide
+99 Hugo Clarinet no loop
+100 Hugo Cla. Slide (velo. 116-127) velo. 116-127 Slide no loop
+101 Piccolo
+102 Flute
+103 Flute EQ
+104 Flute High Pass Filter
+105 Panflute
+106 Shakuhachi
+107 Celtic High Whistle
+108 Celtic High Whistle Grace note AV Auto Grace note
+109 C. High Wh. Slide (velo. 116-127) velo. 116-127 Slide
+110 Bottle
+111 Bottle soft
+112 Bottle Q
+113 Bottle LFO
+114 Whistle
+115 Whistle GS
+116 Hl. Pipers & Drone (split note 60-c1) split note 60 - c1
+117 Ullian Piper & Drone Repetition
+118 Ullian Piper & Drone Grace note AV Auto Grace note Repetition
+119 U. Piper & Dr. Slide (velo. 116-127) velo. 116-127 Slide
+120 Ullian Drone & Chords

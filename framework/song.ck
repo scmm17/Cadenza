@@ -1,4 +1,5 @@
 @import "patch.ck"
+@import "../framework/midi-events.ck"
 
 // Overall structure of a song
 
@@ -8,36 +9,156 @@ public class Song
     float BPM;
     // Duration of a single beat. Set from BPM;
     dur beat;
-    // How many beats per bar
-    int beatsPerMeasure;
-
     // Root-note of chords, as a midi note number
     int rootNote;
 
     // All the parts playing in parallel
     Part @ parts[];
 
-    int forever;
-
     // All the Fragments. A song can have Parts or Fragments, but not both
     Fragment @ startFragment;
+    Fragment @ currentFragment;
 
-    fun Song(float bpm, int root, int beatsInABar, Part allParts[])
+    int forever;
+
+    // Interactive controls
+    static int pause;
+    static int debug;
+    static int golden;
+    static int shuttingDown;
+
+    // All the currently active shreds playing parts
+    static Shred shreds[];
+
+    fun Song(float bpm, int root, Part allParts[])
     {
         setBPM(bpm);
         root => rootNote;
         allParts @=> parts;
-        beatsInABar => beatsPerMeasure;
         false => forever;
+        false => pause;
+        false => debug;
+        false => shuttingDown;
+        false => golden;
     }
 
-    fun Song(float bpm, int root, int beatsInABar, Fragment startFrag)
+    fun Song(float bpm, int root, Fragment startFrag)
     {
         setBPM(bpm);
         root => rootNote;
         startFrag @=> startFragment;
-        beatsInABar => beatsPerMeasure;
         .25::second => now;
+        false => pause;
+        false => debug;
+        false => shuttingDown;
+        false => golden;
+
+        spork ~ hydraEvents.startEventLoop();       
+        spork ~ keyboardLoop(); 
+    }
+
+    MidiMapper hydraEvents("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1);
+    V3PresetCollection presets;
+
+    fun string getPresetDeclaration(V3Preset preset)
+    {
+        return "V3GrandPiano instrument(" + Std.itoa(hydraEvents.outputChannel+1) + ", \"" + preset.name + "\");";
+    }
+
+    fun setNextPreset() 
+    {
+        presets.getNextPreset() @=> V3Preset preset;
+        V3GrandPiano v3(hydraEvents.outputChannel+1);
+        v3.programChangeV3GrandPiano(preset.program, preset.bank);
+
+        <<< getPresetDeclaration(preset), "" >>>;
+    }
+
+    fun setNextPresetCategory() 
+    {
+        presets.getNextCategory() @=> V3Preset preset;
+        V3GrandPiano v3(hydraEvents.outputChannel+1);
+        v3.programChangeV3GrandPiano(preset.program, preset.bank);
+        <<< "Category:", preset.category >>>;
+        <<< getPresetDeclaration(preset), "" >>>;
+    }
+
+    fun setPreviousPreset() 
+    {
+        presets.getPreviousPreset() @=> V3Preset preset;
+        V3GrandPiano v3(hydraEvents.outputChannel+1);
+        v3.programChangeV3GrandPiano(preset.program, preset.bank);
+        <<< getPresetDeclaration(preset), "" >>>;
+    }
+
+    fun setPreviousPresetCategory() 
+    {
+        presets.getPreviousCategory() @=> V3Preset preset;
+        V3GrandPiano v3(hydraEvents.outputChannel+1);
+        v3.programChangeV3GrandPiano(preset.program, preset.bank);
+        <<< "Category:", preset.category >>>;
+        <<< getPresetDeclaration(preset), "" >>>;
+    }
+
+    fun keyboardLoop()
+    {
+        KBHit kb;
+
+        // time-loop
+        while( true )
+        {
+            // wait on kbhit event
+            kb => now;
+
+            // potentially more than 1 key at a time
+            while( kb.more() )
+            {
+                // print key value
+                kb.getchar() => int key;
+                if (debug) {
+                    <<< "ascii: ", key >>>;
+                }
+                if (key >= "1".charAt(0) && key <= "9".charAt(0)) {
+                    key - "1".charAt(0) => hydraEvents.outputChannel;
+                    <<< "Setting midi mapper out:", hydraEvents.outputChannel+1 >>>;
+                }
+                if ("q".charAt(0) == key) {
+                    shutdown();
+                }
+                if ("n".charAt(0) == key) {
+                    setNextPreset();
+                }
+                if ("m".charAt(0) == key) {
+                    setPreviousPreset();
+                }
+                if ("N".charAt(0) == key) {
+                    setNextPresetCategory();
+                }
+                if ("M".charAt(0) == key) {
+                    setPreviousPresetCategory();
+                }
+                if ("p".charAt(0) == key) {
+                    !pause => pause;
+                    <<< "Pause: ", pause >>>;
+                }
+                if ("g".charAt(0) == key) {
+                    !golden => golden;
+                    <<< "Golden: ", golden >>>;
+                }
+            }
+        }
+    }
+
+    fun shutdown() {
+        <<< "Shutting Down" >>>;
+        if (debug) {
+            <<< "Stopping shreds" >>>;
+        }
+        for(0 => int i; i < shreds.cap(); i++) 
+        {
+            shreds[i].exit();
+        }        
+        true => shuttingDown;
     }
 
     fun void setBPM(float bpm)
@@ -45,6 +166,7 @@ public class Song
         bpm => BPM;
         60::second / bpm => beat;
     }
+
 
     fun void play()
     {
@@ -55,6 +177,7 @@ public class Song
             for( startFragment @=>  Fragment frag; 
                  frag != null; 
                  frag.play() @=> frag) {
+                    frag @=> currentFragment;
                  }
         }
     }
@@ -62,9 +185,10 @@ public class Song
     // play the song
     fun void playParts()
     {
-        <<< "Starting song, num parts: ", parts.cap() >>>;
+        // <<< "Starting song, num parts: ", parts.cap() >>>;
         0::second => dur total;
-        Shred shreds[parts.cap()];
+        Shred myShreds[parts.cap()];
+        myShreds @=> shreds;
         for(0 => int i; i < parts.cap(); i++) 
         {
             parts[i] @=> Part part;
@@ -81,7 +205,17 @@ public class Song
                 5::second => now;
             }
         } else {
+            if (debug) {
+                <<< "Advancing time:", total >>>;
+            }
             total => now;
+            if (debug) {
+                <<< "Stopping shreds" >>>;
+            }
+            if (shuttingDown) {
+                <<< "Exiting" >>> ;
+                me.exit();
+            }
             for(0 => int i; i < parts.cap(); i++) 
             {
                 shreds[i].exit();
@@ -264,15 +398,18 @@ public class Fragment
     fun Fragment getNextSongFragment()
     {
         Math.random2f(0.0, 1.0) => float r;
+        if (Song.golden) {
+            0.0 => r;
+        }
         0 => float prob;
 
-        <<< "Random: ", r >>>;
-        <<< "Num next fragments: ", nextFragments.cap() >>>;
+        // <<< "Random: ", r >>>;
+        // <<< "Num next fragments: ", nextFragments.cap() >>>;
         for(0 => int i; i < nextFragments.cap(); i++)
         {
             nextFragments[i] @=> FragmentTransition frag;
             frag.probability + prob => prob;
-            <<< "NF Prob: ", nextFragments[i].probability, "Prob: ", prob >>>;
+            // <<< "NF Prob: ", nextFragments[i].probability, "Prob: ", prob >>>;
             if (r <= prob)
             {
                 <<< "Picked number: ", i >>>;
@@ -285,7 +422,7 @@ public class Fragment
     fun Fragment play()
     {
         for(0 => int i; i < repeatCount; i++) {
-            <<< "Play count: ", i >>>;
+            // <<< "Play count: ", i >>>;
             song.play();
         }
         return getNextSongFragment();

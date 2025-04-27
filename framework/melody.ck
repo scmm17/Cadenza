@@ -82,9 +82,8 @@ public class SequentialMelody extends Melody
 public class DrumMachine extends Melody
 {
     float useNoteFromChordProbability;
-    fun DrumMachine(NoteCollection initSale, int npm, int numMeasures, float probabilities[])
+    fun DrumMachine(NoteCollection initSale, int npm, int numMeasures, float probabilities[], Patch drums)
     {
-        RolandSH4d drums(10);
         // BehringerRD6 drums;
         drums @=> patch;
         initSale @=> scale;
