@@ -2,6 +2,7 @@ public class Patch
 {
     string deviceName;
     int midiChannel;
+    string patchName;
 
     MidiOut gma;
 
@@ -9,12 +10,23 @@ public class Patch
     {   if (deviceName != "") 
         {
             gma.open(deviceName) => int status;
-            // <<< "Device open status:", status, "name:", gma.name() >>>;
+            <<< "Device open status:", status, "name:", gma.name() >>>;
             setPreset();
+            <<< "Patch Name: ", patchName >>>;
         }
     }
 
     fun void setPreset() {
+    }
+
+    fun void sendControllerChange(int controller, int value)
+    {
+        MidiMsg msg;
+        0xB0 | midiChannel => msg.data1;
+        controller => msg.data2;
+        value => msg.data3;
+        gma.send(msg);
+
     }
 
     fun void programChangeHydra(int program, int bank)
@@ -112,6 +124,7 @@ public class Hydrasynth extends Patch
         "HYDRASYNTH EXPLORER" => deviceName;
         0 => midiChannel;
         preset => presetName;
+        preset => patchName;
         Patch();
     }
 
@@ -139,6 +152,7 @@ public class RolandS1 extends Patch
         2 => midiChannel;
         p => program;
         b => bank;
+        "S1 bank " + Std.itoa(bank) + " program: ", Std.itoa(program) => patchName;
         Patch();
     }
 
@@ -163,16 +177,18 @@ public class RolandSH4d extends Patch
         p => program;
         b => bank;
         true => programChange;
+        "SH-4d bank " + Std.itoa(bank) + " program: ", Std.itoa(program) => patchName;
         Patch();
     }
 
-    fun RolandSH4d(int channel)
+    fun RolandSH4d(int channel, string pName)
     {
         "SH-4d" => deviceName;
         channel - 1 => midiChannel;
         0 => program;
         0 => bank;
         false => programChange;
+        pName => patchName;
         Patch();
     }
 
@@ -195,6 +211,8 @@ public class BehringerRD6 extends Patch
     {
         "RHYTHM DESIGNER RD-6" => deviceName;
         0 => midiChannel;
+        "RHYTHM DESIGNER RD-6" => patchName;
+
         Patch();
     }
 
@@ -1018,8 +1036,8 @@ public class V3GrandPiano extends Patch
         collection.getPreset(presetName) @=> V3Preset preset;
         preset.program => program;
         preset.bank => bank;
-        <<< "Setting preset:", preset.name, "category:", preset.category >>>;
         true => programChange;
+        presetName => patchName;
         Patch();
     }
 

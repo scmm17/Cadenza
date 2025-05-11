@@ -84,7 +84,6 @@ public class DrumMachine extends Melody
     float useNoteFromChordProbability;
     fun DrumMachine(NoteCollection initSale, int npm, int numMeasures, float probabilities[], Patch drums)
     {
-        // BehringerRD6 drums;
         drums @=> patch;
         initSale @=> scale;
         probabilities @=> rhythmProbabilities;

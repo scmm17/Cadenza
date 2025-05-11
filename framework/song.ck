@@ -15,6 +15,9 @@ public class Song
     // All the parts playing in parallel
     Part @ parts[];
 
+    // One patch per midi device
+    Patch @ devices[16];
+
     // All the Fragments. A song can have Parts or Fragments, but not both
     Fragment @ startFragment;
     Fragment @ currentFragment;
@@ -30,6 +33,13 @@ public class Song
     // All the currently active shreds playing parts
     static Shred shreds[];
 
+    LaunchControl @ launchControl;
+    MidiMapper @ hydraEvents;
+    
+    if (startFragment != null) {
+    }
+
+
     fun Song(float bpm, int root, Part allParts[])
     {
         setBPM(bpm);
@@ -40,6 +50,15 @@ public class Song
         false => debug;
         false => shuttingDown;
         false => golden;
+        initDevicesFromParts();
+        <<< "*** Devices ***", "" >>>;
+        for(0 => int i; i < devices.cap(); i++) {
+            if (devices[i] == null) {
+                break;
+            }
+            devices[i] @=> Patch device;
+            <<< "Device:", i, device.deviceName, "Preset:", device.patchName, "Channel:", device.midiChannel >>>;
+        }
     }
 
     fun Song(float bpm, int root, Fragment startFrag)
@@ -52,12 +71,37 @@ public class Song
         false => debug;
         false => shuttingDown;
         false => golden;
+        new MidiMapper("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1) @=> hydraEvents;
+        <<< "Adding Launch Control to:", this >>>;
+        new LaunchControl(this) @=> launchControl;
 
         spork ~ hydraEvents.startEventLoop();       
+        spork ~ launchControl.startEventLoop();
         spork ~ keyboardLoop(); 
     }
 
-    MidiMapper hydraEvents("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1);
+    fun initDevicesFromParts()
+    {
+        for(0 => int i; i < parts.cap(); i++) 
+        {
+            parts[i] @=> Part part;
+            part.patch @=> Patch patch;
+            for(0 => int j; j < devices.cap(); j++) 
+            {
+                if (devices[j] == null) 
+                {
+                    patch @=> devices[j];
+                    break;
+                }
+                if (patch.deviceName == devices[j].deviceName &&
+                    patch.midiChannel == devices[j].midiChannel) 
+                    {
+                        break;
+                    }
+            }
+        }
+    }
+
     V3PresetCollection presets;
 
     fun string getPresetDeclaration(V3Preset preset)
@@ -176,10 +220,17 @@ public class Song
         } else if (startFragment != null) {
             for( startFragment @=>  Fragment frag; 
                  frag != null; 
-                 frag.play() @=> frag) {
+                 playFragment(frag) @=> frag) {
                     frag @=> currentFragment;
                  }
         }
+    }
+
+    fun Fragment playFragment(Fragment frag) 
+    {
+        frag.song @=> this.launchControl.song;
+        <<< "On Song:", this, "Setting LC song: ", frag.song >>>;
+        return frag.play();
     }
 
     // play the song
@@ -412,7 +463,7 @@ public class Fragment
             // <<< "NF Prob: ", nextFragments[i].probability, "Prob: ", prob >>>;
             if (r <= prob)
             {
-                <<< "Picked number: ", i >>>;
+//                <<< "Picked number: ", i >>>;
                 return frag.nextFragment;
             }
         }
@@ -426,5 +477,97 @@ public class Fragment
             song.play();
         }
         return getNextSongFragment();
+    }
+}
+
+public class ControlChange
+{
+    string name;
+    int minController;
+    int maxController;
+    int mapToController;
+    static int ccMsg;
+
+    fun ControlChange(string n, int min, int max, int outController) {
+        min => minController;
+        max => maxController;
+        outController => mapToController;
+        n => name;
+        0xB0 => ccMsg;
+    }
+}
+
+
+
+public class LaunchControl
+{
+    string inputDeviceName;
+    string outputDeviceName;
+    int outputChannel;
+
+    MidiIn min;
+    MidiMsg msg;
+    Song @ song;
+    
+    [ 
+      new ControlChange("Volume", 77, 84, 7),
+      new ControlChange("Mod Wheel", 13, 20, 1),
+      new ControlChange("Resonance", 29, 36, 71),
+      new ControlChange("Pan", 49, 56, 10),
+    ]  
+    @=> static ControlChange ccHandlers[];
+
+    fun LaunchControl(Song @ s)
+    {
+        "Launch Control XL" => inputDeviceName;
+        s @=> song;
+        <<< "Lc Constructor song: ", song, "Devices:", song.devices >>>;
+        <<< "Creating Launch Control, num devices: ", song.devices.cap() >>>;
+    }
+
+    fun startEventLoop()
+    {
+        midi_events();
+    }   
+
+    fun midi_events() {
+        // open midi receiver, exit on fail
+        min.open(inputDeviceName) => int status;
+        <<< "Midi controller open status:", status, "name:", min.name() >>>;
+        if ( !status )
+            me.exit(); 
+
+        while( true )
+        {
+            // wait on midi event
+            min => now;
+
+            // receive midimsg(s)
+            while( min.recv( msg ) )
+            {
+                <<< "In d1:", msg.data1, "d2:", msg.data2, "d3:", msg.data3 >>>;
+                msg.data1 & 0x0F => int channel;
+                msg.data1 & 0xFFF0 => int cc;
+                // <<< "CC:", cc, "channel:", channel >>>;
+                handControlChange(msg.data2, msg.data3);
+            }
+        }
+    }
+
+    fun handControlChange(int baseControlNumber, int value) 
+    {
+        for(0 => int i; i < ccHandlers.cap(); i++) {
+            ccHandlers[i] @=> ControlChange cc;
+            if (baseControlNumber >= cc.minController &&
+                baseControlNumber <= cc.maxController) {
+                    baseControlNumber - cc.minController => int channel;
+                    song.devices[channel] @=> Patch patch;
+                    if (patch != null) {
+                        <<< "Handle control change:", cc.name >>>;
+                        patch.sendControllerChange(cc.mapToController, value);
+                    }
+                    return;
+                }
+        }
     }
 }
