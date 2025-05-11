@@ -99,72 +99,14 @@ RolandSH4d drumKit(10, "SH-4d SDrums");
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 
-[prog2] @=> Part parts1[];
-Song song1(BPM, root, parts1);
-
-[prog2, prog5, drums] @=> Part parts2[];
-Song song2(BPM, root, parts2);
-
-[prog2, prog3, drums] @=> Part parts3[];
-Song song3(BPM, root, parts3);
-
-[prog2, prog3, prog4, prog, drums] @=> Part parts4[];
-Song song4(BPM, root, parts4);
-
-[prog4, prog5, melody, drums] @=> Part parts5[];
-Song song5(BPM, root, parts5);
-
 [prog, prog2, prog3, prog4, prog5, melody, drums] @=> Part parts6[];
 Song song6(BPM, root, parts6);
 
 // Fragment frag1(1, song1);
-Fragment frag1(1, song1);
-Fragment frag2(1, song2);
-Fragment frag3(1, song3);
-Fragment frag4(1, song4);
-Fragment frag5(1, song5);
-Fragment frag6(3, song6);
-Fragment frag7(1, song4);
-
+Fragment frag1(1, song6);
 FragmentTransition ft1(frag1, 1.0);
-FragmentTransition ft2(frag2, 1.0);
 
-FragmentTransition ft3_1(frag3, 0.75);
-FragmentTransition ft3_2(frag2, 0.15);
-FragmentTransition ft3_3(frag4, 0.10);
-
-FragmentTransition ft4_1(frag4, 0.6);
-FragmentTransition ft4_2(frag3, 0.3);
-FragmentTransition ft4_3(frag5, 0.1);
-
-FragmentTransition ft5_1(frag5, 0.6);
-FragmentTransition ft5_2(frag4, 0.2);
-FragmentTransition ft5_3(frag6, 0.2);
-
-FragmentTransition ft6_1(frag6, 0.55);
-FragmentTransition ft6_2(frag5, 0.20);
-FragmentTransition ft6_3(frag4, 0.30);
-
-FragmentTransition ft7_1(frag7, 0.75);
-FragmentTransition ft7_2(frag2, 0.25);
-
-[ft2] @=> frag1.nextFragments;
-[ft3_1, ft3_2, ft3_3] @=> frag2.nextFragments;
-[ft4_1, ft4_2, ft4_3] @=> frag3.nextFragments;
-[ft5_1, ft5_2, ft5_3] @=> frag4.nextFragments;
-[ft6_1, ft6_2, ft6_3] @=> frag5.nextFragments;
-[ft7_1, ft7_2] @=> frag6.nextFragments;
-[ft1] @=> frag7.nextFragments;
-
-
-// [prog, prog2, prog3, prog4, prog5] @=> Part parts[];
-
-// Song song(BPM, root, parts);
-// true => song.forever;
-// song.play();
-
-MidiMapper hydraEvents("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1);
-spork ~ hydraEvents.startEventLoop();
+[ft1] @=> frag1.nextFragments;
 
 Song song(BPM, root, frag1);
 song.play();

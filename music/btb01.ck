@@ -15,8 +15,8 @@ RolandS1 s1(2, 10);
 //RolandS1 s1(2, 9);
 RolandSH4d sh4d_1(1, 3, 5);
 V3GrandPiano piano(1, "Grand Piano Vienna - Rock");
-RolandSH4d sh4d_2(2);
-RolandSH4d sh4d_3(3);
+RolandSH4d sh4d_2(2, "SH4d channel 2");
+RolandSH4d sh4d_3(3, "SH4d channel 3");
 
 // Chords
 Chord I7_Low(NoteCollection.I7_notes(), -1);
@@ -103,7 +103,7 @@ velocities2 @=> prog2.velocities;
     0
   ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10);
+RolandSH4d drumKit(10, "SH-4d SDrums");
 DrumMachine drums(drumNotesCollection, 16, 12, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 

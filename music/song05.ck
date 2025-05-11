@@ -30,7 +30,7 @@ velocities1 @=> prog.velocities;
 // true => prog.random;
 
 [majorChordH, minorChordH, majorChordH, majorChordH] @=> Chord chords2[];
-ChordProgression prog3(bass, chords2, progression, true, 32, 4, probabilities1);
+ChordProgression prog3(bass, chords1, progression, true, 32, 4, probabilities1);
 velocities1 @=> prog3.velocities;
 true => prog3.random;
 
@@ -46,7 +46,7 @@ velocities4 @=> prog5.velocities;
 
 // Melody
 [1.0, 0.15, 0.65, 0.35] @=> float probabilities[];
-[110, 75, 75, 100] @=> int velocities[];
+[120, 100, 100, 120] @=> int velocities[];
 AleatoricMelody melody(piano, majorChordH, 16, 4, probabilities);
 // true => melody.legato;
 velocities @=> melody.velocities;

@@ -88,7 +88,7 @@ velocities @=> melody.velocities;
 
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10);
+RolandSH4d drumKit(10, "SH-4d SDrums");
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 
