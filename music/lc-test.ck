@@ -4,7 +4,7 @@
 @import "../framework/midi-events.ck"
 
 // Global parameters
-60 => float BPM;          // Beats per minute
+65 => float BPM;          // Beats per minute
 57 => int root;           // A below Middle C as the root note
 
 // Midi devices
