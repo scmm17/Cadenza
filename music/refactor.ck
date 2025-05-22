@@ -1,0 +1,112 @@
+@import "../framework/song.ck"
+@import "../framework/chords.ck"
+@import "../framework/melody.ck"
+@import "../framework/midi-events.ck"
+
+// Global parameters
+65 => float BPM;          // Beats per minute
+57 => int root;           // A below Middle C as the root note
+
+// Midi devices
+V3GrandPiano piano(1, "Marimba");
+V3GrandPiano bass(2, "Vibraphone");
+V3GrandPiano ooh(3, "Classic Choir Aah Filter");
+
+// Chords
+Chord majorChord(NoteCollection.majorChordNotes(), -1);
+Chord minorChord(NoteCollection.minorChordNotes(), -1);
+
+Chord majorChordH(NoteCollection.majorChordNotes(), 0);
+Chord minorChordH(NoteCollection.minorChordNotes(), 0);
+
+// Chord progression, arpeggiated
+[0, -3, 5, 7] @=> int progression[];
+[majorChord, minorChord, majorChord, majorChord] @=> Chord chords1[];
+[0.65, 0, .65, 0, .65, 0, .65, 0, 
+ 0.65, 0, .30, 0, .65, .35, 1.0, 1.0] @=> float probabilities1[];
+[100, 80, 100, 70] @=> int velocities1[];
+ChordProgression prog(bass, chords1, progression, true, 16, 4, probabilities1);
+velocities1 @=> prog.velocities;
+// true => prog.random;
+
+[majorChordH, minorChordH, majorChordH, majorChordH] @=> Chord chords2[];
+ChordProgression prog3(bass, chords2, progression, true, 32, 4, probabilities1);
+velocities1 @=> prog3.velocities;
+true => prog3.random;
+
+// Chord Progression
+[1.0] @=> float probabilities2[];
+[55] @=> int velocities2[];
+ChordProgression prog2(ooh, chords1, progression, false, 1, 4, probabilities2);
+velocities2 @=> prog2.velocities;
+
+[60] @=> int velocities4[];
+ChordProgression prog5(piano, chords1, progression, true, 16, 4, probabilities2);
+velocities4 @=> prog5.velocities;
+
+// Melody
+[1.0, 0.15, 0.65, 0.35] @=> float probabilities[];
+[110, 75, 75, 100] @=> int velocities[];
+AleatoricMelody melody(piano, majorChordH, 16, 4, probabilities);
+// true => melody.legato;
+velocities @=> melody.velocities;
+
+ChordProgression prog4(piano, chords2, progression, true, 32, 4, probabilities);
+velocities @=> prog4.velocities;
+true => prog4.random;
+
+
+// Drums
+[1.0] @=> float probabilities3[];
+[127, 120, 134, 120, 94, 120, 120, 120] @=> int velocities3[];
+[
+ DrumMachine.BassDrum(),
+ 0,
+ 0,
+ 0,
+ DrumMachine.SnareDrum(),
+ 0,
+ 0,
+ 0,
+ DrumMachine.BassDrum(),
+ 0,
+ 0,
+ 0,
+ DrumMachine.Clap(),
+ 0,
+ DrumMachine.Clap(),
+ 0,
+ DrumMachine.BassDrum(),
+ 0,
+ 0, 
+ 0,
+ DrumMachine.SnareDrum(),
+ 0,
+ DrumMachine.SnareDrum(),
+ 0,
+ DrumMachine.BassDrum(),
+ 0,
+ DrumMachine.ClosedHat(),
+ 0,
+ DrumMachine.ClosedHat(),
+ DrumMachine.ClosedHat(),
+ DrumMachine.ClosedHat(),
+ DrumMachine.ClosedHat()
+
+ ] @=> int drumNotes[];
+NoteCollection drumNotesCollection(drumNotes);
+RolandSH4d drumKit(10, "SH-4d SDrums");
+DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, drumKit);
+velocities3 @=> drums.velocities;
+
+[prog, prog2, prog3, prog4, prog5, melody, drums] @=> Part parts6[];
+Song song6(BPM, root, parts6);
+
+// Fragment frag1(1, song1);
+Fragment frag1(1, song6);
+FragmentTransition ft1(frag1, 1.0);
+
+[ft1] @=> frag1.nextFragments;
+
+Song song(BPM, root, frag1);
+song.play();

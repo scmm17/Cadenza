@@ -80,6 +80,27 @@ public class Song
         spork ~ keyboardLoop(); 
     }
 
+    fun Song(float bpm, int root, Fragment startFrag, Part allParts[]))
+    {
+        setBPM(bpm);
+        root => rootNote;
+        allParts @=> parts;
+        startFrag @=> startFragment;
+        .25::second => now;
+        false => pause;
+        false => debug;
+        false => shuttingDown;
+        false => golden;
+        initDevicesFromParts();
+        new MidiMapper("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1) @=> hydraEvents;
+        <<< "Adding Launch Control to:", this >>>;
+        new LaunchControl(this) @=> launchControl;
+
+        spork ~ hydraEvents.startEventLoop();       
+        spork ~ launchControl.startEventLoop();
+        spork ~ keyboardLoop(); 
+    }
+
     fun initDevicesFromParts()
     {
         for(0 => int i; i < parts.cap(); i++) 
@@ -437,13 +458,22 @@ public class FragmentTransition
 public class Fragment 
 {
     int repeatCount;
-    Song song;
+    Song @ song;
+    Song @ owningSong;
     FragmentTransition nextFragments[];
+    Part @ parts[];
 
     fun Fragment(int r, Song s)
     {
         r => repeatCount;
         s @=> song;
+    }
+
+    fun Fragment(int r, Song os, Part p[])
+    {
+        r => repeatCount;
+        os @=> owningSong;
+        p @=> parts;
     }
 
     fun Fragment getNextSongFragment()
