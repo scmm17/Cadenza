@@ -12,8 +12,10 @@ public class Song
     // Root-note of chords, as a midi note number
     int rootNote;
 
-    // All the parts playing in parallel
+    // All the parts in the song
     Part @ parts[];
+    // The currently playing parts
+    Part @ currentParts[];
 
     // One patch per midi device
     Patch @ devices[16];
@@ -80,7 +82,7 @@ public class Song
         spork ~ keyboardLoop(); 
     }
 
-    fun Song(float bpm, int root, Fragment startFrag, Part allParts[]))
+    fun Song(float bpm, int root, Fragment startFrag, Part allParts[])
     {
         setBPM(bpm);
         root => rootNote;
@@ -92,6 +94,7 @@ public class Song
         false => shuttingDown;
         false => golden;
         initDevicesFromParts();
+        startFrag.parts @=> currentParts;
         new MidiMapper("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1) @=> hydraEvents;
         <<< "Adding Launch Control to:", this >>>;
         new LaunchControl(this) @=> launchControl;
@@ -103,6 +106,7 @@ public class Song
 
     fun initDevicesFromParts()
     {
+        parts[0].patch @=> currentDevice;
         for(0 => int i; i < parts.cap(); i++) 
         {
             parts[i] @=> Part part;
@@ -135,7 +139,7 @@ public class Song
         presets.getNextPreset() @=> V3Preset preset;
         V3GrandPiano v3(hydraEvents.outputChannel+1);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
-
+        preset.name => currentDevice.patchName;
         <<< getPresetDeclaration(preset), "" >>>;
     }
 
@@ -144,6 +148,7 @@ public class Song
         presets.getNextCategory() @=> V3Preset preset;
         V3GrandPiano v3(hydraEvents.outputChannel+1);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
+        preset.name => currentDevice.patchName;
         <<< "Category:", preset.category >>>;
         <<< getPresetDeclaration(preset), "" >>>;
     }
@@ -153,6 +158,7 @@ public class Song
         presets.getPreviousPreset() @=> V3Preset preset;
         V3GrandPiano v3(hydraEvents.outputChannel+1);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
+        preset.name => currentDevice.patchName;
         <<< getPresetDeclaration(preset), "" >>>;
     }
 
@@ -161,14 +167,19 @@ public class Song
         presets.getPreviousCategory() @=> V3Preset preset;
         V3GrandPiano v3(hydraEvents.outputChannel+1);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
+        preset.name => currentDevice.patchName;
         <<< "Category:", preset.category >>>;
         <<< getPresetDeclaration(preset), "" >>>;
     }
+
+    Patch @ currentDevice;
 
     fun keyboardLoop()
     {
         KBHit kb;
 
+        devices[0] @=> currentDevice;
+        devices[0].midiChannel => hydraEvents.outputChannel;
         // time-loop
         while( true )
         {
@@ -184,23 +195,30 @@ public class Song
                     <<< "ascii: ", key >>>;
                 }
                 if (key >= "1".charAt(0) && key <= "9".charAt(0)) {
-                    key - "1".charAt(0) => hydraEvents.outputChannel;
-                    <<< "Setting midi mapper out:", hydraEvents.outputChannel+1 >>>;
+                    key - "1".charAt(0) => int i;
+                    if (i >= 0 && i < devices.cap() && devices[i] != null)
+                    devices[i] @=> currentDevice;
+                    devices[i].midiChannel => hydraEvents.outputChannel;
+                    launchControl.printDevices();
                 }
                 if ("q".charAt(0) == key) {
                     shutdown();
                 }
                 if ("n".charAt(0) == key) {
                     setNextPreset();
+                    launchControl.printDevices();
                 }
                 if ("m".charAt(0) == key) {
                     setPreviousPreset();
+                    launchControl.printDevices();
                 }
                 if ("N".charAt(0) == key) {
                     setNextPresetCategory();
+                    launchControl.printDevices();
                 }
                 if ("M".charAt(0) == key) {
                     setPreviousPresetCategory();
+                    launchControl.printDevices();
                 }
                 if ("p".charAt(0) == key) {
                     !pause => pause;
@@ -235,23 +253,42 @@ public class Song
 
     fun void play()
     {
-        if (parts != null) 
-        {
-            playParts();
-        } else if (startFragment != null) {
+        if (startFragment != null) {
             for( startFragment @=>  Fragment frag; 
                  frag != null; 
                  playFragment(frag) @=> frag) {
                     frag @=> currentFragment;
                  }
         }
+        if (parts != null) 
+        {
+            playParts();
+        }
+    }
+
+    fun void playPartOnce() 
+    {
+        if (currentParts != null) {
+            playParts();
+        }
     }
 
     fun Fragment playFragment(Fragment frag) 
     {
-        frag.song @=> this.launchControl.song;
-        <<< "On Song:", this, "Setting LC song: ", frag.song >>>;
         return frag.play();
+    }
+
+    fun int containsPart(Part part) 
+    {
+        if (currentParts == null) {
+            return true;
+        }
+        for(0 => int i; i < currentParts.cap(); i++) {
+            if (currentParts[i] == part) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // play the song
@@ -264,12 +301,13 @@ public class Song
         for(0 => int i; i < parts.cap(); i++) 
         {
             parts[i] @=> Part part;
-
+            if (!containsPart(part)) {
+                continue;
+            }
             if (part.totalDuration(this) > total) 
-             {
-                 part.totalDuration(this) => total;
-             }
-
+            {
+                part.totalDuration(this) => total;
+            }
             spork ~ playPart(part) @=> shreds[i];
         }
         if (forever) {
@@ -288,9 +326,11 @@ public class Song
                 <<< "Exiting" >>> ;
                 me.exit();
             }
-            for(0 => int i; i < parts.cap(); i++) 
+            for(0 => int i; i < shreds.cap(); i++) 
             {
-                shreds[i].exit();
+                if (shreds[i] != null) {
+                    shreds[i].exit();
+                }
             }
         }
     }
@@ -462,6 +502,7 @@ public class Fragment
     Song @ owningSong;
     FragmentTransition nextFragments[];
     Part @ parts[];
+    string name;
 
     fun Fragment(int r, Song s)
     {
@@ -469,11 +510,12 @@ public class Fragment
         s @=> song;
     }
 
-    fun Fragment(int r, Song os, Part p[])
+    fun Fragment(string n, int r, Part p[])
     {
+        n => name;
         r => repeatCount;
-        os @=> owningSong;
         p @=> parts;
+        <<< "Frag:", name, "parts:", p.cap() >>>;
     }
 
     fun Fragment getNextSongFragment()
@@ -490,10 +532,9 @@ public class Fragment
         {
             nextFragments[i] @=> FragmentTransition frag;
             frag.probability + prob => prob;
-            // <<< "NF Prob: ", nextFragments[i].probability, "Prob: ", prob >>>;
             if (r <= prob)
             {
-//                <<< "Picked number: ", i >>>;
+                // <<< "Picked number: ", i >>>;
                 return frag.nextFragment;
             }
         }
@@ -504,8 +545,15 @@ public class Fragment
     {
         for(0 => int i; i < repeatCount; i++) {
             // <<< "Play count: ", i >>>;
-            song.play();
+            if (song != null) {
+                song.play();
+            } else if (owningSong != null) {
+                parts @=> owningSong.currentParts;
+                owningSong.launchControl.printDevices();
+                owningSong.playPartOnce();
+            }
         }
+        getNextSongFragment() @=> Fragment next;
         return getNextSongFragment();
     }
 }
@@ -551,8 +599,61 @@ public class LaunchControl
     {
         "Launch Control XL" => inputDeviceName;
         s @=> song;
-        <<< "Lc Constructor song: ", song, "Devices:", song.devices >>>;
-        <<< "Creating Launch Control, num devices: ", song.devices.cap() >>>;
+        printDevices();
+    }
+
+    fun string padString(int len) 
+    {
+        "" => string s;
+        for(0 => int i; i < len; i++) {
+            s + " " => s;
+        }
+        return s;
+    }
+
+    fun int isActiveDevice(Patch p) 
+    {
+        return p == song.currentDevice;
+    }
+
+    fun int isPlaying(Patch p) 
+    {
+        for (0 => int i; i < song.currentParts.cap(); i++) {
+            if (song.currentParts[i].patch == p) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    fun void printDevices()
+    {
+        <<< "\033c", "" >>>;
+        0 => int maxLength;
+        for(0 => int i; i < song.devices.cap(); i++) {
+            song.devices[i] @=> Patch patch;
+            if (patch != null) {
+                if (patch.patchName.length() + patch.uiName.length() > maxLength) {
+                    patch.patchName.length() + patch.uiName.length() => maxLength;
+                }
+            }
+        }
+        for(0 => int i; i < song.devices.cap(); i++) {
+            song.devices[i] @=> Patch patch;
+            if (patch != null) {
+                " " => string pad;
+                " " => string prefix;
+                if (isActiveDevice(patch)) {
+                    "*" => prefix;
+                } 
+                if (isPlaying(patch)) {
+                    "X" => pad;
+                }
+                patch.patchName => string name;
+                "| " + patch.uiName + ":" => string n;
+                <<< prefix, pad, "Device:", i + 1, n, name, padString(maxLength-(name.length()+patch.uiName.length())), "| Volume:", patch.volume >>>;
+            }
+        }
     }
 
     fun startEventLoop()
@@ -575,7 +676,7 @@ public class LaunchControl
             // receive midimsg(s)
             while( min.recv( msg ) )
             {
-                <<< "In d1:", msg.data1, "d2:", msg.data2, "d3:", msg.data3 >>>;
+                // <<< "In d1:", msg.data1, "d2:", msg.data2, "d3:", msg.data3 >>>;
                 msg.data1 & 0x0F => int channel;
                 msg.data1 & 0xFFF0 => int cc;
                 // <<< "CC:", cc, "channel:", channel >>>;
@@ -593,8 +694,12 @@ public class LaunchControl
                     baseControlNumber - cc.minController => int channel;
                     song.devices[channel] @=> Patch patch;
                     if (patch != null) {
-                        <<< "Handle control change:", cc.name >>>;
+                        // <<< "Handle control change:", cc.name >>>;
                         patch.sendControllerChange(cc.mapToController, value);
+                        if (cc.mapToController == 7) {
+                            value => patch.volume;
+                            spork ~ printDevices();
+                        }
                     }
                     return;
                 }

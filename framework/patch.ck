@@ -3,17 +3,21 @@ public class Patch
     string deviceName;
     int midiChannel;
     string patchName;
+    int volume;
+    string uiName;
 
     MidiOut gma;
 
     fun Patch()
-    {   if (deviceName != "") 
+    {   
+        if (deviceName != "") 
         {
             gma.open(deviceName) => int status;
             <<< "Device open status:", status, "name:", gma.name() >>>;
             setPreset();
             <<< "Patch Name: ", patchName >>>;
         }
+        127 => volume;
     }
 
     fun void setPreset() {
@@ -122,6 +126,7 @@ public class Hydrasynth extends Patch
     fun Hydrasynth(string preset)
     {
         "HYDRASYNTH EXPLORER" => deviceName;
+        "Hydrasynth" => uiName;
         0 => midiChannel;
         preset => presetName;
         preset => patchName;
@@ -149,6 +154,7 @@ public class RolandS1 extends Patch
     fun RolandS1(int b, int p)
     {
         "S-1 MIDI IN" => deviceName;
+        "S-1" => uiName;
         2 => midiChannel;
         p => program;
         b => bank;
@@ -173,6 +179,7 @@ public class RolandSH4d extends Patch
     fun RolandSH4d(int channel, int b, int p)
     {
         "SH-4d" => deviceName;
+        "SH-4d" => uiName;
         channel - 1 => midiChannel;
         p => program;
         b => bank;
@@ -184,6 +191,7 @@ public class RolandSH4d extends Patch
     fun RolandSH4d(int channel, string pName)
     {
         "SH-4d" => deviceName;
+        "SH-4d" => uiName;
         channel - 1 => midiChannel;
         0 => program;
         0 => bank;
@@ -210,6 +218,7 @@ public class BehringerRD6 extends Patch
     fun BehringerRD6()
     {
         "RHYTHM DESIGNER RD-6" => deviceName;
+        "RD-6" => uiName;
         0 => midiChannel;
         "RHYTHM DESIGNER RD-6" => patchName;
 
@@ -1011,6 +1020,7 @@ public class V3GrandPiano extends Patch
     fun V3GrandPiano(int channel, int b, int p)
     {
         "U2MIDI Pro" => deviceName;
+        "V3" => uiName;
         channel - 1 => midiChannel;
         p => program;
         b => bank;
@@ -1021,6 +1031,7 @@ public class V3GrandPiano extends Patch
     fun V3GrandPiano(int channel)
     {
         "U2MIDI Pro" => deviceName;
+        "V3" => uiName;
         channel - 1 => midiChannel;
         0 => program;
         0 => bank;
@@ -1032,6 +1043,7 @@ public class V3GrandPiano extends Patch
     {
         V3PresetCollection collection;
         "U2MIDI Pro" => deviceName;
+        "V3" => uiName;
         channel - 1 => midiChannel;
         collection.getPreset(presetName) @=> V3Preset preset;
         preset.program => program;

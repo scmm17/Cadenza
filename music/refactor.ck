@@ -99,14 +99,19 @@ RolandSH4d drumKit(10, "SH-4d SDrums");
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 
-[prog, prog2, prog3, prog4, prog5, melody, drums] @=> Part parts6[];
-Song song6(BPM, root, parts6);
+[prog, drums] @=> Part parts6[];
+[prog, prog2, prog3, prog4, prog5, melody, drums] @=> Part allParts[];
 
 // Fragment frag1(1, song1);
-Fragment frag1(1, song6);
+Fragment frag1("frag1", 1, allParts);
+Fragment frag2("frag2", 1, allParts);
 FragmentTransition ft1(frag1, 1.0);
+FragmentTransition ft2(frag2, 1.0);
 
-[ft1] @=> frag1.nextFragments;
+[ft2] @=> frag1.nextFragments;
+[ft1] @=> frag2.nextFragments;
 
-Song song(BPM, root, frag1);
+Song song(BPM, root, frag1, allParts);
+song @=> frag1.owningSong;
+song @=> frag2.owningSong;
 song.play();

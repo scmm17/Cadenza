@@ -83,34 +83,21 @@ DrumMachine drumsIntro(drumNotesCollection7, 8, 1, probabilities7, drumKit);
 velocities7 @=> drumsIntro.velocities;
 
 [drumsIntro] @=> Part parts1[];
-Song song1(BPM, root, parts1);
-
 [prog2, prog5, drums] @=> Part parts2[];
-Song song2(BPM, root, parts2);
-
 [prog2, prog3, drums] @=> Part parts3[];
-Song song3(BPM, root, parts3);
-
 [prog2, prog3, prog4, prog, drums] @=> Part parts4[];
-Song song4(BPM, root, parts4);
-
 [prog4, prog5, melody] @=> Part parts5[];
-Song song5(BPM, root, parts5);
-
 [prog, prog2, prog3, prog4, prog5, melody, drums] @=> Part parts6[];
-Song song6(BPM, root, parts6);
-
 [prog, prog4] @=> Part parts7[];
-Song song7(BPM, root, parts7);
 
 // Fragment frag1(1, song1);
-Fragment frag1(1, song1);
-Fragment frag2(1, song2);
-Fragment frag3(1, song3);
-Fragment frag4(1, song4);
-Fragment frag5(1, song5);
-Fragment frag6(3, song6);
-Fragment frag7(1, song7);
+Fragment frag1("frag1", 1, parts1);
+Fragment frag2("frag2", 1, parts2);
+Fragment frag3("frag3", 1, parts3);
+Fragment frag4("frag4", 1, parts4);
+Fragment frag5("frag5", 1, parts5);
+Fragment frag6("frag6", 3, parts6);
+Fragment frag7("frag7", 1, parts7);
 
 FragmentTransition ft1(frag1, 1.0);
 FragmentTransition ft2(frag2, 1.0);
@@ -142,13 +129,13 @@ FragmentTransition ft7_2(frag2, 0.25);
 [ft7_1, ft7_2] @=> frag6.nextFragments;
 [ft1] @=> frag7.nextFragments;
 
-
-// [prog, prog2, prog3, prog4, prog5] @=> Part parts[];
-
-// Song song(BPM, root, parts);
-// true => song.forever;
-// song.play();
-
-Song song(BPM, root, frag1);
+Song song(BPM, root, frag1, parts6);
+song @=> frag1.owningSong;
+song @=> frag2.owningSong;
+song @=> frag3.owningSong;
+song @=> frag4.owningSong;
+song @=> frag5.owningSong;
+song @=> frag6.owningSong;
+song @=> frag7.owningSong;
 
 song.play();
