@@ -22,9 +22,10 @@ public class LaunchControl
     fun midi_events() {
         // open midi receiver, exit on fail
         min.open(inputDeviceName) => int status;
-        <<< "Midi controller open status:", status, "name:", min.name() >>>;
-        if ( !status )
+        if ( !status ) {
+            <<< "Failed to open:", inputDeviceName >>>''
             me.exit(); 
+        }
 
         while( true )
         {

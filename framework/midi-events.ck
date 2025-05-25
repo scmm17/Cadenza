@@ -23,15 +23,17 @@ public class MidiMapper
     fun midi_events() {
         // open midi receiver, exit on fail
         min.open(inputDeviceName) => int status;
-        <<< "Input open status:", status, "name:", min.name() >>>;
-        if ( !status )
+        if ( !status ) {
+            <<< "Failed to open:", inputDeviceName >>>;
             me.exit(); 
+        }
 
         mout.open(outputDeviceName) => status;
-        if ( !status ) 
-            me.exit();         
+        if ( !status ) {
+            <<< "Failed to open:", outputDeviceName >>>;
+            me.exit();  
+        }       
 
-        <<< "Output open status:", status, "name:", mout.name() >>>;
         while( true )
         {
             // wait on midi event

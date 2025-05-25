@@ -13,7 +13,9 @@ public class Patch
         if (deviceName != "") 
         {
             gma.open(deviceName) => int status;
-            <<< "Device open status:", status, "name:", gma.name() >>>;
+            if (!status) {
+                <<< "Failed to open", gma.name() >>>;
+            }
             setPreset();
             <<< "Patch Name: ", patchName >>>;
         }

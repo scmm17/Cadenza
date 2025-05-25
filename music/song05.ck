@@ -89,6 +89,7 @@ velocities7 @=> drumsIntro.velocities;
 [prog4, prog5, melody] @=> Part parts5[];
 [prog, prog2, prog3, prog4, prog5, melody, drums] @=> Part parts6[];
 [prog, prog4] @=> Part parts7[];
+[prog, prog2, prog3, prog4, prog5, melody, drums, drumsIntro] @=> Part allParts[];
 
 // Fragment frag1(1, song1);
 Fragment frag1("frag1", 1, parts1);
@@ -129,7 +130,7 @@ FragmentTransition ft7_2(frag2, 0.25);
 [ft7_1, ft7_2] @=> frag6.nextFragments;
 [ft1] @=> frag7.nextFragments;
 
-Song song(BPM, root, frag1, parts6);
+Song song(BPM, root, frag1, allParts);
 song @=> frag1.owningSong;
 song @=> frag2.owningSong;
 song @=> frag3.owningSong;
