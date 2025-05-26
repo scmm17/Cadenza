@@ -32,7 +32,15 @@ public class Patch
         controller => msg.data2;
         value => msg.data3;
         gma.send(msg);
+    }
 
+    fun void sendAllNotesOff() 
+    {
+        MidiMsg msg;
+        0xB0 | midiChannel => msg.data1;
+        0x7B => msg.data2;
+        0 => msg.data3;
+        gma.send(msg);
     }
 
     fun void programChangeHydra(int program, int bank)

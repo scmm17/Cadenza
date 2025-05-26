@@ -210,6 +210,15 @@ public class Song
 
     fun shutdown() {
         <<< "Shutting Down" >>>;
+        launchControl.setActiveLED(0, 41, 0, 0x3c);
+
+        // Shut off all current notes.
+        for(0 => int i; i < devices.cap(); i++) {
+            if (devices[i] != null) {
+                devices[i].sendAllNotesOff();
+            }
+        }
+
         if (debug) {
             <<< "Stopping shreds" >>>;
         }
@@ -591,7 +600,7 @@ public class LaunchControl
 
     fun void printDevices()
     {
-        // <<< "\033c", "" >>>;
+        <<< "\033c", "" >>>;
         0 => int maxLength;
         for(0 => int i; i < song.devices.cap(); i++) {
             song.devices[i] @=> Patch patch;
@@ -748,7 +757,6 @@ public class LaunchControl
 
     fun int handleButtonDown(int channel, int note, int velocity)
     {
-        <<< "Button Down, note:", note, "Velocity:", velocity >>>;
         if (note >= 41 && note <= 48) {
             // Select device
             note - 41 => int i;
