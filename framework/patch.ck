@@ -5,6 +5,7 @@ public class Patch
     string patchName;
     int volume;
     string uiName;
+    int muted;
 
     MidiOut gma;
 
@@ -20,6 +21,7 @@ public class Patch
             <<< "Patch Name: ", patchName >>>;
         }
         127 => volume;
+        false => muted;
     }
 
     fun void setPreset() {

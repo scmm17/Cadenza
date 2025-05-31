@@ -16,6 +16,10 @@ public class Song
     Part @ parts[];
     // The currently playing parts
     Part @ currentParts[];
+    // The single solo part
+    Patch @ soloPatch;
+    // The muted parts
+    Patch @ mutedPatches[];
 
     // One patch per midi device
     Patch @ devices[16];
@@ -49,11 +53,11 @@ public class Song
         false => shuttingDown;
         false => golden;
         initDevicesFromParts();
-        for(0 => int i; i < devices.cap(); i++) {
-            if (devices[i] == null) {
+        for(Patch device : devices) {
+            if (device == null) {
                 break;
             }
-            devices[i] @=> Patch device;
+            device @=> Patch device;
         }
     }
 
@@ -82,9 +86,9 @@ public class Song
     fun initDevicesFromParts()
     {
         parts[0].patch @=> currentDevice;
-        for(0 => int i; i < parts.cap(); i++) 
+        0 => int deviceIndex;
+        for(Part part : parts) 
         {
-            parts[i] @=> Part part;
             part.patch @=> Patch patch;
             for(0 => int j; j < devices.cap(); j++) 
             {
@@ -213,20 +217,21 @@ public class Song
         launchControl.setActiveLED(0, 41, 0, 0x3c);
 
         // Shut off all current notes.
-        for(0 => int i; i < devices.cap(); i++) {
-            if (devices[i] != null) {
-                devices[i].sendAllNotesOff();
+        for(Patch device : devices) {
+            if (device != null) {
+                device.sendAllNotesOff();
             }
         }
 
         if (debug) {
             <<< "Stopping shreds" >>>;
         }
-        for(0 => int i; i < shreds.cap(); i++) 
+        for(Shred shred : shreds) 
         {
-            shreds[i].exit();
+            shred.exit();
         }        
         true => shuttingDown;
+        me.exit();
     }
 
     fun void setBPM(float bpm)
@@ -235,6 +240,32 @@ public class Song
         60::second / bpm => beat;
     }
 
+    fun void startMuteMode()
+    {
+    }
+
+    fun void endMuteMode()
+    {
+        for(Patch p : mutedPatches) {
+            false => p.muted;
+        }
+        mutedPatches.clear();
+    }
+
+    fun void mutePatch(Patch patch)
+    {
+        true => patch.muted;
+        mutedPatches << patch;
+    }
+
+    fun void unMutePatch(Patch patch)
+    {
+        false => patch.muted;
+        for(0 => int i; i < mutedPatches.cap(); i++) {
+
+        }
+    
+    }
 
     fun void play()
     {
@@ -268,8 +299,8 @@ public class Song
         if (currentParts == null) {
             return true;
         }
-        for(0 => int i; i < currentParts.cap(); i++) {
-            if (currentParts[i] == part) {
+        for(Part currentPart : currentParts) {
+            if (currentPart == part) {
                 return true;
             }
         }
@@ -283,17 +314,19 @@ public class Song
         0::second => dur total;
         Shred myShreds[parts.cap()];
         myShreds @=> shreds;
-        for(0 => int i; i < parts.cap(); i++) 
+        0 => int partIndex;
+        for(Part part : parts) 
         {
-            parts[i] @=> Part part;
             if (!containsPart(part)) {
+                partIndex++;
                 continue;
             }
             if (part.totalDuration(this) > total) 
             {
                 part.totalDuration(this) => total;
             }
-            spork ~ playPart(part) @=> shreds[i];
+            spork ~ playPart(part) @=> shreds[partIndex];
+            partIndex++;
         }
         if (forever) {
             while(true) {
@@ -305,10 +338,16 @@ public class Song
                 <<< "Exiting" >>> ;
                 me.exit();
             }
-            for(0 => int i; i < shreds.cap(); i++) 
+            // Shut off all current notes.
+            for(Patch device : devices) {
+                if (device != null) {
+                    device.sendAllNotesOff();
+                }
+            }
+            for(Shred shred : shreds) 
             {
-                if (shreds[i] != null) {
-                    shreds[i].exit();
+                if (shred != null) {
+                    shred.exit();
                 }
             }
         }
@@ -499,9 +538,8 @@ public class Fragment
 
         // <<< "Random: ", r >>>;
         // <<< "Num next fragments: ", nextFragments.cap() >>>;
-        for(0 => int i; i < nextFragments.cap(); i++)
+        for(FragmentTransition frag : nextFragments)
         {
-            nextFragments[i] @=> FragmentTransition frag;
             frag.probability + prob => prob;
             if (r <= prob)
             {
@@ -590,8 +628,8 @@ public class LaunchControl
 
     fun int isPlaying(Patch p) 
     {
-        for (0 => int i; i < song.currentParts.cap(); i++) {
-            if (song.currentParts[i].patch == p) {
+        for (Part currentPart : song.currentParts) {
+            if (currentPart.patch == p) {
                 return true;
             }
         }
@@ -602,16 +640,15 @@ public class LaunchControl
     {
         <<< "\033c", "" >>>;
         0 => int maxLength;
-        for(0 => int i; i < song.devices.cap(); i++) {
-            song.devices[i] @=> Patch patch;
+        for(Patch patch : song.devices) {
             if (patch != null) {
                 if (patch.patchName.length() + patch.uiName.length() > maxLength) {
                     patch.patchName.length() + patch.uiName.length() => maxLength;
                 }
             }
         }
-        for(0 => int i; i < song.devices.cap(); i++) {
-            song.devices[i] @=> Patch patch;
+        0 => int deviceNum;
+        for(Patch patch : song.devices) {
             if (patch != null) {
                 " " => string pad;
                 " " => string prefix;
@@ -623,8 +660,9 @@ public class LaunchControl
                 }
                 patch.patchName => string name;
                 "| " + patch.uiName + ":" => string n;
-                <<< prefix, pad, "Device:", i + 1, n, name, padString(maxLength-(name.length()+patch.uiName.length())), "| Volume:", patch.volume >>>;
+                <<< prefix, pad, "Device:", deviceNum + 1, n, name, padString(maxLength-(name.length()+patch.uiName.length())), "| Volume:", patch.volume >>>;
             }
+            deviceNum++;
         }
 
         write_markdown_panel();
@@ -641,8 +679,8 @@ public class LaunchControl
         fout.write("| Status | Device | Patch | Volume |\n");
         fout.write("| :---: | :---: | --- | :---: |\n");
 
-        for(0 => int i; i < song.devices.cap(); i++) {
-            song.devices[i] @=> Patch patch;
+        0 => int deviceNum;
+        for(Patch patch : song.devices) {
             if (patch != null) {
                 " " => string pad;
                 " " => string prefix;
@@ -654,9 +692,10 @@ public class LaunchControl
                 }
                 "_" + patch.patchName + "_" => string name;
                 patch.uiName + ": " => string n;
-                "| " + prefix + pad + " | " + Std.itoa(i + 1) + " | " + n + name +  " | " + patch.volume + " |\n" => string line;
+                "| " + prefix + pad + " | " + Std.itoa(deviceNum + 1) + " | " + n + name +  " | " + patch.volume + " |\n" => string line;
                 fout.write(line);
             }
+            deviceNum++;
         }
         fout.close();
     }
@@ -714,8 +753,7 @@ public class LaunchControl
 
     fun int handControlChange(int baseControlNumber, int value) 
     {
-        for(0 => int i; i < ccHandlers.cap(); i++) {
-            ccHandlers[i] @=> ControlChange cc;
+        for(ControlChange cc : ccHandlers) {
             if (baseControlNumber >= cc.minController &&
                 baseControlNumber <= cc.maxController) {
                     baseControlNumber - cc.minController => int channel;
