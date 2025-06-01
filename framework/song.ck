@@ -20,6 +20,8 @@ public class Song
     Patch @ soloPatch;
     // The muted parts
     Patch @ mutedPatches[];
+    int muteMode;
+    int soloMode;
 
     // One patch per midi device
     Patch @ devices[16];
@@ -52,6 +54,10 @@ public class Song
         false => debug;
         false => shuttingDown;
         false => golden;
+        true => muteMode;
+        false => soloMode;
+        Patch empty[0];
+        empty @=> mutedPatches;
         initDevicesFromParts();
         for(Patch device : devices) {
             if (device == null) {
@@ -71,6 +77,10 @@ public class Song
         false => debug;
         false => shuttingDown;
         false => golden;
+        true => muteMode;
+        false => soloMode;
+        Patch empty[0];
+        empty @=> mutedPatches;
         initDevicesFromParts();
         startFrag.parts @=> currentParts;
         new MidiMapper("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1) @=> hydraEvents;
@@ -214,8 +224,19 @@ public class Song
 
     fun shutdown() {
         <<< "Shutting Down" >>>;
-        launchControl.setActiveLED(0, 41, 0, 0x3c);
-
+        // Turn off the active selection LED
+        launchControl.setActiveSelectionLED(0, 41, 0, 0x3c);
+        if (soloMode) {
+            toggleSoloMode(110);
+        }
+        if (muteMode) {
+            toggleMuteMode(109);
+        }
+        launchControl.setActiveMutedLED(0, 73, 0, 0x0F);
+        // Turn off the mute LED
+        launchControl.setLED(0, 109, 0x3c, false);
+        // Turn off the solo LED
+        launchControl.setLED(0, 110, 0x3c, false);
         // Shut off all current notes.
         for(Patch device : devices) {
             if (device != null) {
@@ -242,10 +263,12 @@ public class Song
 
     fun void startMuteMode()
     {
+        true => muteMode;
     }
 
     fun void endMuteMode()
     {
+        false => muteMode;
         for(Patch p : mutedPatches) {
             false => p.muted;
         }
@@ -262,9 +285,100 @@ public class Song
     {
         false => patch.muted;
         for(0 => int i; i < mutedPatches.cap(); i++) {
-
+            if (mutedPatches[i] != patch) {
+                mutedPatches.erase(i);
+                break;
+            }
         }
-    
+    }
+
+    fun void startSoloMode()
+    {
+        true => soloMode;
+    }
+
+    fun void endSoloMode()
+    {
+        false => soloMode;
+        null @=> soloPatch;
+        for(Patch p : devices) {
+            if (p != null) {
+                false => p.muted;
+            }
+        }
+    }
+
+    fun void setSoloPatch(Patch patch)
+    {
+        <<< "Setting solo patch:", patch.deviceName >>>;
+        patch @=> soloPatch;
+        for(Patch p : devices) {
+            if (p == patch) {
+                false => p.muted;
+            } else if (p != null)   {
+                true => p.muted;
+            }
+        }
+    }
+
+    fun void unsetSoloPatch()
+    {
+        <<< "Unsetting solo patch:", soloPatch.deviceName >>>;
+        for(Patch p : devices) {
+            if (p != null) {
+                false => p.muted;
+            }
+        }
+        null @=> soloPatch;
+    }
+
+    fun void toggleMute(Patch patch)
+    {
+        if (patch.muted) {
+            unMutePatch(patch);
+        } else {
+            mutePatch(patch);
+        }
+    }
+
+    fun void toggleSoloPatch(Patch patch)
+    {
+        <<< "Toggling solo patch:", patch.deviceName >>>;
+        soloPatch @=> Patch originalSoloPatch;
+        if (soloPatch != null) {
+            unsetSoloPatch();
+        }
+        if (originalSoloPatch != patch) {
+            setSoloPatch(patch);
+        } else {
+            null @=> soloPatch;
+        }
+    }
+
+    fun void toggleMuteMode(int note)
+    {
+        if (soloMode) {
+            endSoloMode();
+        }
+
+        if (muteMode) {
+            endMuteMode();
+        } else {
+            startMuteMode();
+        }
+    }
+
+    fun void toggleSoloMode(int note) 
+    {
+        if (muteMode) {
+            endMuteMode();
+        }
+
+        if (soloMode) {
+            endSoloMode();
+        } else {
+            startSoloMode();
+        }
     }
 
     fun void play()
@@ -609,6 +723,7 @@ public class LaunchControl
     {
         "Launch Control XL" => inputDeviceName;
         s @=> song;
+
         printDevices();
     }
 
@@ -665,6 +780,8 @@ public class LaunchControl
             deviceNum++;
         }
 
+        <<< "Mute Mode:", song.muteMode, "Solo Mode:", song.soloMode, "Muted Patches:", song.mutedPatches.cap() >>>;
+
         write_markdown_panel();
     }
 
@@ -684,15 +801,19 @@ public class LaunchControl
             if (patch != null) {
                 " " => string pad;
                 " " => string prefix;
+                " " => string muteString;
                 if (isActiveDevice(patch)) {
                     " 👁️" => prefix;
                 } 
                 if (isPlaying(patch)) {
                     " ☑️" => pad;
                 }
+                if (patch.muted) {
+                    " ❌" => muteString;
+                }
                 "_" + patch.patchName + "_" => string name;
                 patch.uiName + ": " => string n;
-                "| " + prefix + pad + " | " + Std.itoa(deviceNum + 1) + " | " + n + name +  " | " + patch.volume + " |\n" => string line;
+                "| " + prefix + pad + muteString + " | " + Std.itoa(deviceNum + 1) + " | " + n + name +  " | " + patch.volume + " |\n" => string line;
                 fout.write(line);
             }
             deviceNum++;
@@ -718,7 +839,10 @@ public class LaunchControl
             me.exit(); 
         }
 
-        setActiveLED(0, 41, 41, 0x3c);
+        setActiveSelectionLED(0, 41, 41, 0x3c);
+        setActiveMutedLED(0, 73, 0, 0x3c);
+        setLED(0, 109, 0x3c, song.muteMode);
+        setLED(0, 110, 0x3c, song.soloMode);
 
         while( true )
         {
@@ -773,24 +897,47 @@ public class LaunchControl
         return false;
     }
 
-    fun void setActiveLED(int channel, int baseNote, int note, int color)
+    fun void setLED(int channel, int note, int color, int on)
     {
-        0x90 => msg.data1;
+        if (on) {
+            0x90 => msg.data1;
+        } else {
+            0x80 => msg.data1;
+        }
         note => msg.data2;
         color => msg.data3;
+        mout.send(msg);        
+    }
+
+    fun void setActiveSelectionLED(int channel, int baseNote, int note, int color)
+    {
         for (baseNote => int i; i < baseNote + 8; i++) {
-            if (i == note) {
-                0x90 | channel => msg.data1;
-                i => msg.data2;
-                color => msg.data3;
-                mout.send(msg);
+            setLED(channel, i, color, i == note);
+        }
+    }
+
+    fun void setActiveMutedLED(int channel, int baseNote, int note, int color)
+    {
+        for (baseNote => int i; i < baseNote + 8; i++) {
+            i - baseNote => int j;
+            if (song.muteMode && j >= 0 && j < song.devices.cap() && song.devices[j] != null) {
+                setLED(channel, i, color, song.devices[j].muted);
             } else {
-                0x80 | channel => msg.data1;
-                i => msg.data2;
-                0 => msg.data3;
-                mout.send(msg);
+                setLED(channel, i, color, false);
             }
         }
+    }
+
+    fun void setActiveSoloLED(int channel, int baseNote, int note, int color)
+    {
+        for (baseNote => int i; i < baseNote + 8; i++) {
+            i - baseNote => int j;
+            if (song.soloMode && j >= 0 && j < song.devices.cap() && song.devices[j] != null) {
+                setLED(channel, i, color, !song.devices[j].muted);
+            } else {
+                setLED(channel, i, color, false);
+            }
+        }            
     }
 
     fun int handleButtonDown(int channel, int note, int velocity)
@@ -801,9 +948,29 @@ public class LaunchControl
             if (i >= 0 && i < song.devices.cap() && song.devices[i] != null) {
                 song.devices[i] @=> song.currentDevice;
                 song.devices[i].midiChannel => song.hydraEvents.outputChannel;
-                setActiveLED(channel, 41, note, 0x3c);
+                setActiveSelectionLED(channel, 41, note, 0x3c);
                 song.launchControl.printDevices();
-            return true;
+                return true;
+            }
+        }
+        if (song.muteMode && note >= 73 && note <= 80) {
+            // Select patch
+            note - 73 => int i;
+            if (i >= 0 && i < song.devices.cap() && song.devices[i] != null) {
+                song.toggleMute(song.devices[i]);
+                setActiveMutedLED(channel, 73, note, 0x0F);
+                song.launchControl.printDevices();
+                return true;
+            }
+        }
+        if (song.soloMode && note >= 73 && note <= 80) {
+            // Select patch
+            note - 73 => int i;
+            if (i >= 0 && i < song.devices.cap() && song.devices[i] != null) {
+                song.toggleSoloPatch(song.devices[i]);
+                setActiveSoloLED(channel, 73, note, 0x3C);
+                song.launchControl.printDevices();
+                return true;
             }
         }
         if (note == 104) {
@@ -823,6 +990,22 @@ public class LaunchControl
         }
         if (note == 107) {
             song.setNextPreset();
+            song.launchControl.printDevices();
+            return true;
+        }
+        if (note == 109) {
+            song.toggleMuteMode(note);
+            setLED(channel, 109, 0x3c, song.muteMode);
+            setLED(channel, 110, 0x3c, song.soloMode);
+            setActiveMutedLED(channel, 73, 0, 0x0F);
+            song.launchControl.printDevices();
+            return true;
+        }
+        if (note == 110) {
+            song.toggleSoloMode(note);
+            setLED(channel, 110, 0x3c, song.soloMode);
+            setLED(channel, 109, 0x3c, song.muteMode);
+            setActiveSoloLED(channel, 73, 0, 0x3C);
             song.launchControl.printDevices();
             return true;
         }

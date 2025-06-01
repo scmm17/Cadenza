@@ -105,6 +105,9 @@ public class Patch
 
     fun void noteOn(int note, int velocity, dur duration)
     {
+        if (muted) {
+            return;
+        }
         MidiMsg msg;
         0x90 | midiChannel => msg.data1;
         note => msg.data2;
