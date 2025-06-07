@@ -232,7 +232,7 @@ public class Song
         if (muteMode) {
             toggleMuteMode(109);
         }
-        launchControl.setActiveMutedLED(0, 73, 0, 0x0F);
+        launchControl.setActiveMutedLED(0, 73, 0x0F);
         // Turn off the mute LED
         launchControl.setLED(0, 109, 0x3c, false);
         // Turn off the solo LED
@@ -527,12 +527,14 @@ public class Part
     float rhythmProbabilities[];
     int velocities[];
     int legato;
+    float mutateProbabilityRange;
 
     Patch patch;
 
     fun Part(Patch initPatch)
     {
         initPatch @=> patch;
+        0.0 => mutateProbabilityRange;
     }
 
    fun void play(Song song)
@@ -561,8 +563,11 @@ public class Part
                 i * notesPerMeasure + j => int index;
                 if (rhythmProbabilities.cap() > 0) 
                 {
-                    rhythmProbabilities[j % rhythmProbabilities.cap()] => float prob;
+                    rhythmProbabilities[index % rhythmProbabilities.cap()] => float prob;
                     Math.random2f(0.0, 1.0) => float rand;
+                    // if (mutateProbabilityRange > 0.0) {
+                    //     <<< "Probability:", prob, "Random:", rand, "index:", index >>>;
+                    // }
                     prob > rand => playNote;
                 } else {
                     true => playNote;
@@ -577,6 +582,7 @@ public class Part
                 }
             }
         }
+        mutateProbabilities();
         // Now Play the notes, determining note length.
         for( 0 => int i; i < notesToPlay.cap(); i++) 
         {
@@ -592,6 +598,43 @@ public class Part
             }
             song.whole()/notesPerMeasure => now;
         }
+    }
+
+    fun mutateProbabilities() 
+    {
+        if (mutateProbabilityRange == 0.0) {
+            return;
+        }
+        <<< "Old probabilities: ", arrayToString(rhythmProbabilities) >>>;
+        for(0 => int i; i < rhythmProbabilities.cap(); i++) {
+            Math.random2f(-1.1, 1.1) => float r;
+            (1.0 - Math.exp(r*r)) * mutateProbabilityRange => float change;
+            if (r < 0.0) {
+                -change => change;
+            }
+            rhythmProbabilities[i] + change => change;
+            if (change < 0.0) {
+                0.0 => change;
+            }
+            if (change > 1.0) {
+                1.0 => change;
+            }
+            rhythmProbabilities[i] => float oldProb;
+            change => rhythmProbabilities[i];
+        }
+        <<< "New probabilities: ", arrayToString(rhythmProbabilities) >>>;
+    }
+
+    fun string arrayToString(float a[])
+    {
+        "[" => string s;
+        for(0 => int i; i < a.cap(); i++) {
+            s + Std.ftoa(a[i], 2) => s;
+            if (i < a.cap() - 1) {
+                s + ", " => s;
+            }
+        }
+        return s + "]";
     }
 
     fun int getNextNotePosition(int notes[], int noteIndex)
@@ -753,6 +796,7 @@ public class LaunchControl
 
     fun void printDevices()
     {
+        // Clear the screen
         <<< "\033c", "" >>>;
         0 => int maxLength;
         for(Patch patch : song.devices) {
@@ -840,7 +884,7 @@ public class LaunchControl
         }
 
         setActiveSelectionLED(0, 41, 41, 0x3c);
-        setActiveMutedLED(0, 73, 0, 0x3c);
+        setActiveMutedLED(0, 73, 0x3c);
         setLED(0, 109, 0x3c, song.muteMode);
         setLED(0, 110, 0x3c, song.soloMode);
 
@@ -904,6 +948,7 @@ public class LaunchControl
         } else {
             0x80 => msg.data1;
         }
+        /// <<< "Set LED:", note, "color:", color, "on:", on >>>;
         note => msg.data2;
         color => msg.data3;
         mout.send(msg);        
@@ -916,7 +961,7 @@ public class LaunchControl
         }
     }
 
-    fun void setActiveMutedLED(int channel, int baseNote, int note, int color)
+    fun void setActiveMutedLED(int channel, int baseNote, int color)
     {
         for (baseNote => int i; i < baseNote + 8; i++) {
             i - baseNote => int j;
@@ -958,7 +1003,7 @@ public class LaunchControl
             note - 73 => int i;
             if (i >= 0 && i < song.devices.cap() && song.devices[i] != null) {
                 song.toggleMute(song.devices[i]);
-                setActiveMutedLED(channel, 73, note, 0x0F);
+                setActiveMutedLED(channel, 73, 0x0F);
                 song.launchControl.printDevices();
                 return true;
             }
@@ -997,7 +1042,7 @@ public class LaunchControl
             song.toggleMuteMode(note);
             setLED(channel, 109, 0x3c, song.muteMode);
             setLED(channel, 110, 0x3c, song.soloMode);
-            setActiveMutedLED(channel, 73, 0, 0x0F);
+            setActiveMutedLED(channel, 73, 0x0F);
             song.launchControl.printDevices();
             return true;
         }

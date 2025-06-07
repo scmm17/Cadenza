@@ -94,7 +94,89 @@ public class NoteCollection
         NoteCollection chord(notes);
         return chord;
     }
-    
+    fun static NoteCollection coltrane1_notes()
+    {
+        [0, 4, 7, 10] @=> int notes[]; // Major 7th (Cmaj7)
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection coltrane2_notes() 
+    {
+        [-3, 0, 3, 7] @=> int notes[]; // Minor 7th (Dm7)
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection coltrane3_notes()
+    {
+        [-5, -2, 2, 5] @=> int notes[]; // Minor 7th (Em7)
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection coltrane4_notes()
+    {
+        [-7, -3, 0, 3] @=> int notes[]; // Major 7th (Fmaj7)
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection coltrane5_notes()
+    {
+        [-5, -1, 2, 5] @=> int notes[]; // Dominant 7th (G7)
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection coltrane6_notes()
+    {
+        [-3, 0, 3, 7] @=> int notes[]; // Minor 7th (Am7)
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection coltrane7_notes()
+    {
+        [-2, 2, 5, 8] @=> int notes[]; // Half Diminished (Bm7b5)
+        NoteCollection chord(notes);
+        return chord;
+    }
+    fun static NoteCollection trane1_notes()
+    {
+        [0, 4,7, 12] @=> int notes[]; // Major 7th (Cmaj7)
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection trane2_notes() 
+    {
+        [3,10,13,19] @=> int notes[]; // Minor 7th (Dm7)
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection trane3_notes()
+    {
+        [8,12,15,20] @=> int notes[]; // Minor 7th (Em7)
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection trane4_notes()
+    {
+        [-1,6,12,15] @=> int notes[]; // Major 7th (Fmaj7)
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection trane5_notes()
+    {
+        [4,8,11,16] @=> int notes[]; // Dominant 7th (G7)
+        NoteCollection chord(notes);
+        return chord;
+    }
+
     fun NoteCollection(int theNotes[])
     {
         theNotes @=> notes;

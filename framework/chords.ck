@@ -43,6 +43,7 @@ public class ChordProgression extends Part
         npm => notesPerMeasure;
         numMeasures => numberOfMeasures;
         false => random;
+        0.0 => mutateProbabilityRange;
     }
 
     fun dur totalDuration(Song song)
