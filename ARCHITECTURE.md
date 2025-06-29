@@ -1,3 +1,4 @@
+```mermaid
 classDiagram
     class Song {
         +Part[] parts
@@ -47,3 +48,4 @@ classDiagram
     Melody "1" *-- "1" NoteCollection
     Patch <.. MidiMapper : uses
     NoteCollection <.. Chord : extends
+```
