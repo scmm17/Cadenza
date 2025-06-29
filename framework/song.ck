@@ -608,7 +608,7 @@ public class Part
         <<< "Old probabilities: ", arrayToString(rhythmProbabilities) >>>;
         for(0 => int i; i < rhythmProbabilities.cap(); i++) {
             Math.random2f(-1.1, 1.1) => float r;
-            (1.0 - Math.exp(r*r)) * mutateProbabilityRange => float change;
+            (1.0 - Math.exp(-r*r)) * mutateProbabilityRange => float change;
             if (r < 0.0) {
                 -change => change;
             }

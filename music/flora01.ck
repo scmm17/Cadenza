@@ -1,0 +1,83 @@
+@import "../framework/song.ck"
+@import "../framework/chords.ck"
+@import "../framework/melody.ck"
+
+// Global parameters
+45 => float BPM;          // Beats per minute
+56 => int root;
+
+// Midi devices
+//Hydrasynth hydrasynth("F006");
+Hydrasynth hydrasynth("B016");
+RolandS1 s1(1, 1);
+RolandSH4d sh4d_1(1, 3, 11);
+RolandSH4d sh4d_2(2, "SH4d channel 2");
+RolandSH4d sh4d_3(3, "SH4d channel 3");
+RolandSH4d sh4d_4(4, "SH4d channel 4");
+V3GrandPiano marimba(1, "Harp");
+// RolandSH4d sh4d_3(3, "SH4d channel 3");
+
+// Chords
+Chord I_Low(NoteCollection.I_notes(), -1);
+Chord IV_Low(NoteCollection.IV_notes(), -1);
+Chord bVII_Low(NoteCollection.bVII_notes(), -1);
+Chord I_High(NoteCollection.I_notes(), 0);
+Chord IV_High(NoteCollection.IV_notes(), 0);
+Chord bVII_High(NoteCollection.bVII_notes(), 0);
+
+
+// Chord progression, arpeggiated
+[0, 0, 0, 0] @=> int progression[];
+[I_Low, IV_Low, bVII_Low, IV_Low] @=> Chord chordsL[];
+[I_High, IV_High, bVII_High, IV_High] @=> Chord chordsH[];
+
+[1.0] @=> float probabilities1[];
+[124] @=> int velocities1[];
+ChordProgression prog1(hydrasynth, chordsH, progression, false, 1, 4, probabilities1);
+// 0.4 => prog1.mutateProbabilityRange;
+// true => prog1.legato;
+velocities1 @=> prog1.velocities;
+
+
+[1.0, 0.5] @=> float probabilities2[];
+[124, 100] @=> int velocities2[];
+ChordProgression prog2(sh4d_1, chordsH, progression, true, 2, 4, probabilities2);
+true => prog2.random;
+velocities2 @=> prog2.velocities;
+0.3 => prog2.mutateProbabilityRange;
+
+// Chord Progression
+[1.0, 0.5, .25, .25] @=> float probabilities3[];
+[127, 100, 100, 100] @=> int velocities3[];
+ChordProgression prog3(sh4d_2, chordsL, progression, true, 4, 4, probabilities3);
+velocities3 @=> prog3.velocities;
+true => prog2.random;
+// true => prog2.legato;
+
+// Melody
+[1.0, 1.0, 0.0, 0.0, 1.0, 1, 1.0, 0.0] @=> float probabilities4[];
+[120, 90, 90, 90] @=> int velocities4[];
+AleatoricMelody melody1(marimba, IV_Low, 16, 4, probabilities4);
+0.4 => melody1.mutateProbabilityRange;
+// true => melody.legato;
+velocities4 @=> melody1.velocities;
+
+[0.0, .45, 1.0, 0.0] @=> float probabilities5[];
+[125, 90, 110, 90] @=> int velocities5[];
+AleatoricMelody melody2(sh4d_3, IV_High, 16, 4, probabilities5);
+0.4 => melody2.mutateProbabilityRange;
+true => melody2.legato;
+velocities5 @=> melody2.velocities;
+
+[prog1, prog2, prog3, melody1, melody2] @=> Part parts1[];
+// Fragment frag1(1, song1);
+Fragment frag1("frag1", 1, parts1);
+
+FragmentTransition ft1(frag1, 1.0);
+
+[ft1] @=> frag1.nextFragments;
+
+Song song(BPM, root, frag1, parts1);
+song @=> frag1.owningSong;
+
+song.play();

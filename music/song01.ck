@@ -31,6 +31,7 @@ Chord bVII_High(NoteCollection.bVII_notes(), 0);
 [1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.5] @=> float probabilities1[];
 [124, 70] @=> int velocities1[];
 ChordProgression prog(sh4d_1, chordsH, progression, true, 16, 4, probabilities1);
+0.4 => prog.mutateProbabilityRange;
 velocities1 @=> prog.velocities;
 
 ChordProgression prog4(s1, chordsH, progression, true, 16, 4, probabilities1);
@@ -38,7 +39,7 @@ velocities1 @=> prog4.velocities;
 
 // Chord Progression
 [1.0] @=> float probabilities2[];
-[100] @=> int velocities2[];
+[127] @=> int velocities2[];
 ChordProgression prog2(sh4d_2, chordsL, progression, false, 1, 4, probabilities2);
 velocities2 @=> prog2.velocities;
 true => prog2.random;
@@ -48,12 +49,14 @@ true => prog2.random;
 [1.0, 0.0, 0.25, 1.0, 1.0, 0.65, 1.0, 0.35] @=> float probabilities[];
 [120, 90, 90, 90] @=> int velocities5[];
 AleatoricMelody melody(marimba, IV_Low, 32, 4, probabilities);
+0.4 => melody.mutateProbabilityRange;
 // true => melody.legato;
 velocities5 @=> melody.velocities;
 
 [1.0, .25, 1.0, 0.0] @=> float probabilities5[];
 [125, 90, 110, 90] @=> int velocities6[];
 AleatoricMelody melody2(hydrasynth, IV_Low, 32, 2, probabilities5);
+0.4 => melody2.mutateProbabilityRange;
 // true => melody.legato;
 velocities6 @=> melody2.velocities;
 

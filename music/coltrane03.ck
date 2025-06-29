@@ -9,9 +9,9 @@
 
 // Midi devices
 RolandSH4d sh4d(1, 2, 8);
-V3GrandPiano piano(1, "XBass 1");
-V3GrandPiano bass(2, "Mute Guitar");
-V3GrandPiano ooh(3, "Theatre Organ Mighty Tower 4");
+V3GrandPiano piano(1, "Crystal");
+V3GrandPiano bass(2, "OBArp");
+V3GrandPiano ooh(3, "VP1");
 
 // Chords
 Chord trane1(NoteCollection.trane1_notes(), 0);
