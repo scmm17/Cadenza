@@ -10,6 +10,7 @@
 // Hydrasynth hydrasynth("F005");
 Hydrasynth hydrasynth("F006", 91);
 RolandS1 s1(2, 7, 64);
+RolandSH4d drumKit(10, "SH-4d SDrums", 70);
 
 // Chords
 Chord I_Low(NoteCollection.I_notes(), -1);
@@ -53,7 +54,7 @@ velocities3 @=> prog3.velocities;
  DrumMachine.Clap(),
 ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-DrumMachine drums(drumNotesCollection, 6, 1, probabilities4);
+DrumMachine drums(drumNotesCollection, 6, 1, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 
 [prog, prog2, prog3, drums] @=> Part parts1[];

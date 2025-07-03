@@ -16,6 +16,7 @@ RolandS1 s1(2, 10, 64);
 RolandSH4d sh4d_1(1, 3, 1, 99);
 RolandSH4d sh4d_2(2, "SH4d channel 2", 64);
 RolandSH4d sh4d_3(3, "SH4d channel 3", 64);
+RolandSH4d drumKit(10, "SH-4d SDrums", 70);
 
 // Chords
 Chord I_Low(NoteCollection.I_notes(), -1);
@@ -77,7 +78,7 @@ velocities6 @=> melody2.velocities;
  0,
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-DrumMachine drums(drumNotesCollection, 16, 1, probabilities4);
+DrumMachine drums(drumNotesCollection, 16, 1, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 
 [prog, prog2, prog4, melody, melody2, drums] @=> Part parts1[];
