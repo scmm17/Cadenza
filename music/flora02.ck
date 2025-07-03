@@ -8,14 +8,15 @@
 
 // Midi devices
 //Hydrasynth hydrasynth("F006");
-Hydrasynth hydrasynth("B016");
-RolandS1 s1(1, 1);
-RolandSH4d sh4d_1(1, 3, 11);
-RolandSH4d sh4d_2(2, "SH4d channel 2");
-RolandSH4d sh4d_3(3, "SH4d channel 3");
-RolandSH4d sh4d_4(4, "SH4d channel 4");
+Hydrasynth hydrasynth("B016", 24);
+RolandS1 s1(1, 1, 64);
+RolandSH4d sh4d_1(1, 3, 11, 127);
+RolandSH4d sh4d_2(2, "SH4d channel 2", 30);
+RolandSH4d sh4d_3(3, "SH4d channel 3", 49);
+RolandSH4d sh4d_4(4, "SH4d channel 4", 64);
 // V3GrandPiano marimba(1, "Harp");
-V3GrandPiano marimba(1, "G. Steel Slide (velo. 116-127 Slide)");
+V3GrandPiano marimba(1, "G. Steel Slide (velo. 116-127 Slide)", 75);
+V3GrandPiano bass(2, "Upright Jazz Bass Random", 64);
 // RolandSH4d sh4d_3(3, "SH4d channel 3");
 
 // Chords
@@ -70,14 +71,28 @@ true => melody1.random;
 // true => melody.legato;
 velocities4 @=> melody1.velocities;
 
-[0.0, .45, 1.0, 0.0] @=> float probabilities5[];
+[1.0, 1.0, 1.0, 1.0, 1.0, 1, 0.0, 1.0] @=> float probabilities5[];
+ChordProgression melody3(marimba, chordsL, progression, true, 32, 4, probabilities5);
+0.4 => melody3.mutateProbabilityRange;
+true => melody3.random;
+// true => melody.legato;
+velocities4 @=> melody3.velocities;
+
+[1.0, 1.0, 1.0, 1.0, 1.0, 1, 0.0, 1.0] @=> float probabilities7[];
+ChordProgression melody4(marimba, chordsH, progression, true, 64, 4, probabilities7);
+0.4 => melody4.mutateProbabilityRange;
+true => melody4.random;
+// true => melody.legato;
+velocities4 @=> melody4.velocities;
+
+[0.0, .45, 1.0, 0.0] @=> float probabilities6[];
 [125, 90, 110, 90] @=> int velocities5[];
-AleatoricMelody melody2(sh4d_3, IV_High, 16, 4, probabilities5);
+AleatoricMelody melody2(sh4d_3, IV_High, 16, 4, probabilities6);
 0.4 => melody2.mutateProbabilityRange;
 true => melody2.legato;
 velocities5 @=> melody2.velocities;
 
-[prog1, prog2, prog3, melody1, melody2] @=> Part parts1[];
+[prog1, prog2, prog3, melody1, melody2, melody3] @=> Part parts1[];
 // Fragment frag1(1, song1);
 Fragment frag1("frag1", 1, parts1);
 

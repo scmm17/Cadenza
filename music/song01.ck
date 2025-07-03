@@ -7,13 +7,13 @@
 60 => int root;           // Middle C as the root note
 
 // Midi devices
-//Hydrasynth hydrasynth("F006");
-Hydrasynth hydrasynth("B017");
-RolandS1 s1(2, 1);
-RolandSH4d sh4d_1(1, 3, 7);
-RolandSH4d sh4d_2(2, "SH4d channel 2");
-V3GrandPiano marimba(1, "Marimba & Xylophon");
-// RolandSH4d sh4d_3(3, "SH4d channel 3");
+//Hydrasynth hydrasynth("F006", 64);
+Hydrasynth hydrasynth("B017", 91);
+RolandS1 s1(2, 1, 64);
+RolandSH4d sh4d_1(1, 3, 7, 99);
+RolandSH4d sh4d_2(2, "SH4d channel 2", 64);
+V3GrandPiano marimba(1, "Marimba & Xylophon", 116);
+// RolandSH4d sh4d_3(3, "SH4d channel 3", 64);
 
 // Chords
 Chord I_Low(NoteCollection.I_notes(), -1);
@@ -74,7 +74,7 @@ velocities6 @=> melody2.velocities;
  0,
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10, "SH-4d SDrums");
+RolandSH4d drumKit(10, "SH-4d SDrums", 50);
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 

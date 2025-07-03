@@ -9,7 +9,7 @@ public class Patch
 
     MidiOut gma;
 
-    fun Patch()
+    fun Patch(int v)
     {   
         if (deviceName != "") 
         {
@@ -20,7 +20,12 @@ public class Patch
             setPreset();
             <<< "Patch Name: ", patchName >>>;
         }
-        127 => volume;
+        v => volume;
+        if (volume != -1) {
+            sendControllerChange(7, volume);
+        } else {
+            127 => volume;
+        }
         false => muted;
     }
 
@@ -138,14 +143,14 @@ public class Hydrasynth extends Patch
 {
     string presetName;
 
-    fun Hydrasynth(string preset)
+    fun Hydrasynth(string preset, int v)
     {
         "HYDRASYNTH EXPLORER" => deviceName;
         "Hydrasynth" => uiName;
         0 => midiChannel;
         preset => presetName;
         preset => patchName;
-        Patch();
+        Patch(v);
     }
 
     fun void setPreset()
@@ -166,7 +171,7 @@ public class RolandS1 extends Patch
     int program;
     int bank;
 
-    fun RolandS1(int b, int p)
+    fun RolandS1(int b, int p, int v)
     {
         "S-1 MIDI IN" => deviceName;
         "S-1" => uiName;
@@ -174,7 +179,7 @@ public class RolandS1 extends Patch
         p => program;
         b => bank;
         "S1 bank " + Std.itoa(bank) + " program: ", Std.itoa(program) => patchName;
-        Patch();
+        Patch(-1);
     }
 
     fun void setPreset()
@@ -191,7 +196,7 @@ public class RolandSH4d extends Patch
     int bank;
     int programChange;
 
-    fun RolandSH4d(int channel, int b, int p)
+    fun RolandSH4d(int channel, int b, int p, int v)
     {
         "SH-4d" => deviceName;
         "SH-4d" => uiName;
@@ -200,10 +205,10 @@ public class RolandSH4d extends Patch
         b => bank;
         true => programChange;
         "SH-4d bank " + Std.itoa(bank) + " program: ", Std.itoa(program) => patchName;
-        Patch();
+        Patch(v);
     }
 
-    fun RolandSH4d(int channel, string pName)
+    fun RolandSH4d(int channel, string pName, int v)
     {
         "SH-4d" => deviceName;
         "SH-4d" => uiName;
@@ -212,7 +217,7 @@ public class RolandSH4d extends Patch
         0 => bank;
         false => programChange;
         pName => patchName;
-        Patch();
+        Patch(v);
     }
 
     fun void setPreset()
@@ -230,14 +235,14 @@ public class BehringerRD6 extends Patch
 {
     string presetName;
 
-    fun BehringerRD6()
+    fun BehringerRD6(int v)
     {
         "RHYTHM DESIGNER RD-6" => deviceName;
         "RD-6" => uiName;
         0 => midiChannel;
         "RHYTHM DESIGNER RD-6" => patchName;
 
-        Patch();
+        Patch(v);
     }
 
     fun void setPreset()
@@ -1032,7 +1037,7 @@ public class V3GrandPiano extends Patch
     int programChange;
     V3Preset preset();
 
-    fun V3GrandPiano(int channel, int b, int p)
+    fun V3GrandPiano(int channel, int b, int p, int v)
     {
         "U2MIDI Pro" => deviceName;
         "V3" => uiName;
@@ -1040,10 +1045,10 @@ public class V3GrandPiano extends Patch
         p => program;
         b => bank;
         true => programChange;
-        Patch();
+        Patch(v);
     }
 
-    fun V3GrandPiano(int channel)
+    fun V3GrandPiano(int channel, int v)
     {
         "U2MIDI Pro" => deviceName;
         "V3" => uiName;
@@ -1051,10 +1056,10 @@ public class V3GrandPiano extends Patch
         0 => program;
         0 => bank;
         false => programChange;
-        Patch();
+        Patch(v);
     }
 
-    fun V3GrandPiano(int channel, string presetName)
+    fun V3GrandPiano(int channel, string presetName, int v)
     {
         V3PresetCollection collection;
         "U2MIDI Pro" => deviceName;
@@ -1065,7 +1070,7 @@ public class V3GrandPiano extends Patch
         preset.bank => bank;
         true => programChange;
         presetName => patchName;
-        Patch();
+        Patch(v);
     }
 
     fun void setPreset()

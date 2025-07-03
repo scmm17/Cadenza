@@ -40,6 +40,7 @@ public class Song
 
     // All the currently active shreds playing parts
     static Shred shreds[];
+    static Shred oldShreds[];
 
     LaunchControl @ launchControl;
     MidiMapper @ hydraEvents;
@@ -54,8 +55,8 @@ public class Song
         false => debug;
         false => shuttingDown;
         false => golden;
-        true => muteMode;
-        false => soloMode;
+        false => muteMode;
+        true => soloMode;
         Patch empty[0];
         empty @=> mutedPatches;
         initDevicesFromParts();
@@ -77,8 +78,8 @@ public class Song
         false => debug;
         false => shuttingDown;
         false => golden;
-        true => muteMode;
-        false => soloMode;
+        false => muteMode;
+        true => soloMode;
         Patch empty[0];
         empty @=> mutedPatches;
         initDevicesFromParts();
@@ -126,7 +127,7 @@ public class Song
     fun setNextPreset() 
     {
         presets.getNextPreset() @=> V3Preset preset;
-        V3GrandPiano v3(hydraEvents.outputChannel+1);
+        V3GrandPiano v3(hydraEvents.outputChannel+1, 64);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
         <<< getPresetDeclaration(preset), "" >>>;
@@ -135,7 +136,7 @@ public class Song
     fun setNextPresetCategory() 
     {
         presets.getNextCategory() @=> V3Preset preset;
-        V3GrandPiano v3(hydraEvents.outputChannel+1);
+        V3GrandPiano v3(hydraEvents.outputChannel+1, 64);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
         <<< "Category:", preset.category >>>;
@@ -145,7 +146,7 @@ public class Song
     fun setPreviousPreset() 
     {
         presets.getPreviousPreset() @=> V3Preset preset;
-        V3GrandPiano v3(hydraEvents.outputChannel+1);
+        V3GrandPiano v3(hydraEvents.outputChannel+1, 64);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
         <<< getPresetDeclaration(preset), "" >>>;
@@ -154,7 +155,7 @@ public class Song
     fun setPreviousPresetCategory() 
     {
         presets.getPreviousCategory() @=> V3Preset preset;
-        V3GrandPiano v3(hydraEvents.outputChannel+1);
+        V3GrandPiano v3(hydraEvents.outputChannel+1, 64);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
         <<< "Category:", preset.category >>>;
@@ -429,17 +430,28 @@ public class Song
         Shred myShreds[parts.cap()];
         myShreds @=> shreds;
         0 => int partIndex;
+        0 => int maxBars;
+        for(Part part : parts) 
+        {
+            if (!containsPart(part)) {
+                continue;
+            }
+            if (part.numberOfMeasures > maxBars) {
+                part.numberOfMeasures => maxBars;
+            }
+            if (part.totalDuration(this) > total) 
+            {
+                part.totalDuration(this) => total;
+            }
+        }
+        <<< "Max bars: ", maxBars >>>;
         for(Part part : parts) 
         {
             if (!containsPart(part)) {
                 partIndex++;
                 continue;
             }
-            if (part.totalDuration(this) > total) 
-            {
-                part.totalDuration(this) => total;
-            }
-            spork ~ playPart(part) @=> shreds[partIndex];
+            spork ~ playPart(part, maxBars) @=> shreds[partIndex];
             partIndex++;
         }
         if (forever) {
@@ -453,24 +465,25 @@ public class Song
                 me.exit();
             }
             // Shut off all current notes.
-            for(Patch device : devices) {
-                if (device != null) {
-                    device.sendAllNotesOff();
-                }
-            }
-            for(Shred shred : shreds) 
+            // <<< "Shutting off all notes" >>>;
+            // for(Patch device : devices) {
+            //     if (device != null) {
+            //         device.sendAllNotesOff();
+            //     }
+            // }
+            for(Shred shred : oldShreds) 
             {
                 if (shred != null) {
                     shred.exit();
                 }
             }
+            shreds @=> oldShreds;
         }
     }
 
-    fun void playPart(Part part)
+    fun void playPart(Part part, int maxBars)
     {
-        while (true)
-        {
+        for(0 => int i; i < maxBars/part.numberOfMeasures; i++) {
             part.play(this);
         }
     }
@@ -605,7 +618,7 @@ public class Part
         if (mutateProbabilityRange == 0.0) {
             return;
         }
-        <<< "Old probabilities: ", arrayToString(rhythmProbabilities) >>>;
+        <<< "probabilities: ", arrayToString(rhythmProbabilities) >>>;
         for(0 => int i; i < rhythmProbabilities.cap(); i++) {
             Math.random2f(-1.1, 1.1) => float r;
             (1.0 - Math.exp(-r*r)) * mutateProbabilityRange => float change;
@@ -622,7 +635,7 @@ public class Part
             rhythmProbabilities[i] => float oldProb;
             change => rhythmProbabilities[i];
         }
-        <<< "New probabilities: ", arrayToString(rhythmProbabilities) >>>;
+//        <<< "New probabilities: ", arrayToString(rhythmProbabilities) >>>;
     }
 
     fun string arrayToString(float a[])
@@ -884,7 +897,7 @@ public class LaunchControl
         }
 
         setActiveSelectionLED(0, 41, 41, 0x3c);
-        setActiveMutedLED(0, 73, 0x3c);
+        setActiveSoloLED(0, 73, 0, 0x3C);
         setLED(0, 109, 0x3c, song.muteMode);
         setLED(0, 110, 0x3c, song.soloMode);
 
@@ -978,7 +991,11 @@ public class LaunchControl
         for (baseNote => int i; i < baseNote + 8; i++) {
             i - baseNote => int j;
             if (song.soloMode && j >= 0 && j < song.devices.cap() && song.devices[j] != null) {
-                setLED(channel, i, color, !song.devices[j].muted);
+                song.devices[j] @=> Patch patch;
+                setLED(channel, i, color, !patch.muted);
+                if (patch.muted) {
+                    patch.sendAllNotesOff();
+                }
             } else {
                 setLED(channel, i, color, false);
             }
