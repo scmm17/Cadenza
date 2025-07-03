@@ -8,8 +8,8 @@
 
 // Midi devices
 // Hydrasynth hydrasynth("F005");
-Hydrasynth hydrasynth("F006");
-RolandS1 s1(2, 7);
+Hydrasynth hydrasynth("F006", 91);
+RolandS1 s1(2, 7, 64);
 
 // Chords
 Chord I_Low(NoteCollection.I_notes(), -1);
@@ -56,8 +56,10 @@ NoteCollection drumNotesCollection(drumNotes);
 DrumMachine drums(drumNotesCollection, 6, 1, probabilities4);
 velocities4 @=> drums.velocities;
 
-[prog, prog2, drums] @=> Part parts[];
-// [prog, prog2, melody, drums] @=> Part parts[];
-
-Song song(BPM, root, parts);
+[prog, prog2, prog3, drums] @=> Part parts1[];
+Fragment frag1("frag1", 1, parts1);
+FragmentTransition ft1(frag1, 1.0);
+[ft1] @=> frag1.nextFragments;
+Song song(BPM, root, frag1, parts1);
+song @=> frag1.owningSong;
 song.play();

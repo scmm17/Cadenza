@@ -53,12 +53,12 @@ velocities2 @=> prog2.velocities;
 0.3 => prog2.mutateProbabilityRange;
 
 // Chord Progression
-[1.0, 0.5, .25, .25] @=> float probabilities3[];
+[1.0, 0.5, .75, .25] @=> float probabilities3[];
 [127, 100, 100, 100] @=> int velocities3[];
-ChordProgression prog3(sh4d_2, chordsH, progression, true, 4, 4, probabilities3);
-0.4 => prog3.mutateProbabilityRange;
+ChordProgression prog3(sh4d_2, chordsL, progression, true, 4, 4, probabilities3);
+// 0.4 => prog3.mutateProbabilityRange;
 velocities3 @=> prog3.velocities;
-true => prog2.random;
+true => prog3.random;
 // true => prog2.legato;
 
 // Melody

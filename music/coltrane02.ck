@@ -8,9 +8,9 @@
 55 => int root;           // G below Middle C as the root note
 
 // Midi devices
-V3GrandPiano bass(1, "Marimba & Xylophon");
-V3GrandPiano piano(2, "MOSC (Notch filter 12)");
-V3GrandPiano ooh(3, "Theatre Organ Mighty Tower 4");
+V3GrandPiano bass(1, "Marimba & Xylophon", 116);
+V3GrandPiano piano(2, "MOSC (Notch filter 12)", 116);
+V3GrandPiano ooh(3, "Theatre Organ Mighty Tower 4", 116);
 
 // Chords
 Chord coltrane1(NoteCollection.coltrane1_notes(), 0);
@@ -87,7 +87,7 @@ coltraneVelocities2 @=> coltraneProgression2.velocities;
  0,
   ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10, "SH-4d SDrums");
+RolandSH4d drumKit(10, "SH-4d SDrums", 70);
 DrumMachine drums(drumNotesCollection, 16, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 

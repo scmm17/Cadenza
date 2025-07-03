@@ -8,9 +8,9 @@
 57 => int root;           // A below Middle C as the root note
 
 // Midi devices
-V3GrandPiano piano(1, "Marimba");
-V3GrandPiano bass(2, "Vibraphone");
-V3GrandPiano ooh(3, "Classic Choir Aah Filter");
+V3GrandPiano piano(1, "Marimba", 116);
+V3GrandPiano bass(2, "Vibraphone", 116);
+V3GrandPiano ooh(3, "Classic Choir Aah Filter", 116);
 
 // Chords
 Chord majorChord(NoteCollection.majorChordNotes(), -1);
@@ -95,7 +95,7 @@ true => prog4.random;
 
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10, "SH-4d SDrums");
+RolandSH4d drumKit(10, "SH-4d SDrums", 70);
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 

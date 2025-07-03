@@ -8,10 +8,10 @@
 55 => int root;           // G below Middle C as the root note
 
 // Midi devices
-RolandSH4d sh4d(1, 2, 8);
-V3GrandPiano piano(1, "Crystal");
-V3GrandPiano bass(2, "OBArp");
-V3GrandPiano ooh(3, "VP1");
+RolandSH4d sh4d(1, 2, 8, 99);
+V3GrandPiano piano(1, "Crystal", 116);
+V3GrandPiano bass(2, "OBArp", 116);
+V3GrandPiano ooh(3, "VP1", 116);
 
 // Chords
 Chord trane1(NoteCollection.trane1_notes(), 0);
@@ -84,7 +84,7 @@ coltraneVelocities2 @=> coltraneProgression2.velocities;
  0,
   ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10, "SH-4d SDrums");
+RolandSH4d drumKit(10, "SH-4d SDrums", 70);
 DrumMachine drums(drumNotesCollection, 16, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 

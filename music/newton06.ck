@@ -8,11 +8,11 @@
 
 // Midi devices
 //Hydrasynth hydrasynth("F006");
-Hydrasynth hydrasynth("A011");
-RolandS1 s1(2, 1);
-RolandSH4d sh4d_1(1, 3, 4);
-RolandSH4d sh4d_2(2, "SH4d channel 2");
-RolandSH4d sh4d_3(3, "SH4d channel 3");
+Hydrasynth hydrasynth("A011", 91);
+RolandS1 s1(2, 1, 64);
+RolandSH4d sh4d_1(1, 3, 4, 99);
+RolandSH4d sh4d_2(2, "SH4d channel 2", 64);
+RolandSH4d sh4d_3(3, "SH4d channel 3", 64);
 
 // Chords
 Chord I_Low(NoteCollection.I_notes(), -1);
@@ -70,13 +70,14 @@ velocities6 @=> melody2.velocities;
  0,
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10, "SH-4d SDrums");
+RolandSH4d drumKit(10, "SH-4d SDrums", 70);
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 
-[prog, prog2, prog4, melody, melody2, drums] @=> Part parts[];
-// [drums] @=> Part parts[];
-
-Song song(BPM, root, parts);
-true => song.forever;
+[prog, prog2, prog4, melody, melody2, drums] @=> Part parts1[];
+Fragment frag1("frag1", 1, parts1);
+FragmentTransition ft1(frag1, 1.0);
+[ft1] @=> frag1.nextFragments;
+Song song(BPM, root, frag1, parts1);
+song @=> frag1.owningSong;
 song.play();

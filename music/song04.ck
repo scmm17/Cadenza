@@ -9,10 +9,10 @@
 
 // Midi devices
 // Hydrasynth hydrasynth("D010");
-Hydrasynth hydrasynth("D035");
-RolandS1 s1(1, 13);
-RolandSH4d sh4d_1(1, 3, 10);
-RolandSH4d sh4d_2(2, "SH4d channel 2");
+Hydrasynth hydrasynth("D035", 91);
+RolandS1 s1(1, 13, 64);
+RolandSH4d sh4d_1(1, 3, 10, 99);
+RolandSH4d sh4d_2(2, "SH4d channel 2", 64);
 
 // Chords
 Chord majorChord(NoteCollection.majorChordNotes(), -1);
@@ -97,7 +97,7 @@ true => prog4.random;
 
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10, "SH-4d SDrums");
+RolandSH4d drumKit(10, "SH-4d SDrums", 50);
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 
