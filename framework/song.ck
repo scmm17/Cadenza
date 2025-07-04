@@ -124,38 +124,38 @@ public class Song
         return "V3GrandPiano instrument(" + Std.itoa(hydraEvents.outputChannel+1) + ", \"" + preset.name + "\");";
     }
 
-    fun setNextPreset() 
+    fun setNextPreset(int volume) 
     {
         presets.getNextPreset() @=> V3Preset preset;
-        V3GrandPiano v3(hydraEvents.outputChannel+1, 64);
+        V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
         <<< getPresetDeclaration(preset), "" >>>;
     }
 
-    fun setNextPresetCategory() 
+    fun setNextPresetCategory(int volume) 
     {
         presets.getNextCategory() @=> V3Preset preset;
-        V3GrandPiano v3(hydraEvents.outputChannel+1, 64);
+        V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
         <<< "Category:", preset.category >>>;
         <<< getPresetDeclaration(preset), "" >>>;
     }
 
-    fun setPreviousPreset() 
+    fun setPreviousPreset(int volume) 
     {
         presets.getPreviousPreset() @=> V3Preset preset;
-        V3GrandPiano v3(hydraEvents.outputChannel+1, 64);
+        V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
         <<< getPresetDeclaration(preset), "" >>>;
     }
 
-    fun setPreviousPresetCategory() 
+    fun setPreviousPresetCategory(int volume) 
     {
         presets.getPreviousCategory() @=> V3Preset preset;
-        V3GrandPiano v3(hydraEvents.outputChannel+1, 64);
+        V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
         <<< "Category:", preset.category >>>;
@@ -196,19 +196,19 @@ public class Song
                     shutdown();
                 }
                 if ("n".charAt(0) == key) {
-                    setNextPreset();
+                    setNextPreset(currentDevice.volume);
                     launchControl.printDevices();
                 }
                 if ("m".charAt(0) == key) {
-                    setPreviousPreset();
+                    setPreviousPreset(currentDevice.volume);
                     launchControl.printDevices();
                 }
                 if ("N".charAt(0) == key) {
-                    setNextPresetCategory();
+                    setNextPresetCategory(currentDevice.volume);
                     launchControl.printDevices();
                 }
                 if ("M".charAt(0) == key) {
-                    setPreviousPresetCategory();
+                    setPreviousPresetCategory(currentDevice.volume);
                     launchControl.printDevices();
                 }
                 if ("p".charAt(0) == key) {
@@ -1036,22 +1036,22 @@ public class LaunchControl
             }
         }
         if (note == 104) {
-            song.setPreviousPresetCategory();
+            song.setPreviousPresetCategory(song.currentDevice.volume);
             song.launchControl.printDevices();
             return true;
         }
         if (note == 105) {
-            song.setNextPresetCategory();
+            song.setNextPresetCategory(song.currentDevice.volume);
             song.launchControl.printDevices();
             return true;
         }
         if (note == 106) {
-            song.setPreviousPreset();
+            song.setPreviousPreset(song.currentDevice.volume);
             song.launchControl.printDevices();
             return true;
         }
         if (note == 107) {
-            song.setNextPreset();
+            song.setNextPreset(song.currentDevice.volume);
             song.launchControl.printDevices();
             return true;
         }

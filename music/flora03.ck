@@ -80,7 +80,7 @@ true => melody3.random;
 velocities4 @=> melody3.velocities;
 
 [1.0, 1.0, 1.0, 1.0, 1.0, 1, 0.0, 1.0] @=> float probabilities7[];
-ChordProgression melody4(marimba2, chordsH, progression, true, 32, 4, probabilities7);
+ChordProgression melody4(marimba, chordsH, progression, true, 32, 4, probabilities7);
 0.4 => melody4.mutateProbabilityRange;
 true => melody4.random;
 // true => melody.legato;
@@ -100,7 +100,7 @@ AleatoricMelody melody2(sh4d_3, IV_High, 16, 4, probabilities6);
 true => melody2.legato;
 velocities5 @=> melody2.velocities;
 
-[prog1, prog2, prog3, melody1, melody2, melody3] @=> Part parts1[];
+[prog1, prog2, prog3, melody1, melody2, melody3, melody4, melody5] @=> Part parts1[];
 // Fragment frag1(1, song1);
 Fragment frag1("frag1", 1, parts1);
 
