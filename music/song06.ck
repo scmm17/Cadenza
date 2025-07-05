@@ -54,6 +54,7 @@ velocities @=> melody.velocities;
 ChordProgression prog4(piano, chords2, progression, true, 32, 4, probabilities);
 velocities @=> prog4.velocities;
 true => prog4.random;
+0.3 => prog4.mutateProbabilityRange;
 
 
 // Drums
@@ -95,7 +96,7 @@ true => prog4.random;
 
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10, "SH-4d SDrums", 70);
+RolandSH4d drumKit(10, "SH-4d SDrums", 38);
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 

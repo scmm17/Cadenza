@@ -195,22 +195,6 @@ public class Song
                 if ("q".charAt(0) == key) {
                     shutdown();
                 }
-                if ("n".charAt(0) == key) {
-                    setNextPreset(currentDevice.volume);
-                    launchControl.printDevices();
-                }
-                if ("m".charAt(0) == key) {
-                    setPreviousPreset(currentDevice.volume);
-                    launchControl.printDevices();
-                }
-                if ("N".charAt(0) == key) {
-                    setNextPresetCategory(currentDevice.volume);
-                    launchControl.printDevices();
-                }
-                if ("M".charAt(0) == key) {
-                    setPreviousPresetCategory(currentDevice.volume);
-                    launchControl.printDevices();
-                }
                 if ("p".charAt(0) == key) {
                     !pause => pause;
                     <<< "Pause: ", pause >>>;
