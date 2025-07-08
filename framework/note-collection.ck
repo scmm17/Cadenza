@@ -46,6 +46,13 @@ public class NoteCollection
         return chord;
     }
 
+    fun static NoteCollection V_notes()
+    {
+        [-5, 2, 7, 11, 14, 19] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
     fun static NoteCollection bVII_notes()
     {
         [-2,5,10,14,17,22] @=> int notes[];
@@ -177,6 +184,62 @@ public class NoteCollection
         return chord;
     }
 
+    fun static NoteCollection circle_I_notes()
+    {
+        [-12, -5, 0, 4] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection circle_IV_notes()
+    {
+        [-18, -3, 0, 5] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection circle_viio_notes()
+    {
+        [-13, -7, -1, 2] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection circle_iii_notes()
+    {
+        [-19, -5, -1, 4] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection circle_vi_notes()
+    {
+        [-15, -8, -3, 0] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection circle_ii_notes()
+    {
+        [-21, -7, -3, 2] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection circle_V_notes()
+    {
+        [-17, -10, -5, -1] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection circle_I2_notes()
+    {
+        [-22, -8, -5, 0] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+    
     fun NoteCollection(int theNotes[])
     {
         theNotes @=> notes;
