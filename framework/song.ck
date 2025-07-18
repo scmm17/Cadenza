@@ -834,8 +834,8 @@ public class LaunchControl
         FileIO fout;
         // open for write (default mode: ASCII)
         fout.open( filename, FileIO.WRITE );
-        fout.write("| Status | Device | Patch | Volume |\n");
-        fout.write("| :---: | :---: | --- | :---: |\n");
+        fout.write("| Status | Device | Synth | Patch | Volume |\n");
+        fout.write("| :---: | :---: | :---: | :---: | :---: |\n");
 
         0 => int deviceNum;
         for(Patch patch : song.devices) {
@@ -853,8 +853,8 @@ public class LaunchControl
                     " ❌" => muteString;
                 }
                 "_" + patch.patchName + "_" => string name;
-                patch.uiName + ": " => string n;
-                "| " + prefix + pad + muteString + " | " + Std.itoa(deviceNum + 1) + " | " + n + name +  " | " + patch.volume + " |\n" => string line;
+                patch.uiName => string ui;
+                "| " + prefix + pad + muteString + " | " + Std.itoa(deviceNum + 1) + " | " + ui + " | " + name + " | " + patch.volume + " |\n" => string line;
                 fout.write(line);
             }
             deviceNum++;
