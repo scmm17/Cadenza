@@ -852,7 +852,7 @@ public class LaunchControl
                 if (patch.muted) {
                     " ❌" => muteString;
                 }
-                "_" + patch.patchName + "_" => string name;
+                patch.patchName => string name;
                 patch.uiName => string ui;
                 "| " + prefix + pad + muteString + " | " + Std.itoa(deviceNum + 1) + " | " + ui + " | " + name + " | " + patch.volume + " |\n" => string line;
                 fout.write(line);
