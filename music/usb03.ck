@@ -16,7 +16,7 @@
 RolandS1 s1(2, 10, 64);
 //RolandS1 s1(2, 9);
 RolandSH4d sh4d_1(1, 3, 5, 114);
-V3GrandPiano piano(1, "Vibraphone 2", 68);
+V3GrandPiano piano(1, "Full Strings Pizzicato 2", 127);
 RolandSH4d sh4d_2(2, "channel 2", 64);
 RolandSH4d sh4d_3(3, "channel 3", 70);
 

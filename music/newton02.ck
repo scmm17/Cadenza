@@ -61,9 +61,12 @@ velocities3 @=> prog3.velocities;
 // Melody
 [1.0, 0.25, 1.0, 0.35] @=> float probabilities[];
 [120, 90, 90, 90] @=> int velocities5[];
-AleatoricMelody melody(sh4d_3, majorChord, 16, 4, probabilities);
+// AleatoricMelody melody(sh4d_3, majorChord, 16, 4, probabilities);
+ChordProgression melody(sh4d_3, chordsL, progression, true, 16, 4, probabilities);
 // true => melody.legato;
 velocities5 @=> melody.velocities;
+true => melody.random;
+0.4 => melody.mutateProbabilityRange;
 
 [1.0, 1.0, 0.0, 0.25] @=> float probabilities5[];
 [80, 80, 110, 120] @=> int velocities6[];

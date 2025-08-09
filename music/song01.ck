@@ -12,7 +12,7 @@ Hydrasynth hydrasynth("B017", 115);
 RolandS1 s1(2, 1, 64);
 RolandSH4d sh4d_1(1, 3, 7, 61);
 RolandSH4d sh4d_2(2, "SH4d channel 2", 69);
-V3GrandPiano marimba(1, "Marimba & Xylophon", 90);
+V3GrandPiano marimba(1, "Marimba & Xylophon", 127);
 // RolandSH4d sh4d_3(3, "SH4d channel 3", 64);
 
 // Chords
@@ -55,7 +55,7 @@ velocities5 @=> melody.velocities;
 
 [1.0, .25, 1.0, 0.0] @=> float probabilities5[];
 [125, 90, 110, 90] @=> int velocities6[];
-AleatoricMelody melody2(hydrasynth, IV_Low, 37, 2, probabilities5);
+AleatoricMelody melody2(hydrasynth, IV_Low, 32, 2, probabilities5);
 0.4 => melody2.mutateProbabilityRange;
 // true => melody.legato;
 velocities6 @=> melody2.velocities;
