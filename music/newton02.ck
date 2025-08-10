@@ -16,7 +16,7 @@ RolandS1 s1(2, 10, 64);
 RolandSH4d sh4d_1(1, 3, 1, 99);
 RolandSH4d sh4d_2(2, "SH4d channel 2", 64);
 RolandSH4d sh4d_3(3, "SH4d channel 3", 64);
-RolandSH4d drumKit(10, "SH-4d SDrums", 70);
+RolandSH4d drumKit(10, "Drums", 70);
 
 // Chords
 Chord I_Low(NoteCollection.I_notes(), -1);
@@ -95,6 +95,6 @@ velocities4 @=> drums.velocities;
 Fragment frag1("frag1", 1, parts1);
 FragmentTransition ft1(frag1, 1.0);
 [ft1] @=> frag1.nextFragments;
-Song song(BPM, root, frag1, parts1);
+Song song("newton02", BPM, root, frag1, parts1);
 song @=> frag1.owningSong;
 song.play();

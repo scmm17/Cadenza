@@ -23,13 +23,13 @@ DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, instrument);
 velocities3 @=> drums.velocities;
 
 [drums] @=> Part parts1[];
-Song song1(BPM, root, parts1);
+Song song1("midi-keys", BPM, root, parts1);
 
 // Fragment frag1(1, song1);
 Fragment frag1(1, song1);
 FragmentTransition ft1(frag1, 1.0);
 [ft1] @=> frag1.nextFragments;
 
-Song song(BPM, root, frag1);
+Song song("midi-keys", BPM, root, frag1);
 
 song.play();

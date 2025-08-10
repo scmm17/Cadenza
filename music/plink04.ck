@@ -85,5 +85,5 @@ velocities3 @=> drums.velocities;
 [prog, prog2,  /* melody, */ drums] @=> Part parts[];
 // [prog, prog2, melody, drums] @=> Part parts[];
 
-Song song(BPM, root, parts);
+Song song("plink04", BPM, root, parts);
 song.play();

@@ -1,10 +1,22 @@
 public class Patch 
 {
+    // Name of the MIDI device to connect to
     string deviceName;
+    // MIDI channel to use (0-based)
     int midiChannel;
+    // Name of the patch (preset) for display and reference
     string patchName;
+    // Volume level (0-127, -1 for default)
     int volume;
+    // Filter cutoff value (0-127, -1 for unused)
+    int filterCutoff;
+    // Filter resonance value (0-127, -1 for unused)
+    int filterResonance;
+    // Stereo pan position (0=left, 64=center, 127=right, -1 for unused)
+    int pan;
+    // Name to display in the UI
     string uiName;
+    // Muted state (0 = not muted, 1 = muted, or use as boolean)
     int muted;
 
     MidiOut gma;
@@ -17,19 +29,38 @@ public class Patch
             if (!status) {
                 <<< "Failed to open", gma.name() >>>;
             }
-            setPreset();
             <<< "Patch Name: ", patchName >>>;
         }
         v => volume;
-        if (volume != -1) {
-            sendControllerChange(7, volume);
-        } else {
+        if (volume == -1) {
             127 => volume;
         }
+        -1 => filterCutoff;
+        -1 => filterResonance;
+        64 => pan;
         false => muted;
+        updateControllers();
     }
 
-    fun void setPreset() {
+    fun void setPreset()
+    {
+    }
+
+    fun void updateControllers()
+    {
+        if (filterCutoff != -1) {
+            sendControllerChange(74, filterCutoff);
+        }
+        if (filterResonance != -1) {
+            sendControllerChange(71, filterResonance);
+        }
+        if (pan != -1) {
+            sendControllerChange(10, pan);
+        }
+        if (volume != -1) {
+            sendControllerChange(7, volume);
+        }
+        setPreset();
     }
 
     fun void sendControllerChange(int controller, int value)
@@ -178,7 +209,7 @@ public class RolandS1 extends Patch
         2 => midiChannel;
         p => program;
         b => bank;
-        "S1 bank " + Std.itoa(bank) + " program: ", Std.itoa(program) => patchName;
+        "Bank: " + Std.itoa(bank) + " Program: " + Std.itoa(program) => patchName;
         Patch(-1);
     }
 
@@ -204,7 +235,7 @@ public class RolandSH4d extends Patch
         p => program;
         b => bank;
         true => programChange;
-        "SH-4d bank " + Std.itoa(bank) + " program: ", Std.itoa(program) => patchName;
+        "Bank: " + Std.itoa(bank) + " Program: " + Std.itoa(program) => patchName;
         Patch(v);
     }
 

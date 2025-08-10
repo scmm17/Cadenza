@@ -176,6 +176,57 @@ fun void testEmptyArray()
     assertEqualInt("empty array size", back.cap(), 0);
 }
 
+fun void testMapSetters()
+{
+    YamlNode root("root");
+    YamlNode empty[0];
+    root.SetMap(empty);
+
+    root.SetString("title", "hello");
+    root.SetInt("count", 42);
+    root.SetFloat("ratio", 2.5);
+
+    // overwrite
+    root.SetString("title", "world");
+    root.SetInt("count", 7);
+    root.SetFloat("ratio", 3.25);
+
+    assertEqualInt("map setters: type", root.GetType(), YamlNode.TYPE_MAP());
+    root.GetMap() @=> YamlNode kids[];
+    -1 => int it; -1 => int ic; -1 => int ir;
+    for (0 => int i; i < kids.cap(); i++)
+    {
+        if (kids[i].GetName() == "title") { i => it; }
+        else if (kids[i].GetName() == "count") { i => ic; }
+        else if (kids[i].GetName() == "ratio") { i => ir; }
+    }
+    assertEqualInt("map has title", it >= 0, 1);
+    assertEqualInt("map has count", ic >= 0, 1);
+    assertEqualInt("map has ratio", ir >= 0, 1);
+    if (it >= 0) { assertEqualInt("title type", kids[it].GetType(), YamlNode.TYPE_STRING()); assertEqualString("title value", kids[it].GetString(), "world"); }
+    if (ic >= 0) { assertEqualInt("count type", kids[ic].GetType(), YamlNode.TYPE_INT()); assertEqualInt("count value", kids[ic].GetInt(), 7); }
+    if (ir >= 0) { assertEqualInt("ratio type", kids[ir].GetType(), YamlNode.TYPE_FLOAT()); assertEqualFloat("ratio value", kids[ir].GetFloat(), 3.25); }
+
+    string f; "test-map-setters.yaml" => f;
+    root.WriteFile(f);
+    parseYamlWithFallback("test/" + f, f) @=> YamlNode again;
+    assertEqualInt("map rt type", again.GetType(), YamlNode.TYPE_MAP());
+    again.GetMap() @=> YamlNode againKids[];
+    -1 => it; -1 => ic; -1 => ir;
+    for (0 => int i; i < againKids.cap(); i++)
+    {
+        if (againKids[i].GetName() == "title") { i => it; }
+        else if (againKids[i].GetName() == "count") { i => ic; }
+        else if (againKids[i].GetName() == "ratio") { i => ir; }
+    }
+    assertEqualInt("map rt has title", it >= 0, 1);
+    assertEqualInt("map rt has count", ic >= 0, 1);
+    assertEqualInt("map rt has ratio", ir >= 0, 1);
+    if (it >= 0) { assertEqualString("rt title value", againKids[it].GetString(), "world"); }
+    if (ic >= 0) { assertEqualInt("rt count value", againKids[ic].GetInt(), 7); }
+    if (ir >= 0) { assertEqualFloat("rt ratio value", againKids[ir].GetFloat(), 3.25); }
+}
+
 // Reference node type removed: drop ref tests
 
 // Reference node type removed: drop ref tests
@@ -281,6 +332,7 @@ fun void main()
     testScalarFloat();
     testArrayScalars();
     testEmptyArray();
+    testMapSetters();
     // reference tests removed
     testReadWriteNesting();
     testReadWriteNesting2();

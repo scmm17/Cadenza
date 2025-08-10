@@ -130,7 +130,7 @@ FragmentTransition ft7_2(frag2, 0.25);
 [ft7_1, ft7_2] @=> frag6.nextFragments;
 [ft1] @=> frag7.nextFragments;
 
-Song song(BPM, root, frag1, allParts);
+Song song("song05", BPM, root, frag1, allParts);
 song @=> frag1.owningSong;
 song @=> frag2.owningSong;
 song @=> frag3.owningSong;

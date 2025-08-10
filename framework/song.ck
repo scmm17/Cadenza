@@ -5,6 +5,8 @@
 
 public class Song 
 {
+    string name;
+
     // Tempo in beats-per-minute
     float BPM;
     // Duration of a single beat. Set from BPM;
@@ -44,9 +46,10 @@ public class Song
 
     LaunchControl @ launchControl;
     MidiMapper @ hydraEvents;
-    
-    fun Song(float bpm, int root, Part allParts[])
+
+    fun Song(string name, float bpm, int root, Part allParts[])
     {
+        name => this.name;
         setBPM(bpm);
         root => rootNote;
         allParts @=> parts;
@@ -68,8 +71,9 @@ public class Song
         }
     }
 
-    fun Song(float bpm, int root, Fragment startFrag, Part allParts[])
+    fun Song(string name, float bpm, int root, Fragment startFrag, Part allParts[])
     {
+        name => this.name;
         setBPM(bpm);
         root => rootNote;
         allParts @=> parts;
@@ -834,8 +838,8 @@ public class LaunchControl
         FileIO fout;
         // open for write (default mode: ASCII)
         fout.open( filename, FileIO.WRITE );
-        fout.write("| Status | Device | Synth | Patch | Volume |\n");
-        fout.write("| :---: | :---: | :---: | :---: | :---: |\n");
+        fout.write("| Status | Device | Synth | Channel | Patch | Vol | Cutoff | Res | Pan |\n");
+        fout.write("| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n");
 
         0 => int deviceNum;
         for(Patch patch : song.devices) {
@@ -854,7 +858,7 @@ public class LaunchControl
                 }
                 patch.patchName => string name;
                 patch.uiName => string ui;
-                "| " + prefix + pad + muteString + " | " + Std.itoa(deviceNum + 1) + " | " + ui + " | " + name + " | " + patch.volume + " |\n" => string line;
+                "| " + prefix + pad + muteString + " | " + Std.itoa(deviceNum + 1) + " | " + ui + " | " + Std.itoa(patch.midiChannel + 1) + " | " + name + " | " + patch.volume + " | " + patch.filterCutoff + " | " + patch.filterResonance + " | " + patch.pan + " |\n" => string line;
                 fout.write(line);
             }
             deviceNum++;
@@ -928,6 +932,15 @@ public class LaunchControl
                         patch.sendControllerChange(cc.mapToController, value);
                         if (cc.mapToController == 7) {
                             value => patch.volume;
+                            spork ~ printDevices();
+                        } else if (cc.mapToController == 74) {
+                            value => patch.filterCutoff;
+                            spork ~ printDevices();
+                        } else if (cc.mapToController == 71) {
+                            value => patch.filterResonance;
+                            spork ~ printDevices();
+                        } else if (cc.mapToController == 10) {
+                            value => patch.pan;
                             spork ~ printDevices();
                         }
                         return true;

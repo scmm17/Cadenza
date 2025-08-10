@@ -136,6 +136,105 @@ public class YamlNode
         return type;
     }
 
+    // ---------------- map utilities ----------------
+    // Set or add a string property on a map node
+    fun void SetInt(string key, int value)
+    {
+        if (type != TYPE_MAP())
+        {
+            <<< "Warning: MapSetInt called on non-map YamlNode (type=" + type + ")" >>>;
+            return;
+        }
+        // find existing child with name
+        -1 => int foundIdx;
+        for (0 => int i; i < arrayValue.cap(); i++)
+        {
+            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
+        }
+        if (foundIdx >= 0)
+        {
+            arrayValue[foundIdx].SetInt(value);
+            return;
+        }
+        // create a new child
+        YamlNode child(key);
+        child.SetInt(value);
+        arrayValue << child;
+    }
+
+    fun void SetString(string key, string value)
+    {
+        if (type != TYPE_MAP())
+        {
+            <<< "Warning: SetString(key, value) called on non-map YamlNode (type=" + type + ")" >>>;
+            return;
+        }
+        // find existing child with name
+        -1 => int foundIdx;
+        for (0 => int i; i < arrayValue.cap(); i++)
+        {
+            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
+        }
+        if (foundIdx >= 0)
+        {
+            arrayValue[foundIdx].SetString(value);
+            return;
+        }
+        // create a new child
+        YamlNode child(key);
+        child.SetString(value);
+        arrayValue << child;
+    }
+
+    fun void SetFloat(string key, float value)
+    {
+        if (type != TYPE_MAP())
+        {
+            <<< "Warning: MapSetFloat called on non-map YamlNode (type=" + type + ")" >>>;
+            return;
+        }
+        // find existing child with name
+        -1 => int foundIdx;
+        for (0 => int i; i < arrayValue.cap(); i++)
+        {
+            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
+        }
+        if (foundIdx >= 0)
+        {
+            arrayValue[foundIdx].SetFloat(value);
+            return;
+        }
+        // create a new child
+        YamlNode child(key);
+        child.SetFloat(value);
+        arrayValue << child;
+    }
+
+    fun YamlNode@ SetMap(string key)
+    {
+        if (type != TYPE_MAP())
+        {
+            <<< "Warning: SetMap called on non-map YamlNode (type=" + type + ")" >>>;
+            return null;
+        }
+        // find existing child with name
+        -1 => int foundIdx;
+        for (0 => int i; i < arrayValue.cap(); i++)
+        {
+            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
+        }
+        if (foundIdx >= 0)
+        {
+            return arrayValue[foundIdx];
+        }
+        // create a new child
+        YamlNode child(key);
+        YamlNode none[0];
+        child.SetMap(none);
+        arrayValue << child;
+        return arrayValue[arrayValue.cap() - 1];
+    }
+
     // ---------------- small string helpers ----------------
     fun static string subToEnd(string s, int start)
     {

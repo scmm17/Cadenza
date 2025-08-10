@@ -129,6 +129,6 @@ velocities4 @=> drums.velocities;
 Fragment frag1("frag1", 1, parts1);
 FragmentTransition ft1(frag1, 1.0);
 [ft1] @=> frag1.nextFragments;
-Song song(BPM, root, frag1, parts1);
+Song song("usb03", BPM, root, frag1, parts1);
 song @=> frag1.owningSong;
 song.play();

@@ -87,7 +87,7 @@ coltraneVelocities2 @=> coltraneProgression2.velocities;
  0,
   ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10, "SH-4d SDrums", 70);
+RolandSH4d drumKit(10, "Drums", 70);
 DrumMachine drums(drumNotesCollection, 16, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 
@@ -99,7 +99,7 @@ FragmentTransition ft1(frag1, 1.0);
 
 [ft1] @=> frag1.nextFragments;
 
-Song song(BPM, root, frag1, parts1);
+Song song("coltrane02", BPM, root, frag1, parts1);
 song @=> frag1.owningSong;
 
 song.play();

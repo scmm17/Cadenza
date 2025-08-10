@@ -82,5 +82,5 @@ velocities3 @=> drums.velocities;
 // [melody] @=> Part parts[];
 // [drums] @=> Part parts[];
 
-Song song(BPM, root, parts);
+Song song("first-song", BPM, root, parts);
 song.play();

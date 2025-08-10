@@ -70,7 +70,7 @@ velocities6 @=> melody2.velocities;
  0,
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10, "SH-4d SDrums", 70);
+RolandSH4d drumKit(10, "Drums", 70);
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 
@@ -78,6 +78,6 @@ velocities4 @=> drums.velocities;
 Fragment frag1("frag1", 1, parts1);
 FragmentTransition ft1(frag1, 1.0);
 [ft1] @=> frag1.nextFragments;
-Song song(BPM, root, frag1, parts1);
+Song song("newton06", BPM, root, frag1, parts1);
 song @=> frag1.owningSong;
 song.play();

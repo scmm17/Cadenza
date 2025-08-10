@@ -11,7 +11,7 @@
 Hydrasynth hydrasynth("B017", 115);
 RolandS1 s1(2, 1, 64);
 RolandSH4d sh4d_1(1, 3, 7, 61);
-RolandSH4d sh4d_2(2, "SH4d channel 2", 69);
+RolandSH4d sh4d_2(2, "Low Chords", 69);
 V3GrandPiano marimba(1, "Marimba & Xylophon", 127);
 // RolandSH4d sh4d_3(3, "SH4d channel 3", 64);
 
@@ -74,7 +74,7 @@ velocities6 @=> melody2.velocities;
  0,
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10, "SH-4d SDrums", 37);
+RolandSH4d drumKit(10, "Drums", 37);
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 
@@ -112,7 +112,7 @@ FragmentTransition ft6(frag6, 1.0);
 [ft6] @=> frag5.nextFragments;
 [ft1] @=> frag6.nextFragments;
 
-Song song(BPM, root, frag1, parts6);
+Song song("song01", BPM, root, frag1, parts6);
 song @=> frag1.owningSong;
 song @=> frag2.owningSong;
 song @=> frag3.owningSong;

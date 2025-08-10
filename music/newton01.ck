@@ -10,7 +10,7 @@
 // Hydrasynth hydrasynth("F005");
 Hydrasynth hydrasynth("F006", 91);
 RolandS1 s1(2, 7, 64);
-RolandSH4d drumKit(10, "SH-4d SDrums", 70);
+RolandSH4d drumKit(10, "Drums", 70);
 
 // Chords
 Chord I_Low(NoteCollection.I_notes(), -1);
@@ -61,6 +61,6 @@ velocities4 @=> drums.velocities;
 Fragment frag1("frag1", 1, parts1);
 FragmentTransition ft1(frag1, 1.0);
 [ft1] @=> frag1.nextFragments;
-Song song(BPM, root, frag1, parts1);
+Song song("newton01", BPM, root, frag1, parts1);
 song @=> frag1.owningSong;
 song.play();

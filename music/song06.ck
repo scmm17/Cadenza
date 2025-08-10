@@ -96,7 +96,7 @@ true => prog4.random;
 
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-RolandSH4d drumKit(10, "SH-4d SDrums", 38);
+RolandSH4d drumKit(10, "Drums", 38);
 DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 
@@ -146,7 +146,7 @@ FragmentTransition ft7_2(frag2, 0.25);
 [ft7_1, ft7_2] @=> frag6.nextFragments;
 [ft1] @=> frag7.nextFragments;
 
-Song song(BPM, root, frag1, parts6);
+Song song("song06", BPM, root, frag1, parts6);
 song @=> frag1.owningSong;
 song @=> frag2.owningSong;
 song @=> frag3.owningSong;
