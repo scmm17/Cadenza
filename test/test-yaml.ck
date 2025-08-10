@@ -29,6 +29,66 @@ fun void assertEqualString(string name, string a, string b)
     }
 }
 
+// Deep equality check for YamlNode trees
+fun int nodesDeepEqual(YamlNode a, YamlNode b)
+{
+    a.GetType() => int ta;
+    b.GetType() => int tb;
+    if (ta != tb) return 0;
+    if (a.GetName() != b.GetName()) return 0;
+
+    if (ta == 0) { // string
+        return a.GetString() == b.GetString();
+    }
+    else if (ta == 1) { // float
+        a.GetFloat() => float af;
+        b.GetFloat() => float bf;
+        (af - bf) => float d;
+        if (d < 0) { -d => d; }
+        return d <= 1e-6;
+    }
+    else if (ta == 2) { // int
+        return a.GetInt() == b.GetInt();
+    }
+    else if (ta == 3) { // array
+        a.GetArray() @=> YamlNode aa[];
+        b.GetArray() @=> YamlNode bb[];
+        if (aa.cap() != bb.cap()) return 0;
+        for (0 => int i; i < aa.cap(); i++) {
+            if (nodesDeepEqual(aa[i], bb[i]) == 0) return 0;
+        }
+        return 1;
+    }
+    else if (ta == 5) { // map
+        a.GetMap() @=> YamlNode am[];
+        b.GetMap() @=> YamlNode bm[];
+        if (am.cap() != bm.cap()) return 0;
+        for (0 => int i; i < am.cap(); i++) {
+            b.GetValue(am[i].GetName()) @=> YamlNode other;
+            if (nodesDeepEqual(am[i], other) == 0) return 0;
+        }
+        return 1;
+    }
+    else if (ta == 4) { // ref
+        a.GetNode() @=> YamlNode ar;
+        b.GetNode() @=> YamlNode br;
+        if (ar == null && br == null) return 1;
+        if (ar == null || br == null) return 0;
+        return nodesDeepEqual(ar, br);
+    }
+    return 0;
+}
+
+fun void assertNodesEqual(string name, YamlNode a, YamlNode b)
+{
+    nodesDeepEqual(a, b) => int ok;
+    if (ok == 1) {
+        <<< "PASS", name >>>;
+    } else {
+        <<< "ASSERT FAIL (", name, "): nodes not equal" >>>;
+    }
+}
+
 fun void testScalarString()
 {
     YamlNode n("greeting");
@@ -188,13 +248,13 @@ fun void testNestedRefToArray()
 fun void testReadWriteNesting()
 {
     // Read existing YAML
-    YamlNode.ParseFile("test-yaml-nesting.yaml") @=> YamlNode root;
+    YamlNode.ParseFile("test/test-yaml-nesting.yaml") @=> YamlNode root;
     // Expect a map named level1
     assertEqualString("nesting root name", root.GetName(), "level1");
     assertEqualInt("nesting root type(map)", root.GetType(), 5);
     root.GetMap() @=> YamlNode kids[];
     // Write to a new file
-    string outFile; "test-yaml-nesting-out.yaml" => outFile;
+    string outFile; "test/test-yaml-nesting-out.yaml" => outFile;
     root.WriteFile(outFile);
     // Read back the written file
     YamlNode.ParseFile(outFile) @=> YamlNode again;
@@ -219,10 +279,11 @@ fun void testReadWriteNesting()
     if (ic >= 0) {
         assertEqualInt("c type", againKids[ic].GetType(), 3);
         againKids[ic].GetArray() @=> YamlNode arr[];
-        assertEqualInt("c len", arr.cap(), 3);
+        assertEqualInt("c len", arr.cap(), 4);
         assertEqualInt("c[0]", arr[0].GetInt(), 3);
         assertEqualInt("c[1]", arr[1].GetInt(), 4);
         assertEqualInt("c[2]", arr[2].GetInt(), 5);
+        assertEqualInt("c[3]", arr[3].GetInt(), 6);
     }
     if (id >= 0) {
         assertEqualInt("d type", againKids[id].GetType(), 5);
@@ -259,6 +320,16 @@ fun void testReadWriteNesting()
     }
 }
 
+// Round-trip test for multi-sibling top-level file
+fun void testReadWriteNesting2()
+{
+    YamlNode.ParseFile("test/test-yaml-nesting-2.yaml") @=> YamlNode root;
+    string outFile; "test/test-yaml-nesting-2-out.yaml" => outFile;
+    root.WriteFile(outFile);
+    YamlNode.ParseFile(outFile) @=> YamlNode again;
+    assertNodesEqual("nesting-2 roundtrip", root, again);
+}
+
 fun void main()
 {
     testScalarString();
@@ -271,6 +342,7 @@ fun void main()
     testNestedRefToScalar();
     testNestedRefToArray();
     testReadWriteNesting();
+    testReadWriteNesting2();
 }
 
 main();

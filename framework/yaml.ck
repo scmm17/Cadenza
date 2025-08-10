@@ -148,7 +148,7 @@ public class YamlNode
     {
         if (start < 0) 0 => start;
         if (len < 0) 0 => len;
-        if (start > s.length()) return "";
+        if (start >= s.length()) return "";
         if (start + len > s.length()) (s.length() - start) => len;
         return s.substring(start, len);
     }
@@ -251,11 +251,15 @@ public class YamlNode
         {
             YamlNode items[0];
             node.GetMap() @=> items;
-            writeIndent(f, indent);
-            if (nm != "") { f.write(nm + ":\n"); }
+            if (nm != "") {
+                writeIndent(f, indent);
+                f.write(nm + ":\n");
+            }
+            int childIndent;
+            indent + (nm != "" ? 1 : 0) => childIndent;
             for (0 => int i; i < items.cap(); i++)
             {
-                writeNode(f, items[i], indent + 1);
+                writeNode(f, items[i], childIndent);
             }
         }
         else if (t == 4) // reference: inline the referenced node, preserving this node's name
@@ -394,23 +398,19 @@ public class YamlNode
         0 => int safety;
         while (i < lines.cap())
         {
-            if (safety > lines.cap() * 4) { <<< "PMC safety break at i=", i >>>; break; }
+            if (safety > lines.cap() * 4) { break; }
             safety++;
-            <<< "PMC i=", i, " line=", lines[i] >>>;
             trimLeft(lines[i]) => string l;
             if (l.length() == 0 || l.charAt(0) == '#') { i++; continue; }
             indentOf(lines[i]) => int curIndent;
-            <<< "PMC curIndent=", curIndent, " base=", baseIndent >>>;
             if (curIndent < baseIndent) break;
             if (curIndent > baseIndent) { i++; continue; }
             indexOf(l, ":") => int colon;
-            <<< "PMC colon=", colon, " trimmed=", l >>>;
             if (colon < 0) break;
             if (colon + 1 >= l.length())
             {
                 trimRight(subClamp(l, 0, colon)) => string key;
                 "" => string rest;
-                <<< "PMC key=", key, " rest=(empty)" >>>;
                 // look ahead to determine sequence or map
                 i+1 => int j;
                 while (j < lines.cap())
@@ -429,7 +429,6 @@ public class YamlNode
                 }
                 indentOf(lines[j]) => int childIndent;
                 subClamp(trimLeft(lines[j]), 0, 2) => string pref;
-                <<< "PMC childIndent=", childIndent, " pref=", pref, " j=", j, " line=", lines[j] >>>;
                 if (pref == "- ")
                 {
                     YamlNode items[0];
@@ -489,7 +488,6 @@ public class YamlNode
             }
             trimRight(subClamp(l, 0, colon)) => string key;
             trimLeft(subClamp(l, colon+1, l.length() - (colon+1))) => string rest;
-            <<< "PMC key=", key, " rest=", rest >>>;
             if (rest == "[]")
             {
                 YamlNode emptyArr(key);
@@ -533,7 +531,6 @@ public class YamlNode
             }
             indentOf(lines[j]) => int childIndent;
             subClamp(trimLeft(lines[j]), 0, 2) => string pref;
-            <<< "PMC childIndent=", childIndent, " pref=", pref, " j=", j, " line=", lines[j] >>>;
             if (pref == "- ")
             {
                 YamlNode items[0];
@@ -623,124 +620,19 @@ public class YamlNode
         indexOf(first, ":") => int colon;
         if (colon >= 0)
         {
-            <<< "DEBUG first=", first, " len=", first.length(), " colon=", colon >>>;
-            trimRight(subClamp(first, 0, colon)) => string key;
-            if (colon+1 >= first.length())
+            // Treat the document as a top-level map that may have multiple keys.
+            // Parse all mapping entries at the base indentation.
+            int baseIndent; indentOf(lines[firstIdx]) => baseIndent;
+            parseMapChildren(lines, firstIdx, baseIndent) @=> YamlNode topChildren[];
+            if (topChildren.cap() == 1)
             {
-                // No inline rest; determine sequence or map from following lines
-                <<< "DEBUG key=", key, " rest=(empty)" >>>;
-                // decide if sequence or map
-                firstIdx+1 => int j;
-                while (j < lines.cap())
-                {
-                    trimLeft(lines[j]) => string l;
-                    if (l.length() == 0 || l.charAt(0) == '#') { j++; continue; }
-                    break;
-                }
-                if (j >= lines.cap())
-                {
-                    YamlNode m(key);
-                    YamlNode none[0];
-                    m.SetMap(none);
-                    return m;
-                }
-                <<< "DEBUG after key, candidate line=", trimLeft(lines[j]) >>>;
-                if (subClamp(trimLeft(lines[j]), 0, 2) == "- ")
-                {
-                    // sequence
-                    int childIndent; indentOf(lines[j]) => childIndent;
-                    YamlNode items[0];
-                    for (j => int k; k < lines.cap(); k++)
-                    {
-                        trimLeft(lines[k]) => string l2;
-                        if (l2.length() == 0 || l2.charAt(0) == '#') { continue; }
-                        if (indentOf(lines[k]) != childIndent) break;
-                        if (subClamp(l2, 0, 2) != "- ") break;
-                        subToEnd(l2, 2) => string tok;
-                        <<< "DEBUG seq tok=", tok >>>;
-                        parseScalarNodeWithName("", tok) @=> YamlNode item;
-                        items << item;
-                    }
-                    YamlNode arrNode(key);
-                    arrNode.SetArray(items);
-                    return arrNode;
-                }
-                else
-                {
-                    // map
-                    int childIndent; indentOf(lines[j]) => childIndent;
-                    parseMapChildren(lines, j, childIndent) @=> YamlNode kids[];
-                    YamlNode mapNode(key);
-                    mapNode.SetMap(kids);
-                    return mapNode;
-                }
+                // Single top-level key: return it directly to preserve previous behavior
+                return topChildren[0];
             }
-            trimLeft(subClamp(first, colon+1, first.length() - (colon+1))) => string rest;
-            <<< "DEBUG key=", key, " rest=", rest, " rest.len=", rest.length() >>>;
-            if (rest == "[]")
-            {
-                YamlNode emptyArr(key);
-                YamlNode elems[0];
-                emptyArr.SetArray(elems);
-                return emptyArr;
-            }
-            if (rest.length() > 0)
-            {
-                return parseScalarNodeWithName(key, rest);
-            }
-            // decide if sequence or map
-            firstIdx+1 => int j;
-            while (j < lines.cap())
-            {
-                trimLeft(lines[j]) => string l;
-                if (l.length() == 0 || l.charAt(0) == '#') { j++; continue; }
-                break;
-            }
-            if (j >= lines.cap())
-            {
-                YamlNode m(key);
-                YamlNode none[0];
-                m.SetMap(none);
-                return m;
-            }
-            <<< "DEBUG after key, candidate line=", trimLeft(lines[j]) >>>;
-            if (subClamp(trimLeft(lines[j]), 0, 2) == "- ")
-            {
-                // sequence
-                int childIndent; indentOf(lines[j]) => childIndent;
-                YamlNode items[0];
-                for (j => int k; k < lines.cap(); k++)
-                {
-                    trimLeft(lines[k]) => string l2;
-                    if (l2.length() == 0 || l2.charAt(0) == '#') { continue; }
-                    if (indentOf(lines[k]) != childIndent) break;
-                    if (subClamp(l2, 0, 2) != "- ") break;
-                    subToEnd(l2, 2) => string tok;
-                    // inline scalar parse with empty name
-                    trimLeft(trimRight(tok)) => tok;
-                    YamlNode item("");
-                    if (tok.length() == 0 || tok == "null") { item.SetString(""); }
-                    else if (tok.length() >= 1 && tok.charAt(0) == "\"".charAt(0)) { item.SetString(stripOuterQuotes(tok)); }
-                    else {
-                        Std.atoi(tok) => int iv; Std.itoa(iv) => string ivs;
-                        if (ivs == tok) { item.SetInt(iv); }
-                        else { Std.atof(tok) => float fv; if (tok.find(".") >= 0 || tok.find("e") >= 0 || tok.find("E") >= 0) { item.SetFloat(fv); } else { item.SetString(tok); } }
-                    }
-                    items << item;
-                }
-                YamlNode arrNode(key);
-                arrNode.SetArray(items);
-                return arrNode;
-            }
-            else
-            {
-                // map
-                int childIndent; indentOf(lines[j]) => childIndent;
-                parseMapChildren(lines, j, childIndent) @=> YamlNode kids[];
-                YamlNode mapNode(key);
-                mapNode.SetMap(kids);
-                return mapNode;
-            }
+            // Multiple top-level keys: return an anonymous map node containing them
+            YamlNode root("");
+            root.SetMap(topChildren);
+            return root;
         }
         // Fallback to unnamed sequence or scalar
         0 => int hasDash;
