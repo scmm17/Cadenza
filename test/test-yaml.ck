@@ -85,13 +85,7 @@ fun int nodesDeepEqual(YamlNode a, YamlNode b)
         }
         return 1;
     }
-    else if (ta == 4) { // ref
-        a.GetNode() @=> YamlNode ar;
-        b.GetNode() @=> YamlNode br;
-        if (ar == null && br == null) return 1;
-        if (ar == null || br == null) return 0;
-        return nodesDeepEqual(ar, br);
-    }
+    // type 4 (ref) removed
     return 0;
 }
 
@@ -182,83 +176,13 @@ fun void testEmptyArray()
     assertEqualInt("empty array size", back.cap(), 0);
 }
 
-// Test a node of type ref (4) that references a scalar
-fun void testRefToScalar()
-{
-    YamlNode target(""); target.SetString("ref-value");
-    YamlNode refNode("myref"); refNode.SetNode(target);
-    string file;
-    "test-yaml-ref-scalar.yaml" => file;
-    refNode.WriteFile(file);
-    // On read, ref is inlined, so we expect the scalar value under the ref name
-    YamlNode.ParseFile(file) @=> YamlNode m;
-    assertEqualString("ref->scalar name", m.GetName(), "myref");
-    assertEqualInt("ref->scalar parsed type", m.GetType(), YamlNode.TYPE_STRING());
-    assertEqualString("ref->scalar parsed value", m.GetString(), "ref-value");
-}
+// Reference node type removed: drop ref tests
 
-// Test a node of type ref (4) that references an array of scalars
-fun void testRefToArray()
-{
-    YamlNode a(""); a.SetString("a");
-    YamlNode b(""); b.SetInt(2);
-    YamlNode c(""); c.SetFloat(3.0);
-    YamlNode items[0]; items << a; items << b; items << c;
-    YamlNode arr(""); arr.SetArray(items);
+// Reference node type removed: drop ref tests
 
-    YamlNode refNode("refarray"); refNode.SetNode(arr);
-    string file;
-    "test-yaml-ref-array.yaml" => file;
-    refNode.WriteFile(file);
+// Reference node type removed: drop nested ref tests
 
-    // On read, ref is inlined, so we expect the array content under the ref name
-    YamlNode.ParseFile(file) @=> YamlNode m;
-    assertEqualString("ref->array name", m.GetName(), "refarray");
-    assertEqualInt("ref->array parsed type", m.GetType(), YamlNode.TYPE_ARRAY());
-    m.GetArray() @=> YamlNode back[];
-    assertEqualInt("ref->array size", back.cap(), 3);
-    assertEqualString("ref->array[0]", back[0].GetString(), "a");
-    assertEqualInt("ref->array[1]", back[1].GetInt(), 2);
-    assertEqualFloat("ref->array[2]", back[2].GetFloat(), 3.0);
-}
-
-// Nested: ref to ref to scalar
-fun void testNestedRefToScalar()
-{
-    YamlNode leaf(""); leaf.SetString("nested-s");
-    YamlNode innerRef(""); innerRef.SetNode(leaf);
-    YamlNode outerRef("outerScalar"); outerRef.SetNode(innerRef);
-    string file;
-    "test-yaml-nested-ref-scalar.yaml" => file;
-    outerRef.WriteFile(file);
-    YamlNode.ParseFile(file) @=> YamlNode m;
-    assertEqualString("nested scalar name", m.GetName(), "outerScalar");
-    assertEqualInt("nested scalar type", m.GetType(), YamlNode.TYPE_STRING());
-    assertEqualString("nested scalar value", m.GetString(), "nested-s");
-}
-
-// Nested: ref to ref to array
-fun void testNestedRefToArray()
-{
-    YamlNode x(""); x.SetString("x");
-    YamlNode y(""); y.SetInt(9);
-    YamlNode z(""); z.SetFloat(1.25);
-    YamlNode arrItems[0]; arrItems << x; arrItems << y; arrItems << z;
-    YamlNode arrNode(""); arrNode.SetArray(arrItems);
-    YamlNode innerRef(""); innerRef.SetNode(arrNode);
-    YamlNode outerRef("outerArray"); outerRef.SetNode(innerRef);
-    string file;
-    "test-yaml-nested-ref-array.yaml" => file;
-    outerRef.WriteFile(file);
-    YamlNode.ParseFile(file) @=> YamlNode m;
-    assertEqualString("nested array name", m.GetName(), "outerArray");
-    assertEqualInt("nested array type", m.GetType(), YamlNode.TYPE_ARRAY());
-    m.GetArray() @=> YamlNode back[];
-    assertEqualInt("nested array size", back.cap(), 3);
-    assertEqualString("nested array [0]", back[0].GetString(), "x");
-    assertEqualInt("nested array [1]", back[1].GetInt(), 9);
-    assertEqualFloat("nested array [2]", back[2].GetFloat(), 1.25);
-}
+// Reference node type removed: drop nested ref tests
 
 // Round-trip test for nested mapping file
 fun void testReadWriteNesting()
@@ -357,10 +281,7 @@ fun void main()
     testScalarFloat();
     testArrayScalars();
     testEmptyArray();
-    testRefToScalar();
-    testRefToArray();
-    testNestedRefToScalar();
-    testNestedRefToArray();
+    // reference tests removed
     testReadWriteNesting();
     testReadWriteNesting2();
 }

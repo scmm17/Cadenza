@@ -5,11 +5,11 @@ public class YamlNode
     fun static int TYPE_FLOAT() { return 1; }
     fun static int TYPE_INT() { return 2; }
     fun static int TYPE_ARRAY() { return 3; }
-    fun static int TYPE_REF() { return 4; }
+    // Note: reference type removed
     fun static int TYPE_MAP() { return 5; }
 
     // Type discriminator
-    int type; // 0=string, 1=float, 2=int, 3=array, 4=ref, 5=map
+    int type; // 0=string, 1=float, 2=int, 3=array, 5=map
 
     // Name of this node (YAML mapping key)
     string name;
@@ -19,7 +19,7 @@ public class YamlNode
     float floatValue;
     int intValue;
     YamlNode@ arrayValue[]; // used for sequence or map children
-    YamlNode @ nodeRef;
+    // reference support removed
 
     // Constructors
     fun YamlNode()
@@ -31,7 +31,7 @@ public class YamlNode
         0 => intValue;
         YamlNode empty[0];
         empty @=> arrayValue;
-        null @=> nodeRef;
+        // no reference node
     }
 
     fun YamlNode(string n)
@@ -43,7 +43,7 @@ public class YamlNode
         0 => intValue;
         YamlNode empty[0];
         empty @=> arrayValue;
-        null @=> nodeRef;
+        // no reference node
     }
 
     // Name accessors
@@ -81,11 +81,7 @@ public class YamlNode
         nodes @=> arrayValue;
     }
 
-    fun void SetNode(YamlNode node)
-    {
-        TYPE_REF() => type;
-        node @=> nodeRef;
-    }
+    // Reference support removed: SetNode omitted
 
     // Accessors (type-checked)
     fun string GetString()
@@ -133,11 +129,7 @@ public class YamlNode
         return none;
     }
 
-    fun YamlNode GetNode()
-    {
-        if (type != TYPE_REF()) { <<< "YamlNode type mismatch in GetNode():", type >>>; }
-        return nodeRef;
-    }
+    // Reference support removed: GetNode omitted
 
     fun int GetType()
     {
@@ -270,25 +262,7 @@ public class YamlNode
                 writeNode(f, items[i], childIndent);
             }
         }
-        else if (t == TYPE_REF()) // reference: inline the referenced node, preserving this node's name
-        {
-            YamlNode ref;
-            node.GetNode() @=> ref;
-            if (ref != null)
-            {
-                string saved;
-                ref.GetName() => saved;
-                nm => ref.name;
-                writeNode(f, ref, indent);
-                saved => ref.name;
-            }
-            else
-            {
-                writeIndent(f, indent);
-                if (nm != "") { f.write(nm + ": null\n"); }
-                else { f.write("null\n"); }
-            }
-        }
+        // reference type removed
         else
         {
             writeIndent(f, indent);
