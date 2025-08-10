@@ -1,5 +1,13 @@
 public class YamlNode 
 {
+    // Static type constants (as functions for ChucK compatibility)
+    fun static int TYPE_STRING() { return 0; }
+    fun static int TYPE_FLOAT() { return 1; }
+    fun static int TYPE_INT() { return 2; }
+    fun static int TYPE_ARRAY() { return 3; }
+    fun static int TYPE_REF() { return 4; }
+    fun static int TYPE_MAP() { return 5; }
+
     // Type discriminator
     int type; // 0=string, 1=float, 2=int, 3=array, 4=ref, 5=map
 
@@ -45,68 +53,68 @@ public class YamlNode
     // Setters (also set the type)
     fun void SetString(string v)
     {
-        0 => type;
+        TYPE_STRING() => type;
         v => stringValue;
     }
 
     fun void SetFloat(float v)
     {
-        1 => type;
+        TYPE_FLOAT() => type;
         v => floatValue;
     }
 
     fun void SetInt(int v)
     {
-        2 => type;
+        TYPE_INT() => type;
         v => intValue;
     }
 
     fun void SetArray(YamlNode nodes[])
     {
-        3 => type;
+        TYPE_ARRAY() => type;
         nodes @=> arrayValue;
     }
 
     fun void SetMap(YamlNode nodes[])
     {
-        5 => type;
+        TYPE_MAP() => type;
         nodes @=> arrayValue;
     }
 
     fun void SetNode(YamlNode node)
     {
-        4 => type;
+        TYPE_REF() => type;
         node @=> nodeRef;
     }
 
     // Accessors (type-checked)
     fun string GetString()
     {
-        if (type != 0) { <<< "YamlNode type mismatch in GetString():", type >>>; }
+        if (type != TYPE_STRING()) { <<< "YamlNode type mismatch in GetString():", type >>>; }
         return stringValue;
     }
 
     fun float GetFloat()
     {
-        if (type != 1) { <<< "YamlNode type mismatch in GetFloat():", type >>>; }
+        if (type != TYPE_FLOAT()) { <<< "YamlNode type mismatch in GetFloat():", type >>>; }
         return floatValue;
     }
 
     fun int GetInt()
     {
-        if (type != 2) { <<< "YamlNode type mismatch in GetInt():", type >>>; }
+        if (type != TYPE_INT()) { <<< "YamlNode type mismatch in GetInt():", type >>>; }
         return intValue;
     }
 
     fun YamlNode[] GetArray()
     {
-        if (type != 3) { <<< "YamlNode type mismatch in GetArray():", type >>>; }
+        if (type != TYPE_ARRAY()) { <<< "YamlNode type mismatch in GetArray():", type >>>; }
         return arrayValue;
     }
 
     fun YamlNode[] GetMap()
     {
-        if (type != 5) { <<< "YamlNode type mismatch in GetMap():", type >>>; }
+        if (type != TYPE_MAP()) { <<< "YamlNode type mismatch in GetMap():", type >>>; }
         return arrayValue;
     }
     fun YamlNode GetValue(string key)
@@ -127,7 +135,7 @@ public class YamlNode
 
     fun YamlNode GetNode()
     {
-        if (type != 4) { <<< "YamlNode type mismatch in GetNode():", type >>>; }
+        if (type != TYPE_REF()) { <<< "YamlNode type mismatch in GetNode():", type >>>; }
         return nodeRef;
     }
 
@@ -173,7 +181,7 @@ public class YamlNode
 
     fun static int isScalar(YamlNode n)
     {
-        return (n.GetType() == 0 || n.GetType() == 1 || n.GetType() == 2);
+        return (n.GetType() == TYPE_STRING() || n.GetType() == TYPE_FLOAT() || n.GetType() == TYPE_INT());
     }
 
     fun static string escapeString(string s)
@@ -195,25 +203,25 @@ public class YamlNode
     {
         node.GetType() => int t;
         node.GetName() => string nm;
-        if (t == 0) // string
+        if (t == TYPE_STRING()) // string
         {
             writeIndent(f, indent);
             if (nm != "") { f.write(nm + ": " ); }
             f.write(escapeString(node.GetString()) + "\n");
         }
-        else if (t == 1) // float
+        else if (t == TYPE_FLOAT()) // float
         {
             writeIndent(f, indent);
             if (nm != "") { f.write(nm + ": " ); }
             f.write(("" + node.GetFloat()) + "\n");
         }
-        else if (t == 2) // int
+        else if (t == TYPE_INT()) // int
         {
             writeIndent(f, indent);
             if (nm != "") { f.write(nm + ": " ); }
             f.write(("" + node.GetInt()) + "\n");
         }
-        else if (t == 3) // array (sequence)
+        else if (t == TYPE_ARRAY()) // array (sequence)
         {
             YamlNode items[0];
             node.GetArray() @=> items;
@@ -247,7 +255,7 @@ public class YamlNode
                 }
             }
         }
-        else if (t == 5) // map (object)
+        else if (t == TYPE_MAP()) // map (object)
         {
             YamlNode items[0];
             node.GetMap() @=> items;
@@ -262,7 +270,7 @@ public class YamlNode
                 writeNode(f, items[i], childIndent);
             }
         }
-        else if (t == 4) // reference: inline the referenced node, preserving this node's name
+        else if (t == TYPE_REF()) // reference: inline the referenced node, preserving this node's name
         {
             YamlNode ref;
             node.GetNode() @=> ref;
@@ -343,6 +351,59 @@ public class YamlNode
             if (s.substring(i, needle.length()) == needle) return i;
         }
         return -1;
+    }
+
+    // ---- Inline flow sequence support: [1, 2, 3] ----
+    fun static int isInlineArrayToken(string token)
+    {
+        trimLeft(trimRight(token)) => string t;
+        if (t.length() >= 2 && t.charAt(0) == "[".charAt(0) && t.charAt(t.length()-1) == "]".charAt(0)) return 1;
+        return 0;
+    }
+
+    fun static YamlNode[] parseInlineArrayItems(string token)
+    {
+        YamlNode items[0];
+        trimLeft(trimRight(token)) => string t;
+        if (t.length() < 2) return items;
+        // strip outer brackets
+        subClamp(t, 1, t.length()-2) => string inner;
+        // split on commas (minimal: no nested arrays or quoted commas)
+        string cur;
+        "" => cur;
+        for (0 => int i; i < inner.length(); i++)
+        {
+            inner.charAt(i) => int ch;
+            if (ch == ",".charAt(0))
+            {
+                trimLeft(trimRight(cur)) => string tok;
+                if (tok.length() > 0 || cur.length() > 0)
+                {
+                    parseScalarNodeWithName("", tok) @=> YamlNode n;
+                    items << n;
+                }
+                "" => cur;
+            }
+            else
+            {
+                cur + inner.substring(i, 1) => cur;
+            }
+        }
+        trimLeft(trimRight(cur)) => string lastTok;
+        if (lastTok.length() > 0 || cur.length() > 0)
+        {
+            parseScalarNodeWithName("", lastTok) @=> YamlNode n2;
+            items << n2;
+        }
+        return items;
+    }
+
+    fun static YamlNode parseInlineArrayNodeWithName(string key, string token)
+    {
+        parseInlineArrayItems(token) @=> YamlNode elems[];
+        YamlNode arrNode(key);
+        arrNode.SetArray(elems);
+        return arrNode;
     }
 
     // Construct a named scalar node from a token string
@@ -499,8 +560,15 @@ public class YamlNode
             }
             if (rest.length() > 0)
             {
-                // inline scalar parsing for key: value
+                // inline value parsing for key: value
                 trimLeft(trimRight(rest)) => rest;
+                if (isInlineArrayToken(rest))
+                {
+                    parseInlineArrayNodeWithName(key, rest) @=> YamlNode arrNode;
+                    children << arrNode;
+                    i++;
+                    continue;
+                }
                 YamlNode scalar(key);
                 if (rest.length() == 0 || rest == "null") { scalar.SetString(""); }
                 else if (rest.length() >= 1 && rest.charAt(0) == "\"".charAt(0)) { scalar.SetString(stripOuterQuotes(rest)); }

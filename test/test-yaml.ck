@@ -1,5 +1,8 @@
 @import "../framework/yaml.ck"
 
+// Global flag indicating whether fallback path was used in last parse
+0 => int gYamlParseUsedFallback;
+
 fun void assertEqualInt(string name, int a, int b)
 {
     if (a != b) {
@@ -7,6 +10,19 @@ fun void assertEqualInt(string name, int a, int b)
     } else {
         <<< "PASS", name >>>;
     }
+}
+
+// Try to parse from a preferred path; if the parsed node is empty, try fallback
+fun YamlNode parseYamlWithFallback(string preferred, string fallback)
+{
+    0 => gYamlParseUsedFallback;
+    YamlNode.ParseFile(preferred) @=> YamlNode n;
+    if (n.GetType() == -1 && n.GetName() == "")
+    {
+        1 => gYamlParseUsedFallback;
+        YamlNode.ParseFile(fallback) @=> n;
+    }
+    return n;
 }
 
 fun void assertEqualFloat(string name, float a, float b)
@@ -98,7 +114,7 @@ fun void testScalarString()
     n.WriteFile(file);
     YamlNode.ParseFile(file) @=> YamlNode m;
     assertEqualString("string name", m.GetName(), "greeting");
-    assertEqualInt("string type", m.GetType(), 0);
+    assertEqualInt("string type", m.GetType(), YamlNode.TYPE_STRING());
     assertEqualString("string value", m.GetString(), "hello \"world\"");
 }
 
@@ -111,7 +127,7 @@ fun void testScalarInt()
     n.WriteFile(file);
     YamlNode.ParseFile(file) @=> YamlNode m;
     assertEqualString("int name", m.GetName(), "answer");
-    assertEqualInt("int type", m.GetType(), 2);
+    assertEqualInt("int type", m.GetType(), YamlNode.TYPE_INT());
     assertEqualInt("int value", m.GetInt(), 12345);
 }
 
@@ -124,7 +140,7 @@ fun void testScalarFloat()
     n.WriteFile(file);
     YamlNode.ParseFile(file) @=> YamlNode m;
     assertEqualString("float name", m.GetName(), "pi");
-    assertEqualInt("float type", m.GetType(), 1);
+    assertEqualInt("float type", m.GetType(), YamlNode.TYPE_FLOAT());
     assertEqualFloat("float value", m.GetFloat(), 3.14159);
 }
 
@@ -141,14 +157,14 @@ fun void testArrayScalars()
     arr.WriteFile(file);
     YamlNode.ParseFile(file) @=> YamlNode m;
     assertEqualString("array name", m.GetName(), "items");
-    assertEqualInt("array type", m.GetType(), 3);
+    assertEqualInt("array type", m.GetType(), YamlNode.TYPE_ARRAY());
     m.GetArray() @=> YamlNode back[];
     assertEqualInt("array size", back.cap(), 3);
-    assertEqualInt("array[0] type", back[0].GetType(), 0);
+    assertEqualInt("array[0] type", back[0].GetType(), YamlNode.TYPE_STRING());
     assertEqualString("array[0] value", back[0].GetString(), "alpha");
-    assertEqualInt("array[1] type", back[1].GetType(), 2);
+    assertEqualInt("array[1] type", back[1].GetType(), YamlNode.TYPE_INT());
     assertEqualInt("array[1] value", back[1].GetInt(), 7);
-    assertEqualInt("array[2] type", back[2].GetType(), 1);
+    assertEqualInt("array[2] type", back[2].GetType(), YamlNode.TYPE_FLOAT());
     assertEqualFloat("array[2] value", back[2].GetFloat(), 2.5);
 }
 
@@ -161,7 +177,7 @@ fun void testEmptyArray()
     arr.WriteFile(file);
     YamlNode.ParseFile(file) @=> YamlNode m;
     assertEqualString("empty array name", m.GetName(), "empty");
-    assertEqualInt("empty array type", m.GetType(), 3);
+    assertEqualInt("empty array type", m.GetType(), YamlNode.TYPE_ARRAY());
     m.GetArray() @=> YamlNode back[];
     assertEqualInt("empty array size", back.cap(), 0);
 }
@@ -177,7 +193,7 @@ fun void testRefToScalar()
     // On read, ref is inlined, so we expect the scalar value under the ref name
     YamlNode.ParseFile(file) @=> YamlNode m;
     assertEqualString("ref->scalar name", m.GetName(), "myref");
-    assertEqualInt("ref->scalar parsed type", m.GetType(), 0);
+    assertEqualInt("ref->scalar parsed type", m.GetType(), YamlNode.TYPE_STRING());
     assertEqualString("ref->scalar parsed value", m.GetString(), "ref-value");
 }
 
@@ -198,7 +214,7 @@ fun void testRefToArray()
     // On read, ref is inlined, so we expect the array content under the ref name
     YamlNode.ParseFile(file) @=> YamlNode m;
     assertEqualString("ref->array name", m.GetName(), "refarray");
-    assertEqualInt("ref->array parsed type", m.GetType(), 3);
+    assertEqualInt("ref->array parsed type", m.GetType(), YamlNode.TYPE_ARRAY());
     m.GetArray() @=> YamlNode back[];
     assertEqualInt("ref->array size", back.cap(), 3);
     assertEqualString("ref->array[0]", back[0].GetString(), "a");
@@ -217,7 +233,7 @@ fun void testNestedRefToScalar()
     outerRef.WriteFile(file);
     YamlNode.ParseFile(file) @=> YamlNode m;
     assertEqualString("nested scalar name", m.GetName(), "outerScalar");
-    assertEqualInt("nested scalar type", m.GetType(), 0);
+    assertEqualInt("nested scalar type", m.GetType(), YamlNode.TYPE_STRING());
     assertEqualString("nested scalar value", m.GetString(), "nested-s");
 }
 
@@ -236,7 +252,7 @@ fun void testNestedRefToArray()
     outerRef.WriteFile(file);
     YamlNode.ParseFile(file) @=> YamlNode m;
     assertEqualString("nested array name", m.GetName(), "outerArray");
-    assertEqualInt("nested array type", m.GetType(), 3);
+    assertEqualInt("nested array type", m.GetType(), YamlNode.TYPE_ARRAY());
     m.GetArray() @=> YamlNode back[];
     assertEqualInt("nested array size", back.cap(), 3);
     assertEqualString("nested array [0]", back[0].GetString(), "x");
@@ -248,18 +264,20 @@ fun void testNestedRefToArray()
 fun void testReadWriteNesting()
 {
     // Read existing YAML
-    YamlNode.ParseFile("test/test-yaml-nesting.yaml") @=> YamlNode root;
+    parseYamlWithFallback("test/test-yaml-nesting.yaml", "test-yaml-nesting.yaml") @=> YamlNode root;
     // Expect a map named level1
     assertEqualString("nesting root name", root.GetName(), "level1");
-    assertEqualInt("nesting root type(map)", root.GetType(), 5);
+    assertEqualInt("nesting root type(map)", root.GetType(), YamlNode.TYPE_MAP());
     root.GetMap() @=> YamlNode kids[];
     // Write to a new file
-    string outFile; "test/test-yaml-nesting-out.yaml" => outFile;
+    string outFile;
+    if (gYamlParseUsedFallback == 1) { "test-yaml-nesting-out.yaml" => outFile; }
+    else { "test/test-yaml-nesting-out.yaml" => outFile; }
     root.WriteFile(outFile);
     // Read back the written file
     YamlNode.ParseFile(outFile) @=> YamlNode again;
     assertEqualString("nesting again name", again.GetName(), "level1");
-    assertEqualInt("nesting again type(map)", again.GetType(), 5);
+    assertEqualInt("nesting again type(map)", again.GetType(), YamlNode.TYPE_MAP());
     again.GetMap() @=> YamlNode againKids[];
     // Validate known keys and types/values
     -1 => int ia; -1 => int ib; -1 => int ic; -1 => int id;
@@ -277,7 +295,7 @@ fun void testReadWriteNesting()
     if (ia >= 0) { assertEqualInt("a type", againKids[ia].GetType(), 1); assertEqualFloat("a value", againKids[ia].GetFloat(), 1.0); }
     if (ib >= 0) { assertEqualInt("b type", againKids[ib].GetType(), 2); assertEqualInt("b value", againKids[ib].GetInt(), 2); }
     if (ic >= 0) {
-        assertEqualInt("c type", againKids[ic].GetType(), 3);
+        assertEqualInt("c type", againKids[ic].GetType(), YamlNode.TYPE_ARRAY());
         againKids[ic].GetArray() @=> YamlNode arr[];
         assertEqualInt("c len", arr.cap(), 4);
         assertEqualInt("c[0]", arr[0].GetInt(), 3);
@@ -286,7 +304,7 @@ fun void testReadWriteNesting()
         assertEqualInt("c[3]", arr[3].GetInt(), 6);
     }
     if (id >= 0) {
-        assertEqualInt("d type", againKids[id].GetType(), 5);
+        assertEqualInt("d type", againKids[id].GetType(), YamlNode.TYPE_MAP());
         againKids[id].GetMap() @=> YamlNode dKids[];
         -1 => int ix; -1 => int iy; -1 => int inz; -1 => int inn;
         for (0 => int i; i < dKids.cap(); i++)
@@ -300,11 +318,11 @@ fun void testReadWriteNesting()
         assertEqualInt("d has y", iy >= 0, 1);
         assertEqualInt("d has z", inz >= 0, 1);
         assertEqualInt("d has nested", inn >= 0, 1);
-        if (ix >= 0) { assertEqualInt("d.x type", dKids[ix].GetType(), 2); assertEqualInt("d.x val", dKids[ix].GetInt(), 4); }
-        if (iy >= 0) { assertEqualInt("d.y type", dKids[iy].GetType(), 0); assertEqualString("d.y val", dKids[iy].GetString(), "234"); }
-        if (inz >= 0) { assertEqualInt("d.z type", dKids[inz].GetType(), 2); assertEqualInt("d.z val", dKids[inz].GetInt(), 15); }
+        if (ix >= 0) { assertEqualInt("d.x type", dKids[ix].GetType(), YamlNode.TYPE_INT()); assertEqualInt("d.x val", dKids[ix].GetInt(), 4); }
+        if (iy >= 0) { assertEqualInt("d.y type", dKids[iy].GetType(), YamlNode.TYPE_STRING()); assertEqualString("d.y val", dKids[iy].GetString(), "234"); }
+        if (inz >= 0) { assertEqualInt("d.z type", dKids[inz].GetType(), YamlNode.TYPE_INT()); assertEqualInt("d.z val", dKids[inz].GetInt(), 15); }
         if (inn >= 0) {
-            assertEqualInt("d.nested type", dKids[inn].GetType(), 5);
+            assertEqualInt("d.nested type", dKids[inn].GetType(), YamlNode.TYPE_MAP());
             dKids[inn].GetMap() @=> YamlNode nKids[];
             -1 => int iw; -1 => int is;
             for (0 => int i; i < nKids.cap(); i++)
@@ -314,8 +332,8 @@ fun void testReadWriteNesting()
             }
             assertEqualInt("nested has w", iw >= 0, 1);
             assertEqualInt("nested has s", is >= 0, 1);
-            if (iw >= 0) { assertEqualInt("nested.w type", nKids[iw].GetType(), 2); assertEqualInt("nested.w val", nKids[iw].GetInt(), 5); }
-            if (is >= 0) { assertEqualInt("nested.s type", nKids[is].GetType(), 0); assertEqualString("nested.s val", nKids[is].GetString(), "asdf"); }
+            if (iw >= 0) { assertEqualInt("nested.w type", nKids[iw].GetType(), YamlNode.TYPE_INT()); assertEqualInt("nested.w val", nKids[iw].GetInt(), 5); }
+            if (is >= 0) { assertEqualInt("nested.s type", nKids[is].GetType(), YamlNode.TYPE_STRING()); assertEqualString("nested.s val", nKids[is].GetString(), "asdf"); }
         }
     }
 }
@@ -323,8 +341,10 @@ fun void testReadWriteNesting()
 // Round-trip test for multi-sibling top-level file
 fun void testReadWriteNesting2()
 {
-    YamlNode.ParseFile("test/test-yaml-nesting-2.yaml") @=> YamlNode root;
-    string outFile; "test/test-yaml-nesting-2-out.yaml" => outFile;
+    parseYamlWithFallback("test/test-yaml-nesting-2.yaml", "test-yaml-nesting-2.yaml") @=> YamlNode root;
+    string outFile;
+    if (gYamlParseUsedFallback == 1) { "test-yaml-nesting-2-out.yaml" => outFile; }
+    else { "test/test-yaml-nesting-2-out.yaml" => outFile; }
     root.WriteFile(outFile);
     YamlNode.ParseFile(outFile) @=> YamlNode again;
     assertNodesEqual("nesting-2 roundtrip", root, again);
