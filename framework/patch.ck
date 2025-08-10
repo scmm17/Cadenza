@@ -48,6 +48,8 @@ public class Patch
 
     fun void updateControllers()
     {
+        setPreset();
+
         if (filterCutoff != -1) {
             sendControllerChange(74, filterCutoff);
         }
@@ -60,7 +62,6 @@ public class Patch
         if (volume != -1) {
             sendControllerChange(7, volume);
         }
-        setPreset();
     }
 
     fun void sendControllerChange(int controller, int value)
@@ -1109,6 +1110,7 @@ public class V3GrandPiano extends Patch
         if (programChange) 
         {
             programChangeV3GrandPiano(program, bank);
+            0.1::second => now;
         }
     }
 

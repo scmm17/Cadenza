@@ -858,7 +858,7 @@ public class LaunchControl
                 }
                 patch.patchName => string name;
                 patch.uiName => string ui;
-                "| " + prefix + pad + muteString + " | " + Std.itoa(deviceNum + 1) + " | " + ui + " | " + Std.itoa(patch.midiChannel + 1) + " | " + name + " | " + patch.volume + " | " + patch.filterCutoff + " | " + patch.filterResonance + " | " + patch.pan + " |\n" => string line;
+                "| " + prefix + pad + muteString + " | " + Std.itoa(deviceNum + 1) + " | " + ui + " | " + Std.itoa(patch.midiChannel + 1) + " | " + name + " | " + patch.volume + " | " + patch.filterCutoff + " | " + patch.filterResonance + " | " + (patch.pan - 64) + " |\n" => string line;
                 fout.write(line);
             }
             deviceNum++;

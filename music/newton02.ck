@@ -9,14 +9,14 @@
 // Midi devices
 // Hydrasynth hydrasynth("F005");
 //Hydrasynth hydrasynth("F006");
-Hydrasynth hydrasynth("A026", 91);
+Hydrasynth hydrasynth("A026", 127);
 //RolandS1 s1(2, 8);
 RolandS1 s1(2, 10, 64);
 //RolandS1 s1(2, 9);
-RolandSH4d sh4d_1(1, 3, 1, 99);
-RolandSH4d sh4d_2(2, "Channel 2", 64);
-RolandSH4d sh4d_3(3, "Channel 3", 64);
-RolandSH4d drumKit(10, "Drums", 70);
+RolandSH4d sh4d_1(1, 3, 1, 94);
+RolandSH4d sh4d_2(2, "Channel 2", 85);
+RolandSH4d sh4d_3(3, "Channel 3", 120);
+RolandSH4d drumKit(10, "Drums", 43);
 
 // Chords
 Chord I_Low(NoteCollection.I_notes(), -1);
@@ -75,7 +75,7 @@ AleatoricMelody melody2(hydrasynth, majorChord, 16, 4, probabilities5);
 velocities6 @=> melody2.velocities;
 
 // Drums
-[1.0, 0, 1, 0, 1, 0, 1, .5] @=> float probabilities4[];
+[1.0, 0, 1, 0, 1, 0, 1, 1] @=> float probabilities4[];
 [120] @=>  int velocities4[];
 [
  DrumMachine.BassDrum(),
