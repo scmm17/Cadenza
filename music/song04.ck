@@ -12,7 +12,7 @@
 Hydrasynth hydrasynth("D035", 91);
 RolandS1 s1(1, 13, 64);
 RolandSH4d sh4d_1(1, 3, 10, 99);
-RolandSH4d sh4d_2(2, "SH4d channel 2", 64);
+RolandSH4d sh4d_2(2, "Channel 2", 64);
 
 // Chords
 Chord majorChord(NoteCollection.majorChordNotes(), -1);

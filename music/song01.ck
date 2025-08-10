@@ -13,7 +13,7 @@ RolandS1 s1(2, 1, 64);
 RolandSH4d sh4d_1(1, 3, 7, 61);
 RolandSH4d sh4d_2(2, "Low Chords", 69);
 V3GrandPiano marimba(1, "Marimba & Xylophon", 127);
-// RolandSH4d sh4d_3(3, "SH4d channel 3", 64);
+// RolandSH4d sh4d_3(3, "Channel 3", 64);
 
 // Chords
 Chord I_Low(NoteCollection.I_notes(), -1);

@@ -32,7 +32,7 @@ Here's a complete, working example that creates a simple song with a chord progr
 60 => int root;           // Middle C as the root note
 
 // Create a synth patch
-RolandSH4d synth(1, "SH4d channel 1", 64);
+RolandSH4d synth(1, "Channel 1", 64);
 
 // Define chords
 Chord I_Low(NoteCollection.I_notes(), -1);

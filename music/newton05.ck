@@ -14,8 +14,8 @@ Hydrasynth hydrasynth("E088", 91);
 RolandS1 s1(2, 10, 64);
 //RolandS1 s1(2, 9);
 RolandSH4d sh4d_1(1, 3, 3, 99);
-RolandSH4d sh4d_2(2, "SH4d channel 2", 64);
-RolandSH4d sh4d_3(3, "SH4d channel 2", 64);
+RolandSH4d sh4d_2(2, "Channel 2", 64);
+RolandSH4d sh4d_3(3, "Channel 2", 64);
 RolandSH4d drumKit(10, "Drums", 70);
 
 // Chords

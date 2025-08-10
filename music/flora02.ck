@@ -11,14 +11,14 @@
 Hydrasynth hydrasynth("B016", 24);
 RolandS1 s1(1, 1, 64);
 RolandSH4d sh4d_1(1, 3, 11, 127);
-RolandSH4d sh4d_2(2, "SH4d channel 2", 30);
-RolandSH4d sh4d_3(3, "SH4d channel 3", 49);
-RolandSH4d sh4d_4(4, "SH4d channel 4", 64);
+RolandSH4d sh4d_2(2, "Channel 2", 30);
+RolandSH4d sh4d_3(3, "Channel 3", 49);
+RolandSH4d sh4d_4(4, "Channel 4", 64);
 // V3GrandPiano marimba(1, "Harp");
 V3GrandPiano marimba(1, "G. Steel Slide (velo. 116-127 Slide)", 75);
 V3GrandPiano marimba2(2, "G. Steel Slide (velo. 116-127 Slide)", 75);
 V3GrandPiano bass(3, "Upright Jazz Bass Random", 64);
-// RolandSH4d sh4d_3(3, "SH4d channel 3");
+// RolandSH4d sh4d_3(3, "Channel 3");
 
 // Chords
 Chord I_Low(NoteCollection.I_notes(), -1);

@@ -11,8 +11,8 @@
 Hydrasynth hydrasynth("A011", 91);
 RolandS1 s1(2, 1, 64);
 RolandSH4d sh4d_1(1, 3, 4, 99);
-RolandSH4d sh4d_2(2, "SH4d channel 2", 64);
-RolandSH4d sh4d_3(3, "SH4d channel 3", 64);
+RolandSH4d sh4d_2(2, "Channel 2", 64);
+RolandSH4d sh4d_3(3, "Channel 3", 64);
 
 // Chords
 Chord I_Low(NoteCollection.I_notes(), -1);
