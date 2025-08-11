@@ -331,16 +331,48 @@ public class YamlNode
                 f.write("- ");
                 if (isScalar(items[i]))
                 {
-                    if (items[i].GetType() == 0) {
+                    if (items[i].GetType() == TYPE_STRING()) {
                         f.write(escapeString(items[i].GetString()) + "\n");
-                    } else if (items[i].GetType() == 1) {
+                    } else if (items[i].GetType() == TYPE_FLOAT()) {
                         f.write(("" + items[i].GetFloat()) + "\n");
                     } else { // int
                         f.write(("" + items[i].GetInt()) + "\n");
                     }
                 }
+                else if (items[i].GetType() == TYPE_MAP())
+                {
+                    // Try to inline the first property of the map on the same line as the dash
+                    YamlNode mapKids[0];
+                    items[i].GetMap() @=> mapKids;
+                    if (mapKids != null && mapKids.cap() > 0 && mapKids[0].GetName() != "" && (mapKids[0].GetType() == TYPE_STRING() || mapKids[0].GetType() == TYPE_INT() || mapKids[0].GetType() == TYPE_FLOAT()))
+                    {
+                        // Write "- key: value" inline
+                        f.write(mapKids[0].GetName() + ": ");
+                        if (mapKids[0].GetType() == TYPE_STRING()) {
+                            f.write(escapeString(mapKids[0].GetString()) + "\n");
+                        } else if (mapKids[0].GetType() == TYPE_FLOAT()) {
+                            f.write(("" + mapKids[0].GetFloat()) + "\n");
+                        } else { // int
+                            f.write(("" + mapKids[0].GetInt()) + "\n");
+                        }
+                        // Write the remaining properties as usual, indented under this item
+                        int childIndent;
+                        indent + (nm != "" ? 2 : 1) => childIndent;
+                        for (1 => int mi; mi < mapKids.cap(); mi++)
+                        {
+                            writeNode(f, mapKids[mi], childIndent);
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: write map on the next line as before
+                        f.write("\n");
+                        writeNode(f, items[i], indent + (nm != "" ? 2 : 1));
+                    }
+                }
                 else
                 {
+                    // Non-scalar, non-map (e.g., nested array): keep previous formatting
                     f.write("\n");
                     writeNode(f, items[i], indent + (nm != "" ? 2 : 1));
                 }
