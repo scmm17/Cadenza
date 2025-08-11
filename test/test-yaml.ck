@@ -325,6 +325,48 @@ fun void testReadWriteNesting2()
     assertNodesEqual("nesting-2 roundtrip", root, again);
 }
 
+// Round-trip test for object arrays file
+fun void testObjectArraysRoundtrip()
+{
+    parseYamlWithFallback("test/test-object-arrays.yaml", "test-object-arrays.yaml") @=> YamlNode root;
+    // Verify structure: root is array named test-array with 3 map items
+    assertEqualString("objarr root name", root.GetName(), "test-array");
+    assertEqualInt("objarr root type", root.GetType(), YamlNode.TYPE_ARRAY());
+    root.GetArray() @=> YamlNode objs[];
+    assertEqualInt("objarr len", objs.cap(), 3);
+    // check item 0
+    if (objs.cap() >= 1) {
+        assertEqualInt("objarr[0] type", objs[0].GetType(), YamlNode.TYPE_MAP());
+        objs[0].GetMap() @=> YamlNode m0[];
+        objs[0].GetValue("name") @=> YamlNode m0n;
+        objs[0].GetValue("value") @=> YamlNode m0v;
+        assertEqualString("objarr[0].name", m0n.GetString(), "test1");
+        assertEqualInt("objarr[0].value", m0v.GetInt(), 1);
+    }
+    // check item 1
+    if (objs.cap() >= 2) {
+        assertEqualInt("objarr[1] type", objs[1].GetType(), YamlNode.TYPE_MAP());
+        objs[1].GetValue("name") @=> YamlNode m1n;
+        objs[1].GetValue("value") @=> YamlNode m1v;
+        assertEqualString("objarr[1].name", m1n.GetString(), "test2");
+        assertEqualInt("objarr[1].value", m1v.GetInt(), 2);
+    }
+    // check item 2
+    if (objs.cap() >= 3) {
+        assertEqualInt("objarr[2] type", objs[2].GetType(), YamlNode.TYPE_MAP());
+        objs[2].GetValue("name") @=> YamlNode m2n;
+        objs[2].GetValue("value") @=> YamlNode m2v;
+        assertEqualString("objarr[2].name", m2n.GetString(), "test3");
+        assertEqualInt("objarr[2].value", m2v.GetInt(), 3);
+    }
+    string outFile;
+    if (gYamlParseUsedFallback == 1) { "test-object-arrays-out.yaml" => outFile; }
+    else { "test/test-object-arrays-out.yaml" => outFile; }
+    root.WriteFile(outFile);
+    YamlNode.ParseFile(outFile) @=> YamlNode again;
+    assertNodesEqual("object-arrays roundtrip", root, again);
+}
+
 fun void main()
 {
     testScalarString();
@@ -336,6 +378,7 @@ fun void main()
     // reference tests removed
     testReadWriteNesting();
     testReadWriteNesting2();
+    testObjectArraysRoundtrip();
 }
 
 main();

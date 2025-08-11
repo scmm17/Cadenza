@@ -3,19 +3,19 @@
 @import "../framework/melody.ck"
 
 // Global parameters
-45 => float BPM;          // Beats per minute
+40 => float BPM;          // Beats per minute
 56 => int root;
 
 // Midi devices
 //Hydrasynth hydrasynth("F006");
-Hydrasynth hydrasynth("B016", 24);
-RolandS1 s1(1, 1, 64);
+Hydrasynth hydrasynth("B016", 14);
+RolandS1 s1(1, 1, 127);
 RolandSH4d sh4d_1(1, 3, 11, 127);
 RolandSH4d sh4d_2(2, "Channel 2", 30);
 RolandSH4d sh4d_3(3, "Channel 3", 49);
 RolandSH4d sh4d_4(4, "Channel 4", 64);
 // V3GrandPiano marimba(1, "Harp");
-V3GrandPiano marimba(1, "G. Steel Slide (velo. 116-127 Slide)", 75);
+V3GrandPiano marimba(1, "OB & Noise", 60);
 // RolandSH4d sh4d_3(3, "Channel 3");
 
 // Chords
@@ -72,9 +72,11 @@ velocities4 @=> melody1.velocities;
 
 [0.0, .45, 1.0, 0.0] @=> float probabilities5[];
 [125, 90, 110, 90] @=> int velocities5[];
-AleatoricMelody melody2(sh4d_3, IV_High, 16, 4, probabilities5);
+//AleatoricMelody melody2(sh4d_3, IV_High, 16, 4, probabilities5);
+ChordProgression melody2(sh4d_3, chordsL, progression, true, 16, 4, probabilities5);
 0.4 => melody2.mutateProbabilityRange;
 true => melody2.legato;
+true => melody2.random;
 velocities5 @=> melody2.velocities;
 
 [prog1, prog2, prog3, melody1, melody2] @=> Part parts1[];

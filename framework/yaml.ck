@@ -562,8 +562,8 @@ public class YamlNode
                     break;
                 }
                 indentOf(lines[j]) => int childIndent;
-                subClamp(trimLeft(lines[j]), 0, 2) => string pref;
-                if (pref == "- ")
+                subClamp(trimLeft(lines[j]), 0, 1) => string pref;
+                if (pref == "-")
                 {
                     YamlNode items[0];
                     int k;
@@ -572,19 +572,99 @@ public class YamlNode
                         trimLeft(lines[k]) => string l3;
                         if (l3.length() == 0 || l3.charAt(0) == '#') { continue; }
                         if (indentOf(lines[k]) != childIndent) { break; }
-                        if (subClamp(l3, 0, 2) != "- ") { break; }
-                        subToEnd(l3, 2) => string tok;
-                        // inline scalar parse with empty name
+                        if (subClamp(l3, 0, 1) != "-") { break; }
+                        // token after dash (if present)
+                        string tok;
+                        "" => tok;
+                        if (l3.length() >= 2 && subClamp(l3, 0, 2) == "- ") { subToEnd(l3, 2) => tok; }
                         trimLeft(trimRight(tok)) => tok;
-                        YamlNode item("");
-                        if (tok.length() == 0 || tok == "null") { item.SetString(""); }
-                        else if (tok.length() >= 1 && tok.charAt(0) == "\"".charAt(0)) { item.SetString(stripOuterQuotes(tok)); }
-                        else {
-                            Std.atoi(tok) => int iv; Std.itoa(iv) => string ivs;
-                            if (ivs == tok) { item.SetInt(iv); }
-                            else { Std.atof(tok) => float fv; if (tok.find(".") >= 0 || tok.find("e") >= 0 || tok.find("E") >= 0) { item.SetFloat(fv); } else { item.SetString(tok); } }
+                        if (tok.length() == 0)
+                        {
+                            // parse nested map for this array item
+                            int m; int start;
+                            k+1 => m; k+1 => start;
+                            while (m < lines.cap())
+                            {
+                                trimLeft(lines[m]) => string l5;
+                                if (l5.length() == 0 || l5.charAt(0) == '#') { m++; start++; continue; }
+                                break;
+                            }
+                            if (m < lines.cap())
+                            {
+                                indentOf(lines[m]) => int nestedIndent;
+                                parseMapChildren(lines, m, nestedIndent) @=> YamlNode nestedKids[];
+                                YamlNode mapItem("");
+                                mapItem.SetMap(nestedKids);
+                                items << mapItem;
+                                // advance k past this nested block
+                                int u;
+                                for (m => u; u < lines.cap(); u++)
+                                {
+                                    trimLeft(lines[u]) => string l6;
+                                    if (l6.length() == 0 || l6.charAt(0) == '#') { continue; }
+                                    if (indentOf(lines[u]) <= childIndent) { break; }
+                                }
+                                if (u > k) { u-1 => k; }
+                            }
+                            else
+                            {
+                                YamlNode emptyItem("");
+                                emptyItem.SetString("");
+                                items << emptyItem;
+                            }
                         }
-                        items << item;
+                        else
+                        {
+                            // If the token contains a colon, this item is a map starting inline: "- key: value"
+                            if (indexOf(tok, ":") >= 0)
+                            {
+                                indexOf(tok, ":") => int c2;
+                                trimRight(subClamp(tok, 0, c2)) => string ikey;
+                                trimLeft(subClamp(tok, c2+1, tok.length() - (c2+1))) => string irest;
+                                parseScalarNodeWithName(ikey, irest) @=> YamlNode firstChild;
+                                // collect additional map properties indented under this dash item
+                                int m; k+1 => m;
+                                while (m < lines.cap())
+                                {
+                                    trimLeft(lines[m]) => string l7;
+                                    if (l7.length() == 0 || l7.charAt(0) == '#') { m++; continue; }
+                                    break;
+                                }
+                                YamlNode children[0];
+                                children << firstChild;
+                                if (m < lines.cap())
+                                {
+                                    indentOf(lines[m]) => int nestedIndent;
+                                    parseMapChildren(lines, m, nestedIndent) @=> YamlNode restKids[];
+                                    for (0 => int ri; ri < restKids.cap(); ri++) { children << restKids[ri]; }
+                                    // advance k past the nested block belonging to this item
+                                    int u;
+                                    for (m => u; u < lines.cap(); u++)
+                                    {
+                                        trimLeft(lines[u]) => string l8;
+                                        if (l8.length() == 0 || l8.charAt(0) == '#') { continue; }
+                                        if (indentOf(lines[u]) <= childIndent) { break; }
+                                    }
+                                    if (u > k) { u-1 => k; }
+                                }
+                                YamlNode mapItem("");
+                                mapItem.SetMap(children);
+                                items << mapItem;
+                            }
+                            else
+                            {
+                                // plain scalar array item
+                                YamlNode item("");
+                                if (tok == "null") { item.SetString(""); }
+                                else if (tok.length() >= 1 && tok.charAt(0) == "\"".charAt(0)) { item.SetString(stripOuterQuotes(tok)); }
+                                else {
+                                    Std.atoi(tok) => int iv; Std.itoa(iv) => string ivs;
+                                    if (ivs == tok) { item.SetInt(iv); }
+                                    else { Std.atof(tok) => float fv; if (tok.find(".") >= 0 || tok.find("e") >= 0 || tok.find("E") >= 0) { item.SetFloat(fv); } else { item.SetString(tok); } }
+                                }
+                                items << item;
+                            }
+                        }
                     }
                     YamlNode arrNode(key);
                     arrNode.SetArray(items);
@@ -671,8 +751,8 @@ public class YamlNode
                 break;
             }
             indentOf(lines[j]) => int childIndent;
-            subClamp(trimLeft(lines[j]), 0, 2) => string pref;
-            if (pref == "- ")
+            subClamp(trimLeft(lines[j]), 0, 1) => string pref1;
+            if (pref1 == "-")
             {
                 YamlNode items[0];
                 int k;
@@ -681,19 +761,167 @@ public class YamlNode
                     trimLeft(lines[k]) => string l3;
                     if (l3.length() == 0 || l3.charAt(0) == '#') { continue; }
                     if (indentOf(lines[k]) != childIndent) { break; }
-                    if (subClamp(l3, 0, 2) != "- ") { break; }
-                    subToEnd(l3, 2) => string tok;
-                    // inline scalar parse with empty name
+                    if (subClamp(l3, 0, 1) != "-") { break; }
+                    // extract token after dash (support "-" or "- ")
+                    trimLeft(l3) => string tl3;
+                    "" => string tok;
+                    if (tl3.length() >= 2 && subClamp(tl3, 0, 2) == "- ") { subToEnd(tl3, 2) => tok; }
+                    else { "" => tok; }
                     trimLeft(trimRight(tok)) => tok;
-                    YamlNode item("");
-                    if (tok.length() == 0 || tok == "null") { item.SetString(""); }
-                    else if (tok.length() >= 1 && tok.charAt(0) == "\"".charAt(0)) { item.SetString(stripOuterQuotes(tok)); }
-                    else {
-                        Std.atoi(tok) => int iv; Std.itoa(iv) => string ivs;
-                        if (ivs == tok) { item.SetInt(iv); }
-                        else { Std.atof(tok) => float fv; if (tok.find(".") >= 0 || tok.find("e") >= 0 || tok.find("E") >= 0) { item.SetFloat(fv); } else { item.SetString(tok); } }
+                    if (tok.length() == 0)
+                    {
+                        // nested map under this dash item
+                        int m; k+1 => m;
+                        while (m < lines.cap())
+                        {
+                            trimLeft(lines[m]) => string l5;
+                            if (l5.length() == 0 || l5.charAt(0) == '#') { m++; continue; }
+                            break;
+                        }
+                        if (m < lines.cap())
+                        {
+                            indentOf(lines[m]) => int nestedIndent;
+                            parseMapChildren(lines, m, nestedIndent) @=> YamlNode nestedKids[];
+                            YamlNode mapItem("");
+                            mapItem.SetMap(nestedKids);
+                            items << mapItem;
+                            // advance k past nested block
+                            int u;
+                            for (m => u; u < lines.cap(); u++)
+                            {
+                                trimLeft(lines[u]) => string l6;
+                                if (l6.length() == 0 || l6.charAt(0) == '#') { continue; }
+                                if (indentOf(lines[u]) <= childIndent) { break; }
+                            }
+                            if (u > k) { u-1 => k; }
+                        }
+                        else
+                        {
+                            YamlNode emptyItem("");
+                            emptyItem.SetString("");
+                            items << emptyItem;
+                        }
                     }
-                    items << item;
+                    // (duplicate inline map handlers removed)
+                    // (duplicate inline map handlers removed)
+                    // (duplicate inline map handlers removed)
+                    else if (indexOf(tok, ":") >= 0)
+                    {
+                        // inline key: value on same line as dash
+                        indexOf(tok, ":") => int c2;
+                        trimRight(subClamp(tok, 0, c2)) => string ikey;
+                        trimLeft(subClamp(tok, c2+1, tok.length() - (c2+1))) => string irest;
+                        parseScalarNodeWithName(ikey, irest) @=> YamlNode firstChild;
+                        // collect additional properties indented under this item
+                        int m; k+1 => m;
+                        while (m < lines.cap())
+                        {
+                            trimLeft(lines[m]) => string l7;
+                            if (l7.length() == 0 || l7.charAt(0) == '#') { m++; continue; }
+                            break;
+                        }
+                        YamlNode children[0];
+                        children << firstChild;
+                        if (m < lines.cap())
+                        {
+                            indentOf(lines[m]) => int nestedIndent;
+                            parseMapChildren(lines, m, nestedIndent) @=> YamlNode restKids[];
+                            for (0 => int ri; ri < restKids.cap(); ri++) { children << restKids[ri]; }
+                            // advance k past this nested block
+                            int u;
+                            for (m => u; u < lines.cap(); u++)
+                            {
+                                trimLeft(lines[u]) => string l8;
+                                if (l8.length() == 0 || l8.charAt(0) == '#') { continue; }
+                                if (indentOf(lines[u]) <= childIndent) { break; }
+                            }
+                            if (u > k) { u-1 => k; }
+                        }
+                        YamlNode mapItem("");
+                        mapItem.SetMap(children);
+                        items << mapItem;
+                    }
+                    else if (indexOf(tok, ":") >= 0)
+                    {
+                        // inline key: value on same line as dash
+                        indexOf(tok, ":") => int c2;
+                        trimRight(subClamp(tok, 0, c2)) => string ikey;
+                        trimLeft(subClamp(tok, c2+1, tok.length() - (c2+1))) => string irest;
+                        parseScalarNodeWithName(ikey, irest) @=> YamlNode firstChild;
+                        // collect additional properties indented under this item
+                        int m; k+1 => m;
+                        while (m < lines.cap())
+                        {
+                            trimLeft(lines[m]) => string l7;
+                            if (l7.length() == 0 || l7.charAt(0) == '#') { m++; continue; }
+                            break;
+                        }
+                        YamlNode children[0];
+                        children << firstChild;
+                        if (m < lines.cap())
+                        {
+                            indentOf(lines[m]) => int nestedIndent;
+                            parseMapChildren(lines, m, nestedIndent) @=> YamlNode restKids[];
+                            for (0 => int ri; ri < restKids.cap(); ri++) { children << restKids[ri]; }
+                            // advance k past this nested block
+                            int u;
+                            for (m => u; u < lines.cap(); u++)
+                            {
+                                trimLeft(lines[u]) => string l8;
+                                if (l8.length() == 0 || l8.charAt(0) == '#') { continue; }
+                                if (indentOf(lines[u]) <= childIndent) { break; }
+                            }
+                            if (u > k) { u-1 => k; }
+                        }
+                        YamlNode mapItem("");
+                        mapItem.SetMap(children);
+                        items << mapItem;
+                    }
+                    else if (indexOf(tok, ":") >= 0)
+                    {
+                        indexOf(tok, ":") => int c2;
+                        trimRight(subClamp(tok, 0, c2)) => string ikey;
+                        trimLeft(subClamp(tok, c2+1, tok.length() - (c2+1))) => string irest;
+                        parseScalarNodeWithName(ikey, irest) @=> YamlNode firstChild;
+                        int m; k+1 => m;
+                        while (m < lines.cap())
+                        {
+                            trimLeft(lines[m]) => string l7;
+                            if (l7.length() == 0 || l7.charAt(0) == '#') { m++; continue; }
+                            break;
+                        }
+                        YamlNode children[0];
+                        children << firstChild;
+                        if (m < lines.cap())
+                        {
+                            indentOf(lines[m]) => int nestedIndent;
+                            parseMapChildren(lines, m, nestedIndent) @=> YamlNode restKids[];
+                            for (0 => int ri; ri < restKids.cap(); ri++) { children << restKids[ri]; }
+                            int u;
+                            for (m => u; u < lines.cap(); u++)
+                            {
+                                trimLeft(lines[u]) => string l8;
+                                if (l8.length() == 0 || l8.charAt(0) == '#') { continue; }
+                                if (indentOf(lines[u]) <= childIndent) { break; }
+                            }
+                            if (u > k) { u-1 => k; }
+                        }
+                        YamlNode mapItem("");
+                        mapItem.SetMap(children);
+                        items << mapItem;
+                    }
+                    else
+                    {
+                        YamlNode item("");
+                        if (tok == "null") { item.SetString(""); }
+                        else if (tok.length() >= 1 && tok.charAt(0) == "\"".charAt(0)) { item.SetString(stripOuterQuotes(tok)); }
+                        else {
+                            Std.atoi(tok) => int iv; Std.itoa(iv) => string ivs;
+                            if (ivs == tok) { item.SetInt(iv); }
+                            else { Std.atof(tok) => float fv; if (tok.find(".") >= 0 || tok.find("e") >= 0 || tok.find("E") >= 0) { item.SetFloat(fv); } else { item.SetString(tok); } }
+                        }
+                        items << item;
+                    }
                 }
                 YamlNode arrNode(key);
                 arrNode.SetArray(items);
@@ -789,31 +1017,126 @@ public class YamlNode
         if (hasDash)
         {
             YamlNode items[0];
+            int baseIndent; indentOf(lines[firstIdx]) => baseIndent;
             for (firstIdx => int i; i < lines.cap(); i++)
             {
                 trimLeft(lines[i]) => string l;
                 if (l.length() == 0) continue;
                 if (l.charAt(0) == '#') continue;
-                if (l.length() >= 2 && subClamp(l, 0, 2) == "- ")
+                if (l.length() >= 1 && subClamp(l, 0, 1) == "-")
                 {
-                    subToEnd(l, 2) => string itemTok;
-                    // inline scalar parse with empty name
-                    trimLeft(trimRight(itemTok)) => itemTok;
-                    YamlNode itemNode("");
-                    if (itemTok.length() == 0 || itemTok == "null") { itemNode.SetString(""); }
-                    else if (itemTok.length() >= 1 && itemTok.charAt(0) == "\"".charAt(0)) { itemNode.SetString(stripOuterQuotes(itemTok)); }
-                    else {
-                        Std.atoi(itemTok) => int iv; Std.itoa(iv) => string ivs;
-                        if (ivs == itemTok) { itemNode.SetInt(iv); }
-                        else { Std.atof(itemTok) => float fv; if (itemTok.find(".") >= 0 || itemTok.find("e") >= 0 || itemTok.find("E") >= 0) { itemNode.SetFloat(fv); } else { itemNode.SetString(itemTok); } }
+                    subToEnd(trimLeft(lines[i]), 1) => string itemTokRaw;
+                    trimLeft(trimRight(itemTokRaw)) => string itemTok;
+                    if (itemTok.length() == 0)
+                    {
+                        int m; i+1 => m;
+                        while (m < lines.cap())
+                        {
+                            trimLeft(lines[m]) => string l2;
+                            if (l2.length() == 0 || l2.charAt(0) == '#') { m++; continue; }
+                            break;
+                        }
+                        if (m < lines.cap())
+                        {
+                            indentOf(lines[m]) => int nestedIndent;
+                            parseMapChildren(lines, m, nestedIndent) @=> YamlNode kids[];
+                            YamlNode mapItem("");
+                            mapItem.SetMap(kids);
+                            items << mapItem;
+                            int u;
+                            for (m => u; u < lines.cap(); u++)
+                            {
+                                trimLeft(lines[u]) => string l3;
+                                if (l3.length() == 0 || l3.charAt(0) == '#') { continue; }
+                                if (indentOf(lines[u]) <= baseIndent) { break; }
+                            }
+                            if (u > i) { u-1 => i; }
+                        }
+                        else
+                        {
+                            YamlNode emptyItem("");
+                            emptyItem.SetString("");
+                            items << emptyItem;
+                        }
                     }
-                    items << itemNode;
-                }
-                else if (l == "-")
-                {
-                    YamlNode empty("");
-                    empty.SetString("");
-                    items << empty;
+                    else if (indexOf(itemTok, ":") >= 0)
+                    {
+                        indexOf(itemTok, ":") => int c2;
+                        trimRight(subClamp(itemTok, 0, c2)) => string ikey;
+                        trimLeft(subClamp(itemTok, c2+1, itemTok.length() - (c2+1))) => string irest;
+                        parseScalarNodeWithName(ikey, irest) @=> YamlNode firstChild;
+                        int m; i+1 => m;
+                        while (m < lines.cap())
+                        {
+                            trimLeft(lines[m]) => string l2;
+                            if (l2.length() == 0 || l2.charAt(0) == '#') { m++; continue; }
+                            break;
+                        }
+                        YamlNode children[0];
+                        children << firstChild;
+                        if (m < lines.cap())
+                        {
+                            indentOf(lines[m]) => int nestedIndent;
+                            parseMapChildren(lines, m, nestedIndent) @=> YamlNode rest[];
+                            for (0 => int ri; ri < rest.cap(); ri++) { children << rest[ri]; }
+                            int u;
+                            for (m => u; u < lines.cap(); u++)
+                            {
+                                trimLeft(lines[u]) => string l3;
+                                if (l3.length() == 0 || l3.charAt(0) == '#') { continue; }
+                                if (indentOf(lines[u]) <= baseIndent) { break; }
+                            }
+                            if (u > i) { u-1 => i; }
+                        }
+                        YamlNode mapItem("");
+                        mapItem.SetMap(children);
+                        items << mapItem;
+                    }
+                    else if (indexOf(itemTok, ":") >= 0)
+                    {
+                        indexOf(itemTok, ":") => int c2;
+                        trimRight(subClamp(itemTok, 0, c2)) => string ikey;
+                        trimLeft(subClamp(itemTok, c2+1, itemTok.length() - (c2+1))) => string irest;
+                        parseScalarNodeWithName(ikey, irest) @=> YamlNode firstChild;
+                        int m; i+1 => m;
+                        while (m < lines.cap())
+                        {
+                            trimLeft(lines[m]) => string l2;
+                            if (l2.length() == 0 || l2.charAt(0) == '#') { m++; continue; }
+                            break;
+                        }
+                        YamlNode children[0];
+                        children << firstChild;
+                        if (m < lines.cap())
+                        {
+                            indentOf(lines[m]) => int nestedIndent;
+                            parseMapChildren(lines, m, nestedIndent) @=> YamlNode restKids[];
+                            for (0 => int ri; ri < restKids.cap(); ri++) { children << restKids[ri]; }
+                            int u;
+                            for (m => u; u < lines.cap(); u++)
+                            {
+                                trimLeft(lines[u]) => string l3;
+                                if (l3.length() == 0 || l3.charAt(0) == '#') { continue; }
+                                if (indentOf(lines[u]) <= baseIndent) { break; }
+                            }
+                            if (u > i) { u-1 => i; }
+                        }
+                        YamlNode mapItem("");
+                        mapItem.SetMap(children);
+                        items << mapItem;
+                    }
+                    else
+                    {
+                        YamlNode itemNode("");
+                        if (itemTok == "null") { itemNode.SetString(""); }
+                        else if (itemTok.length() >= 1 && itemTok.charAt(0) == "\"".charAt(0)) { itemNode.SetString(stripOuterQuotes(itemTok)); }
+                        else {
+                            Std.atoi(itemTok) => int iv; Std.itoa(iv) => string ivs;
+                            if (ivs == itemTok) { itemNode.SetInt(iv); }
+                            else { Std.atof(itemTok) => float fv; if (itemTok.find(".") >= 0 || itemTok.find("e") >= 0 || itemTok.find("E") >= 0) { itemNode.SetFloat(fv); } else { itemNode.SetString(itemTok); } }
+                        }
+                        items << itemNode;
+                    }
                 }
             }
             root.SetArray(items);

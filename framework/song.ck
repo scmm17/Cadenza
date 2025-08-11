@@ -520,7 +520,6 @@ public class Song
 public class Part 
 {
     string midiDevice;
-    int midiChannel;
 
     int notesPerMeasure;
     int numberOfMeasures;
