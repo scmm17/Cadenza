@@ -142,7 +142,6 @@ public class YamlNode
     {
         if (type != TYPE_MAP())
         {
-            <<< "Warning: MapSetInt called on non-map YamlNode (type=" + type + ")" >>>;
             return;
         }
         // find existing child with name
@@ -160,6 +159,28 @@ public class YamlNode
         YamlNode child(key);
         child.SetInt(value);
         arrayValue << child;
+    }
+
+    fun int GetInt(string key)
+    {
+        if (type != TYPE_MAP())
+        {
+            <<< "Warning: MapGetInt called on non-map YamlNode (type=" + type + ")" >>>;
+            return 0;
+        }
+        // find existing child with name
+        -1 => int foundIdx;
+        for (0 => int i; i < arrayValue.cap(); i++)
+        {
+            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
+        }
+
+        if (foundIdx < 0) {
+            <<< "Warning: Key '" + key + "' not found in YamlNode map." >>>;
+            return 0;
+        }
+
+        return arrayValue[foundIdx].GetInt();
     }
 
     fun void SetString(string key, string value)
@@ -186,6 +207,29 @@ public class YamlNode
         arrayValue << child;
     }
 
+    fun string GetString(string key)
+    {
+        if (type != TYPE_MAP())
+        {
+            <<< "Warning: MapGetString called on non-map YamlNode (type=" + type + ")" >>>;
+            return "";
+        }
+        // find existing child with name
+        -1 => int foundIdx;
+        for (0 => int i; i < arrayValue.cap(); i++)
+        {
+            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
+        }
+
+        if (foundIdx < 0) {
+            <<< "Warning: Key '" + key + "' not found in YamlNode map." >>>;
+            return "";
+        }
+
+        return arrayValue[foundIdx].GetString();
+    }
+
+
     fun void SetFloat(string key, float value)
     {
         if (type != TYPE_MAP())
@@ -210,12 +254,33 @@ public class YamlNode
         arrayValue << child;
     }
 
+    fun float GetFloat(string key)
+    {
+        if (type != TYPE_MAP())
+        {
+            <<< "Warning: MapGetFloat called on non-map YamlNode (type=" + type + ")" >>>;
+            return 0.0;
+        }
+        // find existing child with name
+        -1 => int foundIdx;
+        for (0 => int i; i < arrayValue.cap(); i++)
+        {
+            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
+        }
+        if (foundIdx < 0) {
+                <<< "Warning: Key '" + key + "' not found in YamlNode map." >>>;
+                return 0.0;
+            }
+
+        return arrayValue[foundIdx].GetFloat();
+    }
+
     fun YamlNode@ SetMap(string key)
     {
         if (type != TYPE_MAP())
         {
-            <<< "Warning: SetMap called on non-map YamlNode (type=" + type + ")" >>>;
-            return null;
+            YamlNode empty[0];
+            SetMap(empty);
         }
         // find existing child with name
         -1 => int foundIdx;
@@ -233,6 +298,33 @@ public class YamlNode
         child.SetMap(none);
         arrayValue << child;
         return arrayValue[arrayValue.cap() - 1];
+    }
+
+    fun YamlNode@ GetMap(string key)
+    {
+        if (type != TYPE_MAP())
+        {
+            <<< "Warning: GetMap called on non-map YamlNode (type=" + type + ")" >>>;
+            return null;
+        }
+        // find existing child with name
+        -1 => int foundIdx;
+        for (0 => int i; i < arrayValue.cap(); i++)
+        {
+            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
+        }
+        if (foundIdx < 0) {
+            <<< "Warning: Key '" + key + "' not found in YamlNode map." >>>;
+            return null;
+        }
+        arrayValue[foundIdx] @=> YamlNode@ map;
+        if (map.GetType() != TYPE_MAP())
+        {
+            <<< "Warning: GetMap called on non-map YamlNode (type=" + map.GetType() + ")" >>>;
+            return null;
+        }
+
+        return map;
     }
 
     // ---------------- small string helpers ----------------

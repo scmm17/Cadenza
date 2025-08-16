@@ -1,3 +1,5 @@
+@import "../framework/yaml.ck"
+
 public class Patch 
 {
     // Name of the MIDI device to connect to
@@ -18,6 +20,10 @@ public class Patch
     string uiName;
     // Muted state (0 = not muted, 1 = muted, or use as boolean)
     int muted;
+
+    // Program and bank for program change, used by some devices
+    int program;
+    int bank;
 
     MidiOut gma;
 
@@ -44,6 +50,42 @@ public class Patch
 
     fun void setPreset()
     {
+    }
+
+    fun void saveConfig(YamlNode @config)
+    {
+        <<< "saveConfig not implemented for:", deviceName >>>;
+    }
+
+    fun void loadConfig(YamlNode @config)
+    {
+        <<< "loadConfig not implemented for:", deviceName >>>;
+    }
+
+    fun void loadCommonConfig(YamlNode @config)
+    {
+        config.GetString("deviceName") => deviceName;
+        config.GetInt("midiChannel") => midiChannel;
+        config.GetString("patchName") => patchName;
+        config.GetString("uiName") => uiName;
+        config.GetInt("muted") => muted;
+        config.GetInt("volume") => volume;
+        config.GetInt("filterCutoff") => filterCutoff;
+        config.GetInt("filterResonance") => filterResonance;
+        config.GetInt("pan") => pan;
+    }
+
+    fun void saveCommonConfig(YamlNode @config)
+    {
+        config.SetString("deviceName", deviceName);
+        config.SetInt("midiChannel", midiChannel);
+        config.SetString("patchName", patchName);
+        config.SetString("uiName", uiName);
+        config.SetInt("muted", muted);
+        config.SetInt("volume", volume);
+        config.SetInt("filterCutoff", filterCutoff);
+        config.SetInt("filterResonance", filterResonance);
+        config.SetInt("pan", pan);
     }
 
     fun void updateControllers()
@@ -196,13 +238,23 @@ public class Hydrasynth extends Patch
             programChangeHydra(program-1, bank);
         }
     }
+
+    fun void saveConfig(YamlNode @config)
+    {
+        saveCommonConfig(config);
+        config.SetString("presetName", presetName);
+    }
+
+    fun void loadConfig(YamlNode @config)
+    {
+        loadCommonConfig(config);
+        config.GetString("presetName") => presetName;
+        updateControllers();
+    }
 }
 
 public class RolandS1 extends Patch
 {
-    int program;
-    int bank;
-
     fun RolandS1(int b, int p, int v)
     {
         "S-1 MIDI IN" => deviceName;
@@ -220,12 +272,25 @@ public class RolandS1 extends Patch
         <<< "S1 preset:", preset >>>;
         programChangeS1(preset);
     }
+
+    fun void saveConfig(YamlNode @config)
+    {
+        saveCommonConfig(config);
+        config.SetInt("program", program);
+        config.SetInt("bank", bank);
+    }
+
+    fun void loadConfig(YamlNode @config)
+    {
+        loadCommonConfig(config);
+        config.GetInt("program") => program;
+        config.GetInt("bank") => bank;
+        updateControllers();
+    }
 }
 
 public class RolandSH4d extends Patch
 {
-    int program;
-    int bank;
     int programChange;
 
     fun RolandSH4d(int channel, int b, int p, int v)
@@ -261,6 +326,23 @@ public class RolandSH4d extends Patch
             programChangeSH4d(preset);
         }
     }
+
+    fun void saveConfig(YamlNode @config)
+    {
+        saveCommonConfig(config);
+        config.SetInt("program", program);
+        config.SetInt("bank", bank);
+        config.SetInt("programChange", programChange);
+    }
+    
+    fun void loadConfig(YamlNode @config)
+    {
+        loadCommonConfig(config);
+        config.GetInt("program") => program;
+        config.GetInt("bank") => bank;
+        config.GetInt("programChange") => programChange;
+        updateControllers();
+    }
 }
 
 public class BehringerRD6 extends Patch
@@ -279,6 +361,19 @@ public class BehringerRD6 extends Patch
 
     fun void setPreset()
     {
+    }
+
+    fun void saveConfig(YamlNode @config)
+    {
+        saveCommonConfig(config);
+        config.SetString("presetName", presetName);
+    }
+
+    fun void loadConfig(YamlNode @config)
+    {
+        loadCommonConfig(config);
+        config.GetString("presetName") => presetName;
+        updateControllers();
     }
 }
 
@@ -363,6 +458,18 @@ public class V3PresetCollection
         }
         <<< "Can't find preset: ", presetName >>>;
         return v3Presets[0];
+    }
+
+    fun void setPresetState(string presetName)
+    {
+        for( 0 => int i; i < v3Presets.cap(); i++) {
+            if (v3Presets[i].name == presetName) {
+                i => curPresetIndex;
+                v3Presets[curPresetIndex] @=> V3Preset preset;
+                preset.category @=> curPresetCategory;
+                return;
+            }
+        }
     }
 
 // All Presets for the V3 Grand Piano XXL
@@ -1064,8 +1171,6 @@ new V3Preset(120, 5, "Ullian Drone & Chords", "Winds"),
 
 public class V3GrandPiano extends Patch
 {
-    int program;
-    int bank;
     int programChange;
     V3Preset preset();
 
@@ -1109,10 +1214,27 @@ public class V3GrandPiano extends Patch
     {
         if (programChange) 
         {
+            <<< "programChangeV3GrandPiano", program, bank >>>;
             programChangeV3GrandPiano(program, bank);
             0.1::second => now;
         }
     }
 
+    fun void saveConfig(YamlNode @config)
+    {
+        saveCommonConfig(config);
+        config.SetInt("program", program);
+        config.SetInt("bank", bank);
+        config.SetInt("programChange", programChange);
+    }
+
+    fun void loadConfig(YamlNode @config)
+    {
+        loadCommonConfig(config);
+        config.GetInt("program") => program;
+        config.GetInt("bank") => bank;
+        true => programChange;
+        updateControllers();
+    }
 }
 

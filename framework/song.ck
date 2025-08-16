@@ -1,5 +1,6 @@
 @import "patch.ck"
 @import "../framework/midi-events.ck"
+@import "../framework/yaml.ck"
 
 // Overall structure of a song
 
@@ -47,29 +48,25 @@ public class Song
     LaunchControl @ launchControl;
     MidiMapper @ hydraEvents;
 
-    fun Song(string name, float bpm, int root, Part allParts[])
-    {
-        name => this.name;
-        setBPM(bpm);
-        root => rootNote;
-        allParts @=> parts;
-        false => forever;
-        false => pause;
-        false => debug;
-        false => shuttingDown;
-        false => golden;
-        false => muteMode;
-        true => soloMode;
-        Patch empty[0];
-        empty @=> mutedPatches;
-        initDevicesFromParts();
-        for(Patch device : devices) {
-            if (device == null) {
-                break;
-            }
-            device @=> Patch device;
-        }
-    }
+    YamlNode @ config;
+
+    // fun Song(string name, float bpm, int root, Part allParts[])
+    // {
+    //     name => this.name;
+    //     setBPM(bpm);
+    //     root => rootNote;
+    //     allParts @=> parts;
+    //     false => forever;
+    //     false => pause;
+    //     false => debug;
+    //     false => shuttingDown;
+    //     false => golden;
+    //     false => muteMode;
+    //     true => soloMode;
+    //     Patch empty[0];
+    //     empty @=> mutedPatches;
+    //     initDevicesFromParts();
+    // }
 
     fun Song(string name, float bpm, int root, Fragment startFrag, Part allParts[])
     {
@@ -90,6 +87,7 @@ public class Song
         startFrag.parts @=> currentParts;
         new MidiMapper("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1) @=> hydraEvents;
         new LaunchControl(this) @=> launchControl;
+        loadConfig();
 
         .25 ::second => now;
 
@@ -121,6 +119,65 @@ public class Song
         }
     }
 
+    fun void loadConfig()
+    {
+        name + ".yaml" => string configFile;
+        FileIO f;
+        f.open(configFile, FileIO.READ);
+        <<< "configFile:", configFile >>>;
+        if (f.good()) {
+            <<< "f.good()" >>>;
+            f.close();
+            YamlNode.ParseFile(configFile) @=> config;
+            loadDeviceConfigs();
+        } else {
+            <<< "f.good() is false" >>>;
+            f.close();
+            new YamlNode("song") @=> config;
+            saveDeviceConfigs();
+            config.WriteFile(configFile);
+        }
+    }
+
+    fun void saveConfig()
+    {
+        name + ".yaml" => string configFile;
+        saveDeviceConfigs();
+        config.WriteFile(configFile);
+    }
+
+    fun void saveDeviceConfigs()
+    {
+        config.SetMap("devices") @=> YamlNode deviceSettings;
+        for(Patch p : devices) {
+            if (p != null) {
+                p.uiName + "-" + Std.itoa(p.midiChannel) => string propName;
+                deviceSettings.SetMap(propName) @=> YamlNode patchConfig;
+                p.saveConfig(patchConfig);
+            }
+        }
+    }
+
+    fun void loadDeviceConfigs()
+    {
+        config.WriteFile("foo.yaml");
+        config.GetMap("devices") @=> YamlNode deviceSettings;
+        <<< "deviceSettings:", deviceSettings >>>;
+        if (deviceSettings != null) {
+            for(Patch p : devices) {
+                if (p != null) {    
+                    <<< "p:", p.uiName, p.midiChannel >>>;
+                    p.uiName + "-" + Std.itoa(p.midiChannel) => string propName;
+                    <<< "propName:", propName >>>;
+                    p.loadConfig(deviceSettings.GetMap(propName));
+                    if (p.uiName == "V3") {
+                        presets.setPresetState(p.patchName);
+                    }
+                }
+            }
+        }
+    }
+
     V3PresetCollection presets;
 
     fun string getPresetDeclaration(V3Preset preset)
@@ -130,38 +187,58 @@ public class Song
 
     fun setNextPreset(int volume) 
     {
+        if (currentDevice.uiName != "V3") {
+            return;
+        }
         presets.getNextPreset() @=> V3Preset preset;
         V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
+        preset.program => currentDevice.program;
+        preset.bank => currentDevice.bank;
         <<< getPresetDeclaration(preset), "" >>>;
     }
 
     fun setNextPresetCategory(int volume) 
     {
+        if (currentDevice.uiName != "V3") {
+            return;
+        }
         presets.getNextCategory() @=> V3Preset preset;
         V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
+        preset.program => currentDevice.program;
+        preset.bank => currentDevice.bank;
         <<< "Category:", preset.category >>>;
         <<< getPresetDeclaration(preset), "" >>>;
     }
 
     fun setPreviousPreset(int volume) 
     {
+        if (currentDevice.uiName != "V3") {
+            return;
+        }
         presets.getPreviousPreset() @=> V3Preset preset;
         V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
+        preset.program => currentDevice.program;
+        preset.bank => currentDevice.bank;
         <<< getPresetDeclaration(preset), "" >>>;
     }
 
     fun setPreviousPresetCategory(int volume) 
     {
+        if (currentDevice.uiName != "V3") {
+            return;
+        }
         presets.getPreviousCategory() @=> V3Preset preset;
         V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
+        preset.program => currentDevice.program;
+        preset.bank => currentDevice.bank;
         <<< "Category:", preset.category >>>;
         <<< getPresetDeclaration(preset), "" >>>;
     }
@@ -206,6 +283,9 @@ public class Song
                 if ("g".charAt(0) == key) {
                     !golden => golden;
                     <<< "Golden: ", golden >>>;
+                }
+                if ("w".charAt(0) == key) {
+                    saveConfig();
                 }
             }
         }

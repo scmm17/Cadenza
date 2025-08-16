@@ -1,0 +1,65 @@
+song:
+  devices:
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "B016"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 30
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "B016"
+    SH-4d-0:
+      deviceName: "SH-4d"
+      midiChannel: 0
+      patchName: "Bank: 3 Program: 11"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 108
+      filterCutoff: 82
+      filterResonance: 95
+      pan: 64
+      program: 11
+      bank: 3
+      programChange: 1
+    SH-4d-1:
+      deviceName: "SH-4d"
+      midiChannel: 1
+      patchName: "Channel 2"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 65
+      filterCutoff: 55
+      filterResonance: 81
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "OB & Noise"
+      uiName: "V3"
+      muted: 0
+      volume: 60
+      filterCutoff: 90
+      filterResonance: 64
+      pan: 85
+      program: 6
+      bank: 2
+      programChange: 1
+    SH-4d-2:
+      deviceName: "SH-4d"
+      midiChannel: 2
+      patchName: "Channel 3"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 64
+      filterCutoff: 83
+      filterResonance: 49
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
