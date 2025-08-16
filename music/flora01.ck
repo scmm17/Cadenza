@@ -44,12 +44,12 @@ ChordProgression prog1(hydrasynth, chordsH, progression, false, 1, 4, probabilit
 velocities1 @=> prog1.velocities;
 
 
-[1.0, 0.5] @=> float probabilities2[];
+[0.25] @=> float probabilities2[];
 [124, 115] @=> int velocities2[];
 ChordProgression prog2(sh4d_1, chordsLL, progression, true, 2, 4, probabilities2);
 true => prog2.random;
 velocities2 @=> prog2.velocities;
-0.3 => prog2.mutateProbabilityRange;
+// 0.3 => prog2.mutateProbabilityRange;
 
 // Chord Progression
 [1.0, 0.5, .25, .25] @=> float probabilities3[];
