@@ -1,27 +1,39 @@
 song:
   devices:
+    S-1-2:
+      deviceName: "S-1 MIDI IN"
+      midiChannel: 2
+      patchName: "Bank: 1 Program: 13"
+      uiName: "S-1"
+      muted: 0
+      volume: 25
+      filterCutoff: 38
+      filterResonance: 18
+      pan: 64
+      program: 13
+      bank: 1
     Hydrasynth-0:
       deviceName: "HYDRASYNTH EXPLORER"
       midiChannel: 0
-      patchName: "B016"
+      patchName: "D025"
       uiName: "Hydrasynth"
       muted: 0
-      volume: 30
+      volume: 91
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      presetName: "B016"
+      presetName: "D025"
     SH-4d-0:
       deviceName: "SH-4d"
       midiChannel: 0
-      patchName: "Bank: 3 Program: 11"
+      patchName: "Bank: 3 Program: 9"
       uiName: "SH-4d"
       muted: 0
-      volume: 108
-      filterCutoff: 82
-      filterResonance: 95
+      volume: 124
+      filterCutoff: -1
+      filterResonance: -1
       pan: 64
-      program: 11
+      program: 9
       bank: 3
       programChange: 1
     SH-4d-1:
@@ -30,35 +42,22 @@ song:
       patchName: "Channel 2"
       uiName: "SH-4d"
       muted: 0
-      volume: 65
-      filterCutoff: 55
-      filterResonance: 81
+      volume: 64
+      filterCutoff: -1
+      filterResonance: -1
       pan: 64
       program: 0
       bank: 0
       programChange: 0
-    V3-0:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 0
-      patchName: "Atmos"
-      uiName: "V3"
-      muted: 0
-      volume: 60
-      filterCutoff: 90
-      filterResonance: 64
-      pan: 85
-      program: 7
-      bank: 2
-      programChange: 1
-    SH-4d-2:
+    SH-4d-9:
       deviceName: "SH-4d"
-      midiChannel: 2
-      patchName: "Channel 3"
+      midiChannel: 9
+      patchName: "Drums"
       uiName: "SH-4d"
       muted: 0
-      volume: 64
-      filterCutoff: 83
-      filterResonance: 49
+      volume: 69
+      filterCutoff: -1
+      filterResonance: -1
       pan: 64
       program: 0
       bank: 0

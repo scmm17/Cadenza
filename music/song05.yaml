@@ -1,0 +1,54 @@
+song:
+  devices:
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Boys Doo Bass"
+      uiName: "V3"
+      muted: 0
+      volume: 79
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 73
+      bank: 4
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Choir Ooh Filter"
+      uiName: "V3"
+      muted: 0
+      volume: 97
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 69
+      bank: 4
+      programChange: 1
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Girls Doo"
+      uiName: "V3"
+      muted: 0
+      volume: 96
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 76
+      bank: 4
+      programChange: 1
+    V3-3:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 3
+      patchName: "Voice Kit (page 43)"
+      uiName: "V3"
+      muted: 0
+      volume: 79
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 123
+      bank: 4
+      programChange: 1

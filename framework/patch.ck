@@ -35,7 +35,6 @@ public class Patch
             if (!status) {
                 <<< "Failed to open", gma.name() >>>;
             }
-            <<< "Patch Name: ", patchName >>>;
         }
         v => volume;
         if (volume == -1) {
@@ -269,7 +268,6 @@ public class RolandS1 extends Patch
     fun void setPreset()
     {
         (bank - 1) * 16 + program - 1 => int preset; 
-        <<< "S1 preset:", preset >>>;
         programChangeS1(preset);
     }
 
@@ -322,7 +320,6 @@ public class RolandSH4d extends Patch
         if (programChange) 
         {
             (bank - 1) * 16 + program - 1 => int preset; 
-            <<< "SH4d preset:", preset >>>;
             programChangeSH4d(preset);
         }
     }
@@ -1214,7 +1211,6 @@ public class V3GrandPiano extends Patch
     {
         if (programChange) 
         {
-            <<< "programChangeV3GrandPiano", program, bank >>>;
             programChangeV3GrandPiano(program, bank);
             0.1::second => now;
         }

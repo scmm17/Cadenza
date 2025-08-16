@@ -1,0 +1,77 @@
+song:
+  devices:
+    SH-4d-0:
+      deviceName: "SH-4d"
+      midiChannel: 0
+      patchName: "Bank: 3 Program: 2"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 99
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 2
+      bank: 3
+      programChange: 1
+    SH-4d-1:
+      deviceName: "SH-4d"
+      midiChannel: 1
+      patchName: "Channel 2"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 64
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+    S-1-2:
+      deviceName: "S-1 MIDI IN"
+      midiChannel: 2
+      patchName: "Bank: 2 Program: 10"
+      uiName: "S-1"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 10
+      bank: 2
+    SH-4d-2:
+      deviceName: "SH-4d"
+      midiChannel: 2
+      patchName: "Channel 3"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 102
+      filterCutoff: 71
+      filterResonance: 115
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "F007"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 118
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "F007"
+    SH-4d-9:
+      deviceName: "SH-4d"
+      midiChannel: 9
+      patchName: "Drums"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 70
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0

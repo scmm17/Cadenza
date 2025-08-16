@@ -40,14 +40,14 @@ song:
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
-      patchName: "OB & Noise"
+      patchName: "Atmos"
       uiName: "V3"
       muted: 0
       volume: 60
       filterCutoff: 90
       filterResonance: 64
       pan: 85
-      program: 6
+      program: 7
       bank: 2
       programChange: 1
     SH-4d-2:

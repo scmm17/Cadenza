@@ -126,12 +126,10 @@ public class Song
         f.open(configFile, FileIO.READ);
         <<< "configFile:", configFile >>>;
         if (f.good()) {
-            <<< "f.good()" >>>;
             f.close();
             YamlNode.ParseFile(configFile) @=> config;
             loadDeviceConfigs();
         } else {
-            <<< "f.good() is false" >>>;
             f.close();
             new YamlNode("song") @=> config;
             saveDeviceConfigs();
@@ -160,15 +158,11 @@ public class Song
 
     fun void loadDeviceConfigs()
     {
-        config.WriteFile("foo.yaml");
         config.GetMap("devices") @=> YamlNode deviceSettings;
-        <<< "deviceSettings:", deviceSettings >>>;
         if (deviceSettings != null) {
             for(Patch p : devices) {
                 if (p != null) {    
-                    <<< "p:", p.uiName, p.midiChannel >>>;
                     p.uiName + "-" + Std.itoa(p.midiChannel) => string propName;
-                    <<< "propName:", propName >>>;
                     p.loadConfig(deviceSettings.GetMap(propName));
                     if (p.uiName == "V3") {
                         presets.setPresetState(p.patchName);
@@ -273,7 +267,7 @@ public class Song
                         launchControl.printDevices();
                     }
                 }
-                if ("q".charAt(0) == key) {
+                if ("Q".charAt(0) == key) {
                     shutdown();
                 }
                 if ("p".charAt(0) == key) {
@@ -512,7 +506,6 @@ public class Song
                 part.totalDuration(this) => total;
             }
         }
-        <<< "Max bars: ", maxBars >>>;
         for(Part part : parts) 
         {
             if (!containsPart(part)) {
@@ -794,7 +787,7 @@ public class Fragment
             if (owningSong != null) {
                 parts @=> owningSong.currentParts;
                 owningSong.launchControl.printDevices();
-                <<< "\n    Fragment:", name >>>;
+                <<< "    Fragment:", name >>>;
                 owningSong.playPartOnce();
             }
         }
@@ -846,8 +839,6 @@ public class LaunchControl
     {
         "Launch Control XL" => inputDeviceName;
         s @=> song;
-
-        printDevices();
     }
 
     fun string padString(int len) 
@@ -904,7 +895,7 @@ public class LaunchControl
             deviceNum++;
         }
 
-        <<< "Mute Mode:", song.muteMode, "Solo Mode:", song.soloMode, "Muted Patches:", song.mutedPatches.cap() >>>;
+        <<< "Mute Mode:", song.muteMode, "Solo Mode:", song.soloMode, "Muted Patches:", song.mutedPatches.cap(), "Golden:", Song.golden >>>;
 
         write_markdown_panel();
     }

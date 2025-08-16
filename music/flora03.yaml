@@ -6,7 +6,7 @@ song:
       patchName: "B016"
       uiName: "Hydrasynth"
       muted: 0
-      volume: 30
+      volume: 24
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -17,9 +17,9 @@ song:
       patchName: "Bank: 3 Program: 11"
       uiName: "SH-4d"
       muted: 0
-      volume: 108
-      filterCutoff: 82
-      filterResonance: 95
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
       pan: 64
       program: 11
       bank: 3
@@ -30,9 +30,9 @@ song:
       patchName: "Channel 2"
       uiName: "SH-4d"
       muted: 0
-      volume: 65
-      filterCutoff: 55
-      filterResonance: 81
+      volume: 30
+      filterCutoff: -1
+      filterResonance: -1
       pan: 64
       program: 0
       bank: 0
@@ -40,15 +40,15 @@ song:
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
-      patchName: "Atmos"
+      patchName: "G. Steel Slide (velo. 116-127 Slide)"
       uiName: "V3"
       muted: 0
-      volume: 60
-      filterCutoff: 90
-      filterResonance: 64
-      pan: 85
-      program: 7
-      bank: 2
+      volume: 75
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 28
+      bank: 3
       programChange: 1
     SH-4d-2:
       deviceName: "SH-4d"
@@ -56,9 +56,9 @@ song:
       patchName: "Channel 3"
       uiName: "SH-4d"
       muted: 0
-      volume: 64
-      filterCutoff: 83
-      filterResonance: 49
+      volume: 49
+      filterCutoff: -1
+      filterResonance: -1
       pan: 64
       program: 0
       bank: 0
