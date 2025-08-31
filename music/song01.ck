@@ -113,11 +113,6 @@ FragmentTransition ft6(frag6, 1.0);
 [ft1] @=> frag6.nextFragments;
 
 Song song("song01", BPM, root, frag1, parts6);
-song @=> frag1.owningSong;
-song @=> frag2.owningSong;
-song @=> frag3.owningSong;
-song @=> frag4.owningSong;
-song @=> frag5.owningSong;
-song @=> frag6.owningSong;
+
 
 song.play();

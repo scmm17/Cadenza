@@ -9,7 +9,7 @@ song:
       volume: 123
       filterCutoff: -1
       filterResonance: -1
-      pan: 64
+      pan: 60
       program: 1
       bank: 3
       programChange: 1
@@ -35,7 +35,7 @@ song:
       volume: 127
       filterCutoff: 47
       filterResonance: 32
-      pan: 64
+      pan: 71
       program: 10
       bank: 2
     SH-4d-2:
@@ -47,7 +47,7 @@ song:
       volume: 127
       filterCutoff: -1
       filterResonance: -1
-      pan: 64
+      pan: 48
       program: 0
       bank: 0
       programChange: 0
@@ -57,7 +57,7 @@ song:
       patchName: "A026"
       uiName: "Hydrasynth"
       muted: 0
-      volume: 63
+      volume: 115
       filterCutoff: -1
       filterResonance: -1
       pan: 64

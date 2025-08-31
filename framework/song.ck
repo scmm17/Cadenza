@@ -25,6 +25,7 @@ public class Song
     Patch @ mutedPatches[];
     int muteMode;
     int soloMode;
+    int allMode;
 
     // One patch per midi device
     Patch @ devices[16];
@@ -36,7 +37,6 @@ public class Song
     int forever;
 
     // Interactive controls
-    static int pause;
     static int debug;
     static int golden;
     static int shuttingDown;
@@ -50,24 +50,6 @@ public class Song
 
     YamlNode @ config;
 
-    // fun Song(string name, float bpm, int root, Part allParts[])
-    // {
-    //     name => this.name;
-    //     setBPM(bpm);
-    //     root => rootNote;
-    //     allParts @=> parts;
-    //     false => forever;
-    //     false => pause;
-    //     false => debug;
-    //     false => shuttingDown;
-    //     false => golden;
-    //     false => muteMode;
-    //     true => soloMode;
-    //     Patch empty[0];
-    //     empty @=> mutedPatches;
-    //     initDevicesFromParts();
-    // }
-
     fun Song(string name, float bpm, int root, Fragment startFrag, Part allParts[])
     {
         name => this.name;
@@ -75,12 +57,12 @@ public class Song
         root => rootNote;
         allParts @=> parts;
         startFrag @=> startFragment;
-        false => pause;
         false => debug;
         false => shuttingDown;
         false => golden;
         false => muteMode;
         true => soloMode;
+        false => allMode;
         Patch empty[0];
         empty @=> mutedPatches;
         initDevicesFromParts();
@@ -270,16 +252,17 @@ public class Song
                 if ("Q".charAt(0) == key) {
                     shutdown();
                 }
-                if ("p".charAt(0) == key) {
-                    !pause => pause;
-                    <<< "Pause: ", pause >>>;
-                }
                 if ("g".charAt(0) == key) {
                     !golden => golden;
-                    <<< "Golden: ", golden >>>;
+                    launchControl.printDevices();
                 }
                 if ("w".charAt(0) == key) {
                     saveConfig();
+                    <<< "Saved config", "" >>>;
+                }
+                if ("a".charAt(0) == key) {
+                    !allMode => allMode;
+                    launchControl.printDevices();
                 }
             }
         }
@@ -468,7 +451,7 @@ public class Song
 
     fun Fragment playFragment(Fragment frag) 
     {
-        return frag.play();
+        return frag.play(this);
     }
 
     fun int containsPart(Part part) 
@@ -487,7 +470,6 @@ public class Song
     // play the song
     fun void playParts()
     {
-        // <<< "Starting song, num parts: ", parts.cap() >>>;
         0::second => dur total;
         Shred myShreds[parts.cap()];
         myShreds @=> shreds;
@@ -495,7 +477,7 @@ public class Song
         0 => int maxBars;
         for(Part part : parts) 
         {
-            if (!containsPart(part)) {
+            if (!allMode && !containsPart(part)) {
                 continue;
             }
             if (part.numberOfMeasures > maxBars) {
@@ -508,7 +490,7 @@ public class Song
         }
         for(Part part : parts) 
         {
-            if (!containsPart(part)) {
+            if (!allMode && !containsPart(part)) {
                 partIndex++;
                 continue;
             }
@@ -525,13 +507,6 @@ public class Song
                 <<< "Exiting" >>> ;
                 me.exit();
             }
-            // Shut off all current notes.
-            // <<< "Shutting off all notes" >>>;
-            // for(Patch device : devices) {
-            //     if (device != null) {
-            //         device.sendAllNotesOff();
-            //     }
-            // }
             for(Shred shred : oldShreds) 
             {
                 if (shred != null) {
@@ -752,7 +727,6 @@ public class FragmentTransition
 public class Fragment 
 {
     int repeatCount;
-    Song @ owningSong;
     FragmentTransition nextFragments[];
     Part @ parts[];
     string name;
@@ -786,16 +760,12 @@ public class Fragment
         return nextFragments[0].nextFragment;
     }
 
-    fun Fragment play()
+    fun Fragment play(Song song)
     {
         for(0 => int i; i < repeatCount; i++) {
-            // <<< "Play count: ", i >>>;
-            if (owningSong != null) {
-                parts @=> owningSong.currentParts;
-                owningSong.launchControl.printDevices();
-                <<< "    Fragment:", name >>>;
-                owningSong.playPartOnce();
-            }
+            parts @=> song.currentParts;
+            song.launchControl.printDevices();
+            song.playPartOnce();
         }
         getNextSongFragment() @=> Fragment next;
         <<< "Next Fragment:", next.name >>>;
@@ -901,7 +871,7 @@ public class LaunchControl
             deviceNum++;
         }
 
-        <<< "Mute Mode:", song.muteMode, "Solo Mode:", song.soloMode, "Muted Patches:", song.mutedPatches.cap(), "Golden:", Song.golden >>>;
+        <<< "Fragment: " + song.currentFragment.name + ", Mute Mode: " + song.muteMode + ", Solo Mode: " + song.soloMode + ", Muted Patches: " + song.mutedPatches.cap() + ", Golden: " + Song.golden + ", All Mode: " + song.allMode, "" >>>;
 
         write_markdown_panel();
     }
@@ -939,6 +909,11 @@ public class LaunchControl
             }
             deviceNum++;
         }
+        fout.write("\n");
+        fout.write("| Fragment | Mute Mode | Solo Mode | Golden | All |\n");
+        fout.write("| :---: | :---: | :---: | :---: | :---: |\n");
+        "| " + song.currentFragment.name + " | " + (song.muteMode ? "☑️" : "❌") + " | " + (song.soloMode ? "☑️" : "❌") + " | " + (Song.golden ? "☑️" : "❌") + " | " + (song.allMode ? "☑️" : "❌") + " |\n" => string statusLine;
+        fout.write(statusLine);
         fout.close();
     }
 

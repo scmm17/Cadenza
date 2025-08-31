@@ -112,6 +112,5 @@ FragmentTransition ft2(frag2, 1.0);
 [ft1] @=> frag2.nextFragments;
 
 Song song("refactor", BPM, root, frag1, allParts);
-song @=> frag1.owningSong;
-song @=> frag2.owningSong;
+
 song.play();
