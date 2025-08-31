@@ -32,7 +32,7 @@ song:
       patchName: "Steel drums"
       uiName: "V3"
       muted: 0
-      volume: 62
+      volume: 51
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -45,9 +45,9 @@ song:
       patchName: "Bank: 2 Program: 10"
       uiName: "S-1"
       muted: 0
-      volume: 127
-      filterCutoff: -1
-      filterResonance: -1
+      volume: 118
+      filterCutoff: 64
+      filterResonance: 89
       pan: 64
       program: 10
       bank: 2

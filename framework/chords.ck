@@ -20,11 +20,15 @@ public class ChordProgression extends Part
 {
     Chord chords[];
     int offsets[];
+    int melody[];
 
     // If true, play the chord in sequence, otherwise play as a chord.
     int arpeggiated;
     int random;
+    int useMelody;
     dur noteDuration; 
+
+    int curMelodyPosition;
 
     fun ChordProgression(
       Patch initPatch,
@@ -44,6 +48,8 @@ public class ChordProgression extends Part
         numMeasures => numberOfMeasures;
         false => random;
         0.0 => mutateProbabilityRange;
+        false => useMelody;
+        0 => curMelodyPosition;
     }
 
     fun dur totalDuration(Song song)
@@ -96,10 +102,15 @@ public class ChordProgression extends Part
         if (random)
         {
             Math.random2(0, chord.notes.cap()-1) => int index;
-            chord.getMidiNote(song, index, offsets[measure] + chord.octave * 12) => int note;
+            chord.getMidiNote(song, index, offsets[measure % offsets.cap()] + chord.octave * 12) => int note;
+            return note;
+        } else if (useMelody) {
+            melody[curMelodyPosition] => int noteIndex;
+            ++curMelodyPosition % melody.cap() => curMelodyPosition;
+            chord.getMidiNote(song, noteIndex, offsets[measure % offsets.cap()] + chord.octave * 12) => int note;
             return note;
         } else {
-            chord.getMidiNote(song, noteInMeasure, offsets[measure] + chord.octave * 12) => int note;
+            chord.getMidiNote(song, noteInMeasure, offsets[measure % offsets.cap()] + chord.octave * 12) => int note;
             return note;
         }
     }

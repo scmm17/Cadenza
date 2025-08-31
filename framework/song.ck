@@ -599,6 +599,7 @@ public class Part
 
     float rhythmProbabilities[];
     int velocities[];
+    float durations[0];
     int legato;
     float mutateProbabilityRange;
 
@@ -666,6 +667,11 @@ public class Part
                 if (legato) 
                 {
                     0::ms => duration;
+                } else if (durations.cap() > 0) {
+                    durations[i % durations.cap()] => float durationFactor;
+                    if (durationFactor > 0.0) {
+                        durationFactor * song.whole()/notesPerMeasure => duration;
+                    }
                 }
                 patch.noteOn(note, velocitiesToPlay[i], duration);
             }

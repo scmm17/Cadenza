@@ -239,7 +239,14 @@ public class NoteCollection
         NoteCollection chord(notes);
         return chord;
     }
-    
+
+    fun static NoteCollection mixolydian_notes()
+    {
+        [-12, -10, -8, -7, -5, -3, -2, 0, 2, 4, 5, 7, 9, 10, 12] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
     fun NoteCollection(int theNotes[])
     {
         theNotes @=> notes;
