@@ -4,6 +4,10 @@
 @import "song.ck"
 @import "patch.ck"
 
+// Melody is a class that represents a melody in the framework.
+// It extends Part and adds a scale, rhythm probabilities, notes per measure, and number of measures.
+//
+// This class is used to create melodies for musical parts.
 public class Melody extends Part
 {
     NoteCollection scale;
@@ -35,6 +39,10 @@ public class Melody extends Part
 
 }
 
+// AleatoricMelody is a class that represents an aleatoric melody in the framework.
+// It extends Melody and adds a use note from chord probability.
+//
+// This class is used to create aleatoric melodies for musical parts.
 public class AleatoricMelody extends Melody
 {
     float useNoteFromChordProbability;
@@ -57,6 +65,10 @@ public class AleatoricMelody extends Melody
     }
 }
 
+// SequentialMelody is a class that represents a sequential melody in the framework.
+// It extends Melody and adds a use note from chord probability.
+//
+// This class is used to create sequential melodies for musical parts.
 public class SequentialMelody extends Melody
 {
     float useNoteFromChordProbability;
@@ -79,6 +91,10 @@ public class SequentialMelody extends Melody
     }
 }
 
+// DrumMachine is a class that represents a drum machine in the framework.
+// It extends Melody and adds a use note from chord probability.
+//
+// This class is used to create drum machines for musical parts.
 public class DrumMachine extends Melody
 {
     float useNoteFromChordProbability;

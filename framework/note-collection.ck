@@ -272,6 +272,29 @@ public class NoteCollection
     }
 }
 
+// LSystemNotes extends NoteCollection to generate note sequences using L-systems (Lindenmayer systems).
+// L-systems are a type of formal grammar that can generate complex patterns through recursive rewriting rules.
+// This class reads L-system definitions from YAML files and expands them into sequences of musical notes.
+//
+// The L-system is defined by:
+// - A start symbol (initial state)
+// - A set of rewriting rules that replace symbols with sequences of other symbols
+// - Offset values that modify the pitch when expanding symbols
+// - A maximum depth to control the recursion level
+//
+// Example YAML structure:
+// startSymbol: "A"
+// maxDepth: 3
+// rules:
+//   A: ["A", "B"]
+//   B: ["A"]
+// offsets:
+//   A: [0, 2]
+//   B: [1]
+//
+// The expansion process recursively applies the rules until maxDepth is reached,
+// then maps the final positions to actual MIDI notes from the basis note collection.
+
 public class LSystemNotes extends NoteCollection
 {
     NoteCollection @ basisNotes;
@@ -300,8 +323,6 @@ public class LSystemNotes extends NoteCollection
         expandedNotes[size-1] => int lastNote;
         0 => currentIndex;
         expand(startSymbol, 0, 0);
-        <<< "currentIndex: ", currentIndex >>>;
-        <<< "expandedNotes: ", arrayToString(expandedNotes) >>>;
         expandedNotes @=> notes;
     }
 

@@ -1,3 +1,8 @@
+// YamlNode is a class that represents a node in a YAML document.
+// It contains the name, type, and value of the node.
+// It can read and write YAML files for configuration and data storage.
+//
+// This class is used to create YAML nodes for YAML documents.
 public class YamlNode 
 {
     // Static type constants (as functions for ChucK compatibility)

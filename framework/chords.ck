@@ -4,6 +4,10 @@
 @import "song.ck"
 @import "patch.ck"
 
+// Chord is a class that represents a chord in the framework.
+// It extends NoteCollection and adds an octave offset.
+//
+// This class is used to create chords for musical parts.
 public class Chord extends NoteCollection
 {
     // Octave offset
@@ -16,6 +20,11 @@ public class Chord extends NoteCollection
     }
 }
 
+// ChordProgression is a class that represents a chord progression in the framework.
+// It extends Part and adds a chord array, offsets array, melody array, arpeggiated flag, 
+// random flag, note duration, and current melody position.
+//
+// This class is used to create chord progressions for musical parts.
 public class ChordProgression extends Part
 {
     Chord chords[];

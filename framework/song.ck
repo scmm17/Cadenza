@@ -2,8 +2,21 @@
 @import "../framework/midi-events.ck"
 @import "../framework/yaml.ck"
 
-// Overall structure of a song
-
+// Song is the central class that orchestrates all musical elements in the framework.
+// It manages tempo, key, parts, fragments, devices, and interactive controls for a complete musical composition.
+//
+// The Song class supports two main organizational structures:
+// 1. Parts-based: Direct collection of musical parts that play simultaneously
+// 2. Fragment-based: Structured sequences of parts with transitions and repetitions
+//
+// Key responsibilities include:
+// - Tempo management (BPM to duration conversion)
+// - Musical key/root note definition
+// - Part and device lifecycle management
+// - Interactive control integration (LaunchControl, MIDI mapping, keyboard controls)
+// - Playback state management (mute, solo, all modes)
+// - Configuration loading from YAML files
+//
 public class Song 
 {
     string name;
@@ -565,6 +578,27 @@ public class Song
     }
 }
 
+// Part is an abstract base class for all musical parts in the framework.
+// It defines the common interface for playing musical content,
+// including rhythm generation, note selection, and device interaction.
+//
+// Subclasses implement specific types of musical content:
+// - ChordProgression: Plays chord progressions
+// - Melody: Plays melodies
+// - DrumMachine: Plays drum patterns
+//
+// Each part is associated with a Patch, which represents a specific MIDI device.
+// Parts can generate rhythmic patterns using probabilities and velocities,
+// and can specify note durations and legato behavior.
+//
+// The play() method is the entry point for executing the part's musical content,
+// which is implemented by subclasses.
+//
+// Parts can be organized into songs using Fragments, which define sequences of parts
+// with transitions and repetition patterns.
+//
+// This class serves as the foundation for creating complex musical compositions
+// by providing a flexible and extensible framework for modular musical content.
 public class Part 
 {
     string midiDevice;
@@ -712,6 +746,11 @@ public class Part
 
 }
 
+// FragmentTransition is a helper class for defining transitions between Fragments in a Song.
+// It contains a reference to the next Fragment and a probability weight for selecting it.
+//
+// This class is used to create sequences of Fragments with weighted transitions,
+// allowing for more complex and dynamic musical compositions.
 public class FragmentTransition
 {
     Fragment nextFragment;
@@ -724,6 +763,14 @@ public class FragmentTransition
     }
 }
 
+// Fragment is a container for a sequence of Parts that are played together.
+// It defines a name, repeat count, and an array of Parts.
+//
+// The play() method is the entry point for executing the fragment's musical content,
+// which is implemented by subclasses.
+//
+// This class serves as the foundation for creating complex musical compositions
+// by providing a flexible and extensible framework for modular musical content.
 public class Fragment 
 {
     int repeatCount;
@@ -773,6 +820,11 @@ public class Fragment
     }
 }
 
+// ControlChange is a helper class for defining control changes for MIDI devices.
+// It contains a name, minimum and maximum controller numbers, and a mapping to an output controller.
+//
+// This class is used to create control changes for MIDI devices,
+// allowing for more complex and dynamic musical compositions.
 public class ControlChange
 {
     string name;
@@ -790,8 +842,23 @@ public class ControlChange
     }
 }
 
-
-
+// This class is used to manage the Launch Control XL,
+// allowing for more complex and dynamic musical compositions.
+// LaunchControl provides MIDI control surface integration for the Song framework.
+// It manages input from a Launch Control XL device to control various parameters
+// of MIDI devices and musical parts in real-time.
+//
+// Key features:
+// - Volume control for each device (controllers 77-84 mapped to CC 7)
+// - Filter control for each device (controllers 13-20 mapped to CC 74 for mod wheel/filter)
+// - Resonance control for each device (controllers 29-36 mapped to CC 71)
+// - Pan control for each device (controllers 49-56 mapped to CC 10)
+// - Visual feedback through LED indicators showing device status
+// - Real-time parameter adjustment during playback
+//
+// The controller mappings allow for intuitive control of up to 8 devices,
+// with each column of knobs controlling volume and filter parameters
+// for a specific MIDI device in the song.
 public class LaunchControl
 {
     string inputDeviceName;

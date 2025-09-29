@@ -1,5 +1,9 @@
 @import "../framework/yaml.ck"
 
+// Patch is a class that represents a MIDI device in the framework.
+// It contains the device name, MIDI channel, patch name, volume, filter cutoff, filter resonance, pan, UI name, muted state, program, and bank.
+//
+// This class is used to create patches for MIDI devices.
 public class Patch 
 {
     // Name of the MIDI device to connect to
@@ -212,6 +216,10 @@ public class Patch
     }
 }
 
+// Hydrasynth is a class that represents a Hydrasynth MIDI device in the framework.
+// It extends Patch and adds a preset name.
+//
+// This class is used to create Hydrasynth patches for MIDI devices.
 public class Hydrasynth extends Patch
 {
     string presetName;
@@ -252,6 +260,10 @@ public class Hydrasynth extends Patch
     }
 }
 
+// RolandS1 is a class that represents a Roland S-1 MIDI device in the framework.
+// It extends Patch and adds a program and bank.
+//
+// This class is used to create Roland S-1 patches for MIDI devices.
 public class RolandS1 extends Patch
 {
     fun RolandS1(int b, int p, int v)
@@ -287,6 +299,10 @@ public class RolandS1 extends Patch
     }
 }
 
+// RolandSH4d is a class that represents a Roland SH-4d MIDI device in the framework.
+// It extends Patch and adds a program change flag.
+//
+// This class is used to create Roland SH-4d patches for MIDI devices.
 public class RolandSH4d extends Patch
 {
     int programChange;
@@ -342,6 +358,10 @@ public class RolandSH4d extends Patch
     }
 }
 
+// BehringerRD6 is a class that represents a Behringer RD-6 MIDI device in the framework.
+// It extends Patch and adds a preset name.
+//
+// This class is used to create Behringer RD-6 patches for MIDI devices.
 public class BehringerRD6 extends Patch
 {
     string presetName;
@@ -374,6 +394,10 @@ public class BehringerRD6 extends Patch
     }
 }
 
+// V3Preset is a class that represents a V3 preset in the framework.
+// It contains the program, bank, name, and category.
+//
+// This class is used to create V3 presets for MIDI devices.
 public class V3Preset
 {
     int program;
@@ -388,6 +412,10 @@ public class V3Preset
     }
 }
 
+// V3PresetCollection is a class that represents a collection of V3 presets in the framework.
+// It contains the current preset index, current preset category, and a list of V3 presets.
+//
+// This class is used to create V3 preset collections for MIDI devices.
 public class V3PresetCollection
 {
     int curPresetIndex;
@@ -1166,6 +1194,10 @@ new V3Preset(120, 5, "Ullian Drone & Chords", "Winds"),
 
 }
 
+// V3GrandPiano is a class that represents a V3 grand piano in the framework.
+// It extends Patch and adds a program change flag and preset.
+//
+// This class is used to create V3 grand piano patches for MIDI devices.
 public class V3GrandPiano extends Patch
 {
     int programChange;
