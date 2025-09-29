@@ -3,12 +3,12 @@
 @import "../framework/melody.ck"
 
 // Global parameters
-70 => float BPM;          // Beats per minute
+60 => float BPM;          // Beats per minute
 60 => int root;           // Middle C as the root note
 
 // Midi devices
 //Hydrasynth hydrasynth("A026", 127);
-Hydrasynth hydrasynth("A026", 127);
+// Hydrasynth hydrasynth("A026", 127);
 RolandS1 s1(2, 10, 64);
 RolandSH4d sh4d_1(1, 3, 1, 94);
 RolandSH4d sh4d_2(2, "Channel 2", 85);
@@ -67,23 +67,24 @@ ChordProgression prog2(sh4d_2, chordsL, progression, false, 1, 4, probabilities2
 velocities2 @=> prog2.velocities;
 
 // Chord Progression
-[1.0, .2, 1.0, .7] @=> float probabilities3[];
-[100] @=> int velocities3[];
-ChordProgression prog3(hydrasynth, chordsL, progression, true, 16, 4, probabilities3);
-velocities3 @=> prog3.velocities;
+// [1.0, .2, 1.0, .7] @=> float probabilities3[];
+// [100] @=> int velocities3[];
+// ChordProgression prog3(hydrasynth, chordsL, progression, true, 16, 4, probabilities3);
+// velocities3 @=> prog3.velocities;
 
 // Melody
-[1.0, 0.25, 1.0, 0.35] @=> float probabilities[];
+[1.0 , 0.2 /*, 1.0, 0.35*/] @=> float probabilities[];
 [120, 90, 90, 90] @=> int velocities5[];
-ChordProgression melody(sh4d_3, chordsL, progression, true, 16, 4, probabilities);
+LSystemNotes lSystemNotes(NoteCollection.mixolydian_octave_notes(), "l-system01.yaml");
+SequentialMelody melody(sh4d_3, lSystemNotes, 32, 4, probabilities);
 velocities5 @=> melody.velocities;
-true => melody.random;
 0.4 => melody.mutateProbabilityRange;
 
 [1.0, 1.0, 0.0, 0.25] @=> float probabilities5[];
 [40, 40, 60, 70] @=> int velocities6[];
 AleatoricMelody melody2(sh4d_4, majorChord, 16, 4, probabilities5);
 velocities6 @=> melody2.velocities;
+
 
 // Drums
 [1.0, 0, 1, 0, 1, 0, 1, 1] @=> float probabilities4[];

@@ -1,4 +1,5 @@
 @import "song.ck"
+@import "yaml.ck"
 
 public class NoteCollection
 {
@@ -247,6 +248,13 @@ public class NoteCollection
         return chord;
     }
 
+    fun static NoteCollection mixolydian_octave_notes()
+    {
+        [0, 2, 4, 5, 7, 9, 10, 12] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
     fun NoteCollection(int theNotes[])
     {
         theNotes @=> notes;
@@ -261,5 +269,96 @@ public class NoteCollection
     {
         // get the note, adding or subtracting octaves, as needed
         return song.rootNote + offset + notes[noteIndex % numNotes()] /* + 12 * (noteIndex / numNotes()) */;
+    }
+}
+
+public class LSystemNotes extends NoteCollection
+{
+    NoteCollection @ basisNotes;
+   
+    YamlNode @ lSystem;
+    int maxDepth;
+    string startSymbol;
+    YamlNode @ rules;
+    YamlNode @ offsets;
+    int currentIndex;
+
+    int expandedNotes[];
+
+    fun LSystemNotes(NoteCollection theNotes, string lSystemFilename)
+    {
+        theNotes @=> basisNotes;
+        YamlNode.ParseFile(lSystemFilename) @=> lSystem;
+        lSystem.GetString("startSymbol") => startSymbol;
+        lSystem.GetInt("maxDepth") => maxDepth;
+        lSystem.GetMap("rules") @=> rules;
+        lSystem.GetMap("offsets") @=> offsets;
+        computeSize(startSymbol, 0) => int size;
+        <<< "l-system size: ", size, " maxDepth: ", maxDepth >>>;
+        int eNotes[size];
+        eNotes @=> expandedNotes;
+        expandedNotes[size-1] => int lastNote;
+        0 => currentIndex;
+        expand(startSymbol, 0, 0);
+        <<< "currentIndex: ", currentIndex >>>;
+        <<< "expandedNotes: ", arrayToString(expandedNotes) >>>;
+        expandedNotes @=> notes;
+    }
+
+    fun void expand(string currentSymbol, int currentOffset, int currentDepth)
+    {
+        rules.GetValue(currentSymbol) @=> YamlNode@ ruleNode;
+        ruleNode.GetArray() @=> YamlNode@ ruleArray[];
+        offsets.GetValue(currentSymbol) @=> YamlNode@ offsetNode;
+        offsetNode.GetArray() @=> YamlNode@ offsetArray[];
+        if (currentDepth == maxDepth)
+        {
+            // currentOffset % basisNotes.numNotes() => octave;
+            basisNotes.notes[currentOffset % basisNotes.notes.cap()] => expandedNotes[currentIndex++];
+            return;
+        }
+        for (0 => int i; i < ruleArray.cap(); i++)
+        {
+            ruleArray[i].GetString() => string nextSymbol;
+            offsetArray[i].GetInt() => int nextOffset;
+            expand(nextSymbol, currentOffset + nextOffset, currentDepth + 1);
+        }
+        return;
+    }
+
+    fun int computeSize(string currentSymbol, int currentDepth)
+    {
+        rules.GetValue(currentSymbol) @=> YamlNode@ ruleNode;
+        ruleNode.GetArray() @=> YamlNode@ ruleArray[];
+        if (currentDepth == maxDepth-1)
+        {
+            return ruleArray.cap();
+        }
+        0 => int size;
+        for (0 => int i; i < ruleArray.cap(); i++)
+        {
+            ruleArray[i].GetString() => string nextSymbol;
+            computeSize(nextSymbol, currentDepth + 1) => int nextSize;
+            size + nextSize => size;
+        }
+        return size;
+    }
+
+    fun int getMidiNote(Song song, int noteIndex, int offset)
+    {
+        // get the note, adding or subtracting octaves, as needed
+        return song.rootNote + offset + expandedNotes[noteIndex % numNotes()] /* + 12 * (noteIndex / numNotes()) */;
+    }
+
+    fun string arrayToString(int a[])
+    {
+        "[" => string s;
+        for(0 => int i; i < a.cap(); i++) {
+            s + Std.itoa(a[i]) => s;
+            if (i < a.cap() - 1) {
+                s + ", " => s;
+            }
+        }
+        return s + "]";
     }
 }

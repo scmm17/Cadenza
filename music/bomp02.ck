@@ -8,7 +8,7 @@
 
 // Midi devices
 //Hydrasynth hydrasynth("A026", 127);
-Hydrasynth hydrasynth("A026", 127);
+//Hydrasynth hydrasynth("A026", 127);
 RolandS1 s1(2, 10, 64);
 RolandSH4d sh4d_1(1, 3, 1, 94);
 RolandSH4d sh4d_2(2, "Channel 2", 85);
@@ -55,10 +55,12 @@ true => mixol.useMelody;
 [1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.5] @=> float probabilities1[];
 [124, 70] @=> int velocities1[];
 ChordProgression prog(sh4d_1, chordsH, progression, true, 16, 4, probabilities1);
-velocities1 @=> prog.velocities;
+velocities1 @=> prog.velocities; 
 
-ChordProgression prog4(s1, chordsH, progression, true, 16, 4, probabilities1);
+[1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.5] @=> float probabilities11[];
+ChordProgression prog4(s1, chordsH, progression, true, 32, 4, probabilities11);
 velocities1 @=> prog4.velocities;
+0.2 => prog4.mutateProbabilityRange;
 
 // Chord Progression
 [1.0] @=> float probabilities2[];
@@ -69,13 +71,13 @@ velocities2 @=> prog2.velocities;
 // Chord Progression
 [1.0, .2, 1.0, .7] @=> float probabilities3[];
 [100] @=> int velocities3[];
-ChordProgression prog3(hydrasynth, chordsL, progression, true, 16, 4, probabilities3);
+ChordProgression prog3(sh4d_3, chordsL, progression, true, 16, 4, probabilities3);
 velocities3 @=> prog3.velocities;
 
 // Melody
 [1.0, 0.25, 1.0, 0.35] @=> float probabilities[];
 [120, 90, 90, 90] @=> int velocities5[];
-ChordProgression melody(sh4d_3, chordsL, progression, true, 16, 4, probabilities);
+ChordProgression melody(sh4d_3, chordsL, progression, true, 32, 4, probabilities);
 velocities5 @=> melody.velocities;
 true => melody.random;
 0.4 => melody.mutateProbabilityRange;
