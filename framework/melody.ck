@@ -72,6 +72,9 @@ public class AleatoricMelody extends Melody
 public class SequentialMelody extends Melody
 {
     float useNoteFromChordProbability;
+    int useAllNotes;
+    int currentNote;
+
     fun SequentialMelody(Patch initPatch, NoteCollection initSale, int npm, int numMeasures, float probabilities[])
     {
         initPatch @=> patch;
@@ -81,11 +84,22 @@ public class SequentialMelody extends Melody
         npm => notesPerMeasure;
         numMeasures => numberOfMeasures;
         0.0 => useNoteFromChordProbability;
+        false => useAllNotes;
+        0 => currentNote;
     }
 
     fun int generateNote(Song song, int measure, int noteInMeasure)
     {
-        measure * notesPerMeasure + noteInMeasure => int noteToPlay;
+        int noteToPlay;
+        if (useAllNotes) {
+            currentNote => noteToPlay;
+            currentNote++;
+            if (currentNote >= scale.numNotes()) {
+                0 => currentNote;
+            }
+        } else {
+            measure * notesPerMeasure + noteInMeasure => noteToPlay;
+        }
         scale.getMidiNote(song, noteToPlay, 0) => int note;
         return note;
     }
