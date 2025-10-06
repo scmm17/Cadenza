@@ -3,14 +3,17 @@
 @import "../framework/melody.ck"
 
 // Global parameters
-60 => float BPM;          // Beats per minute
-60 => int root;           // Middle C as the root note
+55 => float BPM;          // Beats per minute
+48 => int root;           // Middle C as the root note
 
 // Midi devices
 //Hydrasynth hydrasynth("A026", 127);
 // Hydrasynth hydrasynth("A026", 127);
+V3GrandPiano melody1(1, "Marimba & Xylophon", 116);
+V3GrandPiano melody2_patch(2, "Theatre O. Royal + Xylo Reiteration", 116);
+
 RolandS1 s1(2, 10, 64);
-RolandSH4d sh4d_1(1, 3, 1, 94);
+RolandSH4d sh4d_1(1, 3, 12, 94);
 RolandSH4d sh4d_2(2, "Channel 2", 85);
 RolandSH4d sh4d_3(3, "Channel 3", 120);
 RolandSH4d sh4d_4(4, "Channel 4", 100);
@@ -73,13 +76,21 @@ velocities2 @=> prog2.velocities;
 // velocities3 @=> prog3.velocities;
 
 // Melody
-[1.0, 0.2, 0.75, 0.5 /*, 1.0, 0.35*/] @=> float probabilities[];
+[1.0, 0.2, 0.75, 0.5, 1.0, 0.8, 0.0, 0.0  /*, 1.0, 0.35*/] @=> float probabilities[];
 [120, 90, 90, 90] @=> int velocities5[];
-LSystemNotes lSystemNotes(NoteCollection.mixolydian_octave_notes(), "l-system01.yaml");
-SequentialMelody melody(sh4d_3, lSystemNotes, 32, 4, probabilities);
+LSystemNotes lSystemNotes(NoteCollection.mixolydian_notes(), "l-system01.yaml");
+SequentialMelody melody(melody1, lSystemNotes, 32, 4, probabilities);
 velocities5 @=> melody.velocities;
-// 0.4 => melody.mutateProbabilityRange;
+0.4 => melody.mutateProbabilityRange;
 true => melody.useAllNotes;
+
+[1.0, 0.2, 0.75, 0.5, 0.0, 0.8, 7.0, 0.23 /*, 1.0, 0.35*/] @=> float probabilities9[];
+[120, 90, 90, 90] @=> int velocities9[];
+LSystemNotes lSystemNotes2(NoteCollection.mixolydian_octave_notes(), "l-system02.yaml");
+SequentialMelody melody9(melody2_patch, lSystemNotes2, 16, 4, probabilities9);
+velocities9 @=> melody9.velocities;
+0.4 => melody9.mutateProbabilityRange;
+true => melody9.useAllNotes;
 
 [1.0, 1.0, 0.4, 0.25, 0.0, 0.0, 0.5, 0.75] @=> float probabilities5[];
 [40, 40, 60, 70] @=> int velocities6[];
@@ -88,27 +99,27 @@ velocities6 @=> melody2.velocities;
 
 
 // Drums
-[1.0, 0, 1, 0, 0, 1, 1, 0] @=> float probabilities4[];
+[1.0, 0, 1, 0, 1, 0, 1, 1] @=> float probabilities4[];
 [120] @=>  int velocities4[];
 [
  DrumMachine.BassDrum(),
  0, 
  DrumMachine.Clap(),
  0,
- 0,
  DrumMachine.BassDrum(),
- DrumMachine.Clap(),
  0,
+ DrumMachine.Clap(),
+ DrumMachine.Clap(),
 ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
 DrumMachine drums(drumNotesCollection, 16, 1, probabilities4, drumKit);
 velocities4 @=> drums.velocities;
 
-[prog, prog2, prog4, melody, melody2, drums, mixol] @=> Part allParts[];
+[prog, prog2, prog4, melody, melody2, melody9, drums, mixol] @=> Part allParts[];
 
-[prog] @=> Part parts1[];
-[prog, prog4] @=> Part parts2[];
-[prog, prog4, drums] @=> Part parts3[];
+[prog2] @=> Part parts1[];
+[prog2, melody9] @=> Part parts2[];
+[prog2, melody9, melody] @=> Part parts3[];
 [prog, prog4, prog2, drums] @=> Part parts4[];
 [prog, prog2, prog4, melody, melody2, drums] @=> Part parts5[];
 [prog, prog2, prog4, melody, melody2, mixol, drums] @=> Part parts6[];
@@ -122,9 +133,10 @@ Fragment frag5("frag5", 1, parts5);
 Fragment frag6("frag6", 3, parts6);
 Fragment frag7("frag7", 1, parts7);
 
+//FragmentTransition ft1(frag2, 1.0);
 FragmentTransition ft1(frag2, 1.0);
 FragmentTransition ft2(frag3, 1.0);
-FragmentTransition ft3(frag4, 1.0);
+FragmentTransition ft3(frag3, 1.0);
 FragmentTransition ft4(frag5, 1.0);
 FragmentTransition ft5(frag6, 1.0);
 FragmentTransition ft6(frag7, 1.0);
@@ -138,6 +150,6 @@ FragmentTransition ft7(frag1, 1.0);
 [ft6] @=> frag6.nextFragments;
 [ft7] @=> frag7.nextFragments;
 
-Song song("bomp03", BPM, root, frag1, allParts);
+Song song("count01", BPM, root, frag1, allParts);
 
 song.play();
