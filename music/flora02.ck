@@ -46,56 +46,84 @@ ChordProgression prog1(hydrasynth, chordsH, progression, false, 1, 4, probabilit
 velocities1 @=> prog1.velocities;
 
 
-[1.0, 0.5] @=> float probabilities2[];
+[   "1.0:0.4:1.0",
+    "0.5:0.0:0.5"
+] @=> string probabilityStrings2[];
 [124, 115] @=> int velocities2[];
-ChordProgression prog2(sh4d_1, chordsLL, progression, true, 2, 4, probabilities2);
+ChordProgression prog2(sh4d_1, chordsLL, progression, true, 2, 4, probabilityStrings2);
 true => prog2.random;
 velocities2 @=> prog2.velocities;
 0.3 => prog2.mutateProbabilityRange;
 
 // Chord Progression
-[1.0, 0.5, .75, .25] @=> float probabilities3[];
+[   "1.0:0.8:1.0",
+    "0.5:0.1:0.6",
+    "0.75:0.0:1.0",
+    "0.25:0.0:0.6"
+] @=> string probabilityStrings3[];
 [127, 100, 100, 100] @=> int velocities3[];
-ChordProgression prog3(sh4d_2, chordsL, progression, true, 4, 4, probabilities3);
+ChordProgression prog3(sh4d_2, chordsL, progression, true, 4, 4, probabilityStrings3);
 // 0.4 => prog3.mutateProbabilityRange;
 velocities3 @=> prog3.velocities;
 true => prog3.random;
 // true => prog2.legato;
 
 // Melody
-[1.0, 1.0, 0.0, 0.0, 1.0, 1, 1.0, 0.0] @=> float probabilities4[];
+[   "1.0",
+    "1.0:0.4:1.0",
+    "0.0:0.0:0.5",
+    "0.0:0.0:0.5",
+    "1.0:0.0:7.0",
+    "1.0:0.5:1.0",
+    "1.0:0.7:1.0",
+    "0.0:0.0:0.3"
+] @=> string probabilityStrings4[];
 [120, 90, 90, 90] @=> int velocities4[];
 // AleatoricMelody melody1(marimba, IV_Low, 16, 4, probabilities4);
-ChordProgression melody1(marimba, chordsL, progression, true, 16, 4, probabilities4);
+ChordProgression melody1(marimba, chordsL, progression, true, 16, 4, probabilityStrings4);
 0.4 => melody1.mutateProbabilityRange;
 true => melody1.random;
 // true => melody.legato;
 velocities4 @=> melody1.velocities;
 
-[1.0, 1.0, 1.0, 1.0, 1.0, 1, 0.0, 1.0] @=> float probabilities5[];
-ChordProgression melody3(marimba, chordsL, progression, true, 32, 4, probabilities5);
+[   "1.0:0.0:1.0",
+    "1.0:0.2:1.0",
+    "1.0:0.5:1.0",
+    "1.0:0.1:1.0",
+    "1.0:0.0:1.0",
+    "1.0:0.0:1.0",
+    "0.0:0.0:1.0",
+    "1.0:0.4:1.0"
+] @=> string probabilityStrings5[];
+ChordProgression melody3(marimba, chordsL, progression, true, 32, 4, probabilityStrings5);
 0.4 => melody3.mutateProbabilityRange;
 true => melody3.random;
 // true => melody.legato;
 velocities4 @=> melody3.velocities;
 
-[1.0, 1.0, 1.0, 1.0, 1.0, 1, 0.0, 1.0] @=> float probabilities7[];
-ChordProgression melody4(marimba2, chordsH, progression, true, 32, 4, probabilities7);
+[   "1.0",
+    "1.0",
+    "1.0",
+    "1.0",
+    "1.0:0.2:1.0",
+    "1.0:1.0:1.0",
+    "0.0:0.0:0.25",
+    "1.0:0.5:1.0"
+] @=> string probabilityStrings7[];
+ChordProgression melody4(marimba2, chordsH, progression, true, 32, 4, probabilityStrings7);
 0.4 => melody4.mutateProbabilityRange;
 true => melody4.random;
 // true => melody.legato;
 velocities4 @=> melody4.velocities;
+0.4 => melody4.mutateProbabilityRange;
 
-[1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0] @=> float probabilities8[];
-ChordProgression melody5(marimba, chordsL, progression, true, 32, 4, probabilities8);
-0.4 => melody5.mutateProbabilityRange;
-true => melody5.random;
-// true => melody.legato;
-velocities4 @=> melody5.velocities;
-
-[0.0, .45, 1.0, 0.0] @=> float probabilities6[];
+[   "0.0:0.0:0.5",
+    "1.0:0.45:1.0",
+    "0.4:0.0:1.0",
+    "0.0:0.0:0.5"
+] @=> string probabilityStrings6[];
 [125, 90, 110, 90] @=> int velocities5[];
-AleatoricMelody melody2(sh4d_3, IV_High, 16, 4, probabilities6);
+AleatoricMelody melody2(sh4d_3, IV_High, 16, 4, probabilityStrings6);
 0.4 => melody2.mutateProbabilityRange;
 true => melody2.legato;
 velocities5 @=> melody2.velocities;

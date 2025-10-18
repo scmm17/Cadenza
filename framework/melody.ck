@@ -20,6 +20,26 @@ public class Melody extends Part
 
         npm => notesPerMeasure;
         numMeasures => numberOfMeasures;
+        
+        // Initialize the new probability arrays
+        string emptyStrings[0];
+        float emptyFloats[0];
+        emptyStrings @=> rhythmProbabilityStrings;
+        emptyFloats @=> rhythmProbabilityMins;
+        emptyFloats @=> rhythmProbabilityMaxs;
+        emptyFloats @=> rhythmProbabilityRanges;
+    }
+
+    // Overloaded constructor for string-based probabilities
+    fun Melody(Patch initPatch, NoteCollection initSale, int npm, int numMeasures, string probabilities[])
+    {
+        initPatch @=> patch;
+        initSale @=> scale;
+        npm => notesPerMeasure;
+        numMeasures => numberOfMeasures;
+        
+        // Parse string probabilities
+        setProbabilitiesFromStrings(probabilities);
     }
 
     fun dur totalDuration(Song song)
@@ -55,6 +75,27 @@ public class AleatoricMelody extends Melody
         npm => notesPerMeasure;
         numMeasures => numberOfMeasures;
         0.0 => useNoteFromChordProbability;
+        
+        // Initialize the new probability arrays
+        string emptyStrings[0];
+        float emptyFloats[0];
+        emptyStrings @=> rhythmProbabilityStrings;
+        emptyFloats @=> rhythmProbabilityMins;
+        emptyFloats @=> rhythmProbabilityMaxs;
+        emptyFloats @=> rhythmProbabilityRanges;
+    }
+
+    // Overloaded constructor for string-based probabilities
+    fun AleatoricMelody(Patch initPatch, NoteCollection initSale, int npm, int numMeasures, string probabilities[])
+    {
+        initPatch @=> patch;
+        initSale @=> scale;
+        npm => notesPerMeasure;
+        numMeasures => numberOfMeasures;
+        0.0 => useNoteFromChordProbability;
+        
+        // Parse string probabilities
+        setProbabilitiesFromStrings(probabilities);
     }
 
     fun int generateNote(Song song, int measure, int noteInMeasure)
@@ -86,6 +127,29 @@ public class SequentialMelody extends Melody
         0.0 => useNoteFromChordProbability;
         false => useAllNotes;
         0 => currentNote;
+        
+        // Initialize the new probability arrays
+        string emptyStrings[0];
+        float emptyFloats[0];
+        emptyStrings @=> rhythmProbabilityStrings;
+        emptyFloats @=> rhythmProbabilityMins;
+        emptyFloats @=> rhythmProbabilityMaxs;
+        emptyFloats @=> rhythmProbabilityRanges;
+    }
+
+    // Overloaded constructor for string-based probabilities
+    fun SequentialMelody(Patch initPatch, NoteCollection initSale, int npm, int numMeasures, string probabilities[])
+    {
+        initPatch @=> patch;
+        initSale @=> scale;
+        npm => notesPerMeasure;
+        numMeasures => numberOfMeasures;
+        0.0 => useNoteFromChordProbability;
+        false => useAllNotes;
+        0 => currentNote;
+        
+        // Parse string probabilities
+        setProbabilitiesFromStrings(probabilities);
     }
 
     fun int generateNote(Song song, int measure, int noteInMeasure)
@@ -121,6 +185,27 @@ public class DrumMachine extends Melody
         npm => notesPerMeasure;
         numMeasures => numberOfMeasures;
         0.0 => useNoteFromChordProbability;
+        
+        // Initialize the new probability arrays
+        string emptyStrings[0];
+        float emptyFloats[0];
+        emptyStrings @=> rhythmProbabilityStrings;
+        emptyFloats @=> rhythmProbabilityMins;
+        emptyFloats @=> rhythmProbabilityMaxs;
+        emptyFloats @=> rhythmProbabilityRanges;
+    }
+
+    // Overloaded constructor for string-based probabilities
+    fun DrumMachine(NoteCollection initSale, int npm, int numMeasures, string probabilities[], Patch drums)
+    {
+        drums @=> patch;
+        initSale @=> scale;
+        npm => notesPerMeasure;
+        numMeasures => numberOfMeasures;
+        0.0 => useNoteFromChordProbability;
+        
+        // Parse string probabilities
+        setProbabilitiesFromStrings(probabilities);
     }
 
     fun int generateNote(Song song, int measure, int noteInMeasure)

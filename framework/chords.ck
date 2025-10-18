@@ -59,6 +59,39 @@ public class ChordProgression extends Part
         0.0 => mutateProbabilityRange;
         false => useMelody;
         0 => curMelodyPosition;
+        
+        // Initialize the new probability arrays
+        string emptyStrings[0];
+        float emptyFloats[0];
+        emptyStrings @=> rhythmProbabilityStrings;
+        emptyFloats @=> rhythmProbabilityMins;
+        emptyFloats @=> rhythmProbabilityMaxs;
+        emptyFloats @=> rhythmProbabilityRanges;
+    }
+
+    // Overloaded constructor for string-based probabilities
+    fun ChordProgression(
+      Patch initPatch,
+      Chord progression[], 
+      int progOffsets[], 
+      int isArpeggiated, 
+      int npm,
+      int numMeasures, 
+      string probabilities[])
+    {
+        initPatch @=> patch;
+        progression @=> chords;
+        progOffsets @=> offsets;
+        isArpeggiated => arpeggiated;
+        npm => notesPerMeasure;
+        numMeasures => numberOfMeasures;
+        false => random;
+        0.0 => mutateProbabilityRange;
+        false => useMelody;
+        0 => curMelodyPosition;
+        
+        // Parse string probabilities
+        setProbabilitiesFromStrings(probabilities);
     }
 
     fun dur totalDuration(Song song)

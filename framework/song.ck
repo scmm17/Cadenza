@@ -607,6 +607,10 @@ public class Part
     int numberOfMeasures;
 
     float rhythmProbabilities[];
+    string rhythmProbabilityStrings[];
+    float rhythmProbabilityMins[];
+    float rhythmProbabilityMaxs[];
+    float rhythmProbabilityRanges[];
     int velocities[];
     float durations[0];
     int legato;
@@ -618,6 +622,14 @@ public class Part
     {
         initPatch @=> patch;
         0.0 => mutateProbabilityRange;
+        
+        // Initialize the new probability arrays
+        string emptyStrings[0];
+        float emptyFloats[0];
+        emptyStrings @=> rhythmProbabilityStrings;
+        emptyFloats @=> rhythmProbabilityMins;
+        emptyFloats @=> rhythmProbabilityMaxs;
+        emptyFloats @=> rhythmProbabilityRanges;
     }
 
    fun void play(Song song)
@@ -690,23 +702,54 @@ public class Part
 
     fun mutateProbabilities() 
     {
-        if (mutateProbabilityRange == 0.0) {
+        // Mutate if either mutateProbabilityRange is nonzero or probability strings array exists
+        if (mutateProbabilityRange == 0.0 && rhythmProbabilityStrings.cap() == 0) {
             return;
         }
         <<< "probabilities: ", arrayToString(rhythmProbabilities) >>>;
         for(0 => int i; i < rhythmProbabilities.cap(); i++) {
+            // Determine which mutation range to use
+            mutateProbabilityRange => float currentRange;
+            if (rhythmProbabilityRanges.cap() > i && rhythmProbabilityRanges[i] >= 0.0) {
+                rhythmProbabilityRanges[i] => currentRange;
+            }
+            
+            // Skip mutation if range is 0 or if this is a single-number probability
+            if (currentRange == 0.0 || 
+                (rhythmProbabilityMins.cap() > i && rhythmProbabilityMins[i] < 0.0)) {
+                continue;
+            }
+            
             Math.random2f(-1.1, 1.1) => float r;
-            (1.0 - Math.exp(-r*r)) * mutateProbabilityRange => float change;
+            (1.0 - Math.exp(-r*r)) * currentRange => float change;
             if (r < 0.0) {
                 -change => change;
             }
             rhythmProbabilities[i] + change => change;
-            if (change < 0.0) {
-                0.0 => change;
+            
+            // Apply bounds if they exist
+            if (rhythmProbabilityMins.cap() > i && rhythmProbabilityMins[i] >= 0.0) {
+                if (change < rhythmProbabilityMins[i]) {
+                    rhythmProbabilityMins[i] => change;
+                }
+            } else {
+                // Default minimum bound
+                if (change < 0.0) {
+                    0.0 => change;
+                }
             }
-            if (change > 1.0) {
-                1.0 => change;
+            
+            if (rhythmProbabilityMaxs.cap() > i && rhythmProbabilityMaxs[i] >= 0.0) {
+                if (change > rhythmProbabilityMaxs[i]) {
+                    rhythmProbabilityMaxs[i] => change;
+                }
+            } else {
+                // Default maximum bound
+                if (change > 1.0) {
+                    1.0 => change;
+                }
             }
+            
             rhythmProbabilities[i] => float oldProb;
             change => rhythmProbabilities[i];
         }
@@ -723,6 +766,72 @@ public class Part
             }
         }
         return s + "]";
+    }
+
+    // Parse a probability string in format: "prob", "prob:min:max", or "prob:min:max:range"
+    fun void parseProbabilityString(string probStr, int index)
+    {
+        // Split by colon
+        string parts[0];
+        0 => int start;
+        for(0 => int i; i <= probStr.length(); i++) {
+            if (i == probStr.length() || probStr.charAt(i) == ':') {
+                if (i > start) {
+                    probStr.substring(start, i - start) => string part;
+                    parts << part;
+                }
+                i + 1 => start;
+            }
+        }
+        
+        if (parts.cap() == 1) {
+            // Single number: "0.8" - no mutation
+            Std.atof(parts[0]) => rhythmProbabilities[index];
+            -1.0 => rhythmProbabilityMins[index];  // -1 indicates no bounds
+            -1.0 => rhythmProbabilityMaxs[index];
+            -1.0 => rhythmProbabilityRanges[index]; // -1 indicates use Part's range
+        } else if (parts.cap() == 3) {
+            // Three numbers: "0.8:0.2:1.0" - use Part's mutateProbabilityRange
+            Std.atof(parts[0]) => rhythmProbabilities[index];
+            Std.atof(parts[1]) => rhythmProbabilityMins[index];
+            Std.atof(parts[2]) => rhythmProbabilityMaxs[index];
+            -1.0 => rhythmProbabilityRanges[index]; // Use Part's range
+        } else if (parts.cap() == 4) {
+            // Four numbers: "0.8:0.2:1.0:0.3" - custom range
+            Std.atof(parts[0]) => rhythmProbabilities[index];
+            Std.atof(parts[1]) => rhythmProbabilityMins[index];
+            Std.atof(parts[2]) => rhythmProbabilityMaxs[index];
+            Std.atof(parts[3]) => rhythmProbabilityRanges[index];
+        } else {
+            <<< "Invalid probability string format:", probStr >>>;
+            // Default to 1.0 with no mutation
+            1.0 => rhythmProbabilities[index];
+            -1.0 => rhythmProbabilityMins[index];
+            -1.0 => rhythmProbabilityMaxs[index];
+            -1.0 => rhythmProbabilityRanges[index];
+        }
+    }
+
+    // Set probabilities from an array of strings
+    fun void setProbabilitiesFromStrings(string probStrings[])
+    {
+        probStrings @=> rhythmProbabilityStrings;
+        
+        // Resize arrays to match
+        float newProbs[probStrings.cap()];
+        float newMins[probStrings.cap()];
+        float newMaxs[probStrings.cap()];
+        float newRanges[probStrings.cap()];
+        
+        newProbs @=> rhythmProbabilities;
+        newMins @=> rhythmProbabilityMins;
+        newMaxs @=> rhythmProbabilityMaxs;
+        newRanges @=> rhythmProbabilityRanges;
+        
+        // Parse each string
+        for(0 => int i; i < probStrings.cap(); i++) {
+            parseProbabilityString(probStrings[i], i);
+        }
     }
 
     fun int getNextNotePosition(int notes[], int noteIndex)

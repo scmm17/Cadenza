@@ -1,6 +1,26 @@
 @import "song.ck"
 @import "yaml.ck"
 
+// NoteCollection is a fundamental class for managing collections of musical notes in the framework.
+// It provides static factory methods for creating common musical scales, chords, and note patterns,
+// as well as methods for converting note indices to MIDI note numbers.
+//
+// The class stores notes as integer arrays representing semitone offsets from a root note.
+// These offsets can be positive or negative, allowing for notes above and below the root.
+//
+// Static factory methods include:
+// - majorScale(), minorScale(): Standard 8-note scales
+// - majorChordNotes(), minorChordNotes(): Basic triads with octave
+// - I_notes(), IV_notes(), V_notes(), etc.: Common chord progressions
+// - mixolydian_notes(), mixolydian_octave_notes(): Modal scales
+// - Various circle of fifths chord progressions (circle_vi_notes, etc.)
+//
+// The getMidiNote() method converts a note index to an actual MIDI note number
+// by adding the song's root note and any octave offset to the stored semitone offset.
+//
+// This class serves as the foundation for more complex note generation systems
+// like LSystemNotes, which extends it to create algorithmic note sequences.
+
 public class NoteCollection
 {
     int notes[];
