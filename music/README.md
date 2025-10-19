@@ -1,6 +1,6 @@
-# MuseGen - Music Generator: The Next Generation
+# Cadenza - Algorithmic Music Composition
 
-## Algorithmic, Aleatoric Music Generator
+## Improvisation Through Algorithms
 
 No AI were harmed making this music.
 

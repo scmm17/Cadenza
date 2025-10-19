@@ -1,6 +1,6 @@
-## MuseGen
+## Cadenza
 
-MuseGen is a modular framework for real-time algorithmic music generation and MIDI control, built with the ChucK programming language. It targets composers, performers, and researchers working with generative music, live coding, and MIDI-based synthesis.
+Cadenza is a modular framework for real-time algorithmic music generation and MIDI control, built with the ChucK programming language. It targets composers, performers, and researchers working with generative music, live coding, and MIDI-based synthesis.
 
 ### Highlights
 - **Real-time generation**: Live composition with deterministic timing
@@ -14,8 +14,8 @@ MuseGen is a modular framework for real-time algorithmic music generation and MI
 1. Install ChucK: see `https://chuck.cs.princeton.edu/`
 2. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/MuseGen.git
-   cd MuseGen
+   git clone https://github.com/yourusername/Cadenza.git
+   cd Cadenza
    ```
 3. Connect MIDI devices as needed (optional)
 
@@ -74,7 +74,7 @@ chuck example.ck
 ```
 
 ## YAML Utilities (framework/yaml.ck)
-MuseGen includes a small YAML reader/writer used by tests and tools.
+Cadenza includes a small YAML reader/writer used by tests and tools.
 
 ### Supported features
 - **Scalars**: string, int, float
@@ -162,7 +162,7 @@ test/
 - Music: drum kit constructor display name changed to `"Drums"`
 - Music: all `Song` constructors accept a leading `name` parameter
 
-## Extending MuseGen
+## Extending Cadenza
 - Add new instruments by extending `Patch`
 - Add scales/chords in `note-collection.ck`
 - Create new performance logic via parts/fragments
