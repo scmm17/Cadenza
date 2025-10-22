@@ -1,0 +1,134 @@
+@import "../framework/song.ck"
+@import "../framework/chords.ck"
+@import "../framework/melody.ck"
+
+// Global parameters
+45 => float BPM;          // Beats per minute
+56 => int root;
+
+// Midi devices
+//Hydrasynth hydrasynth("F006");
+Hydrasynth hydrasynth("B016", 24);
+RolandS1 s1(1, 1, 64);
+RolandSH4d sh4d_1(1, 3, 11, 127);
+RolandSH4d sh4d_2(2, "Channel 2", 30);
+RolandSH4d sh4d_3(3, "Channel 3", 49);
+RolandSH4d sh4d_4(4, "Channel 4", 64);
+// V3GrandPiano marimba(1, "Harp");
+V3GrandPiano marimba(1, "G. Steel Slide (velo. 116-127 Slide)", 75);
+V3GrandPiano marimba2(2, "G. Steel Slide (velo. 116-127 Slide)", 75);
+V3GrandPiano bass(3, "Upright Jazz Bass Random", 64);
+// RolandSH4d sh4d_3(3, "Channel 3");
+
+// Chords
+Chord I_Low(NoteCollection.I_notes(), -1);
+Chord IV_Low(NoteCollection.IV_notes(), -1);
+Chord bVII_Low(NoteCollection.bVII_notes(), -1);
+Chord I_LowLow(NoteCollection.I_notes(), -3);
+Chord IV_LowLow(NoteCollection.IV_notes(), -3);
+Chord bVII_LowLow(NoteCollection.bVII_notes(), -3);
+Chord I_High(NoteCollection.I_notes(), 0);
+Chord IV_High(NoteCollection.IV_notes(), 0);
+Chord bVII_High(NoteCollection.bVII_notes(), 0);
+
+
+// Chord progression, arpeggiated
+[0, 0, 0, 0] @=> int progression[];
+[I_Low, IV_Low, bVII_Low, IV_Low] @=> Chord chordsL[];
+[I_LowLow, IV_LowLow, bVII_LowLow, IV_LowLow] @=> Chord chordsLL[];
+[I_High, IV_High, bVII_High, IV_High] @=> Chord chordsH[];
+
+[1.0] @=> float probabilities1[];
+[124] @=> int velocities1[];
+ChordProgression prog1(hydrasynth, chordsH, progression, false, 1, 4, probabilities1);
+// 0.4 => prog1.mutateProbabilityRange;
+// true => prog1.legato;
+velocities1 @=> prog1.velocities;
+
+
+[   "1.0:0.4:1.0",
+    "0.5:0.0:0.5"
+] @=> string probabilityStrings2[];
+[124, 115] @=> int velocities2[];
+ChordProgression prog2(sh4d_1, chordsLL, progression, true, 2, 4, probabilityStrings2);
+true => prog2.random;
+velocities2 @=> prog2.velocities;
+2.0 => prog2.mutateProbabilityRange;
+
+// Chord Progression
+[   "1.0:0.8:1.0",
+    "0.5:0.1:0.6",
+    "0.75:0.0:1.0",
+    "0.25:0.0:0.6"
+] @=> string probabilityStrings3[];
+[127, 100, 100, 100] @=> int velocities3[];
+ChordProgression prog3(sh4d_2, chordsL, progression, true, 4, 4, probabilityStrings3);
+// 0.4 => prog3.mutateProbabilityRange;
+velocities3 @=> prog3.velocities;
+true => prog3.random;
+// true => prog2.legato;
+
+// Melody
+[   "1.0:0.2:1.0:0.4",
+    "1.0:0.0:0.6",
+    "0.0:0.4:0.8",
+    "0.0:0.0:0.75",
+    "1.0:0.3:1.0",
+    "1.0:0.3:0.8",
+    "1.0:0.2:0.7",
+    "0.0:0.0:0.75"
+] @=> string probabilityStrings4[];
+[120, 90, 90, 90] @=> int velocities4[];
+// AleatoricMelody melody1(marimba, IV_Low, 16, 4, probabilities4);
+ChordProgression melody1(marimba, chordsL, progression, true, 16, 4, probabilityStrings4);
+2.0 => melody1.mutateProbabilityRange;
+true => melody1.random;
+// true => melody.legato;
+velocities4 @=> melody1.velocities;
+
+[   "1.0:0.0:1.0",
+    "0.2:0.2:0.8",
+    "0.5:0.0:0.7",
+    "0.2:0.1:0.8",
+    "0.5:0.1:0.7",
+    "0.0:0.0:0.9",
+    "0.5:0.0:1.0",
+    "1.0:0.3:1.0"
+] @=> string probabilityStrings5[];
+ChordProgression melody3(marimba, chordsL, progression, true, 32, 4, probabilityStrings5);
+1.0 => melody3.mutateProbabilityRange;
+true => melody3.random;
+// true => melody.legato;
+velocities4 @=> melody3.velocities;
+
+[   "0.0:0.0:1.0",
+    "1.0:0.0:1.0",
+    "0.4:0.0:1.0",
+    "0.0:0.0:1.0"
+] @=> string probabilityStrings6[];
+[125, 90, 110, 90] @=> int velocities5[];
+AleatoricMelody melody2(sh4d_3, IV_High, 16, 4, probabilityStrings6);
+2.0 => melody2.mutateProbabilityRange;
+true => melody2.legato;
+velocities5 @=> melody2.velocities;
+
+[prog1, prog2, prog3, melody2] @=> Part parts1[];
+[prog1, prog2, prog3, melody1, melody2] @=> Part parts2[];
+[prog1, prog2, prog3, melody1, melody2, melody3] @=> Part parts3[];
+// Fragment frag1(1, song1);
+Fragment frag1("frag1", 1, parts1);
+Fragment frag2("frag2", 1, parts2);
+Fragment frag3("frag3", 1, parts3);
+
+FragmentTransition ft1(frag2, 1.0);
+FragmentTransition ft2(frag3, 1.0);
+FragmentTransition ft3(frag3, 1.0);
+
+[ft1] @=> frag1.nextFragments;
+[ft2] @=> frag2.nextFragments;
+[ft3] @=> frag3.nextFragments;
+
+Song song("flora06", BPM, root, frag1, parts3);
+
+
+song.play();

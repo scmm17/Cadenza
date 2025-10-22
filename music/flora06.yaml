@@ -6,7 +6,7 @@ song:
       patchName: "B016"
       uiName: "Hydrasynth"
       muted: 0
-      volume: 122
+      volume: 114
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -30,7 +30,7 @@ song:
       patchName: "Channel 2"
       uiName: "SH-4d"
       muted: 0
-      volume: 98
+      volume: 55
       filterCutoff: 45
       filterResonance: 50
       pan: 52
@@ -43,7 +43,7 @@ song:
       patchName: "G. Steel Slide (velo. 116-127 Slide)"
       uiName: "V3"
       muted: 0
-      volume: 91
+      volume: 57
       filterCutoff: 64
       filterResonance: 64
       pan: 64
@@ -56,7 +56,7 @@ song:
       patchName: "Channel 3"
       uiName: "SH-4d"
       muted: 0
-      volume: 92
+      volume: 49
       filterCutoff: 86
       filterResonance: 51
       pan: 52
