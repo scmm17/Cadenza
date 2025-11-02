@@ -44,9 +44,9 @@ song:
       patchName: "Channel 3"
       uiName: "SH-4d"
       muted: 0
-      volume: 64
-      filterCutoff: -1
-      filterResonance: -1
+      volume: 114
+      filterCutoff: 25
+      filterResonance: 64
       pan: 64
       program: 0
       bank: 0

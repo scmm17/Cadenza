@@ -1,0 +1,54 @@
+song:
+  devices:
+    V3-3:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 3
+      patchName: "Upright Jazz Bass Random"
+      uiName: "V3"
+      muted: 0
+      volume: 83
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 65
+      bank: 3
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Disco Strings Slide velo. 116-127 Slide"
+      uiName: "V3"
+      muted: 0
+      volume: 69
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 19
+      bank: 4
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Cello"
+      uiName: "V3"
+      muted: 0
+      volume: 86
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 24
+      bank: 4
+      programChange: 1
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Fantasia"
+      uiName: "V3"
+      muted: 0
+      volume: 115
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 18
+      bank: 2
+      programChange: 1

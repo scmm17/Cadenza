@@ -275,6 +275,48 @@ public class NoteCollection
         return chord;
     }
 
+    fun static NoteCollection F_I_chord_Low()
+    {
+        [-12, -8, -5, 0, 4, 7, 12] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection F_I_chord_High()
+    {
+        [0, 4, 7, 12, 16, 19, 24] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection F_IV_chord_Low()
+    {
+        [-7, -3, 0, 5, 9, 12, 17] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection F_IV_chord_High()
+    {
+        [5, 9, 12, 17, 21, 24] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection F_V_chord_Low()
+    {
+        [-5, -1, 2, 7, 11, 14, 19] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
+    fun static NoteCollection F_V_chord_High()
+    {
+        [7, 11, 14, 19, 23, 26] @=> int notes[];
+        NoteCollection chord(notes);
+        return chord;
+    }
+
     fun NoteCollection(int theNotes[])
     {
         theNotes @=> notes;
