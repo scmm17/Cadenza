@@ -8,7 +8,7 @@
 
 // Midi devices
 //Hydrasynth hydrasynth("A026", 127);
-// Hydrasynth hydrasynth("A026", 127);
+Hydrasynth hydrasynth("A026", 127);
 RolandS1 s1(2, 10, 64);
 RolandSH4d sh4d_1(1, 3, 1, 94);
 RolandSH4d sh4d_2(2, "Channel 2", 85);
@@ -37,7 +37,7 @@ Chord mixolydianChord_Low(NoteCollection.mixolydian_notes(), 0);
  1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0] 
 @=> float probabilitiesMixol[];
 [127] @=> int velocitiesMixol[];
-ChordProgression mixol(sh4d_4, mixolydianChords, mixolydian, true, 16, 4, probabilitiesMixol);
+ChordProgression mixol(hydrasynth, mixolydianChords, mixolydian, true, 16, 4, probabilitiesMixol);
 velocitiesMixol @=> mixol.velocities;
 true => mixol.useMelody;
 [7, 14, 7, 14, 13, 12, 11, 10, 11, 12, 13, 14] @=> mixol.melody;

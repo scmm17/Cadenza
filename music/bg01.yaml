@@ -32,7 +32,7 @@ song:
       patchName: "Cello"
       uiName: "V3"
       muted: 0
-      volume: 86
+      volume: 90
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -45,7 +45,7 @@ song:
       patchName: "Fantasia"
       uiName: "V3"
       muted: 0
-      volume: 115
+      volume: 95
       filterCutoff: -1
       filterResonance: -1
       pan: 64
