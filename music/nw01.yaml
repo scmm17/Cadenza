@@ -1,0 +1,54 @@
+song:
+  devices:
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "T8SuperBrass 2"
+      uiName: "V3"
+      muted: 0
+      volume: 84
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 122
+      bank: 0
+      programChange: 1
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Synth Strings analog M12 2"
+      uiName: "V3"
+      muted: 0
+      volume: 75
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 91
+      bank: 0
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Bells 2"
+      uiName: "V3"
+      muted: 0
+      volume: 114
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 120
+      bank: 0
+      programChange: 1
+    SH-4d-9:
+      deviceName: "SH-4d"
+      midiChannel: 9
+      patchName: "Drums"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 37
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0

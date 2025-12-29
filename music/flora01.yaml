@@ -6,7 +6,7 @@ song:
       patchName: "B016"
       uiName: "Hydrasynth"
       muted: 0
-      volume: 30
+      volume: 4
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -43,7 +43,7 @@ song:
       patchName: "Atmos"
       uiName: "V3"
       muted: 0
-      volume: 60
+      volume: 59
       filterCutoff: 90
       filterResonance: 64
       pan: 85

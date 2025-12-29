@@ -1,0 +1,54 @@
+song:
+  devices:
+    V3-3:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 3
+      patchName: "Vibraphone"
+      uiName: "V3"
+      muted: 0
+      volume: 67
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 6
+      bank: 3
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Vibraphone"
+      uiName: "V3"
+      muted: 0
+      volume: 67
+      filterCutoff: 18
+      filterResonance: 95
+      pan: 80
+      program: 6
+      bank: 3
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "VF Vox"
+      uiName: "V3"
+      muted: 0
+      volume: 89
+      filterCutoff: 59
+      filterResonance: 76
+      pan: 42
+      program: 16
+      bank: 2
+      programChange: 1
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Vibraphone"
+      uiName: "V3"
+      muted: 0
+      volume: 89
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 6
+      bank: 3
+      programChange: 1

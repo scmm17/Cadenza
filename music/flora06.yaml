@@ -6,7 +6,7 @@ song:
       patchName: "B016"
       uiName: "Hydrasynth"
       muted: 0
-      volume: 114
+      volume: 6
       filterCutoff: -1
       filterResonance: -1
       pan: 64
