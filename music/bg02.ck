@@ -3,7 +3,7 @@
 @import "../framework/melody.ck"
 
 // Global parameters
-120 => float BPM;         // Beats per minute
+150 => float BPM;         // Beats per minute
 53 => int root;           // F4 as the root note for F major
 
 // V3 MIDI devices - Bluegrass instrumentation

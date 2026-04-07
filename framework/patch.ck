@@ -260,6 +260,46 @@ public class Hydrasynth extends Patch
     }
 }
 
+// MoogMessenger is a class that represents a Moog Messenger MIDI device in the framework.
+// It extends Patch and uses the same bank/program MIDI sequence as Hydrasynth (CC0/CC32 + program change).
+//
+// bank is 0-based (same as Hydrasynth letter banks: A=0, B=1, ...). program is 1-based (1-128), matching
+// the numeric part of a Hydrasynth preset string.
+public class MoogMessenger extends Patch
+{
+    fun MoogMessenger(int channel, int bank, int program, int v)
+    {
+        "Moog Messenger" => deviceName;
+        "Moog" => uiName;
+        channel - 1 => midiChannel;
+        bank => this.bank;
+        program => this.program;
+        "Bank: " + Std.itoa(bank) + " Program: " + Std.itoa(program) => patchName;
+        Patch(v);
+    }
+
+    fun void setPreset()
+    {
+        // programChangeHydra(program - 1, bank);
+    }
+
+    fun void saveConfig(YamlNode @config)
+    {
+        saveCommonConfig(config);
+        config.SetInt("program", program);
+        config.SetInt("bank", bank);
+    }
+
+    fun void loadConfig(YamlNode @config)
+    {
+        loadCommonConfig(config);
+        config.GetInt("program") => program;
+        config.GetInt("bank") => bank;
+        updateControllers();
+    }
+}
+
+
 // RolandS1 is a class that represents a Roland S-1 MIDI device in the framework.
 // It extends Patch and adds a program and bank.
 //

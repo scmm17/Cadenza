@@ -76,7 +76,7 @@ DrumMachine drums(drumNotesCollection, 32, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 
 [1.0] @=> float probabilities7[];
-[80] @=> int velocities7[];
+[127] @=> int velocities7[];
 [ 25, 0, 26, 0, 25, 26, 27, 28,  ] @=> int drumNotes7[];
 NoteCollection drumNotesCollection7(drumNotes7);
 DrumMachine drumsIntro(drumNotesCollection7, 8, 1, probabilities7, drumKit);

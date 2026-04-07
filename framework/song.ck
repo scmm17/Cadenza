@@ -1086,9 +1086,9 @@ public class LaunchControl
             deviceNum++;
         }
         fout.write("\n");
-        fout.write("| Fragment | Mute Mode | Solo Mode | Golden | All |\n");
-        fout.write("| :---: | :---: | :---: | :---: | :---: |\n");
-        "| " + song.currentFragment.name + " | " + (song.muteMode ? "☑️" : "❌") + " | " + (song.soloMode ? "☑️" : "❌") + " | " + (Song.golden ? "☑️" : "❌") + " | " + (song.allMode ? "☑️" : "❌") + " |\n" => string statusLine;
+        fout.write("| Song | Fragment | Mute Mode | Solo Mode | Golden | All |\n");
+        fout.write("| :---: | :---: | :---: | :---: | :---: | :---: |\n");
+        "| " + song.name + " | " + song.currentFragment.name + " | " + (song.muteMode ? "☑️" : "❌") + " | " + (song.soloMode ? "☑️" : "❌") + " | " + (Song.golden ? "☑️" : "❌") + " | " + (song.allMode ? "☑️" : "❌") + " |\n" => string statusLine;
         fout.write(statusLine);
         fout.close();
     }

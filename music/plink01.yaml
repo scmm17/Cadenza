@@ -1,0 +1,36 @@
+song:
+  devices:
+    S-1-2:
+      deviceName: "S-1 MIDI IN"
+      midiChannel: 2
+      patchName: "Bank: 2 Program: 1"
+      uiName: "S-1"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 1
+      bank: 2
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "default"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 64
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "default"
+    RD-6-0:
+      deviceName: "RHYTHM DESIGNER RD-6"
+      midiChannel: 0
+      patchName: "RHYTHM DESIGNER RD-6"
+      uiName: "RD-6"
+      muted: 0
+      volume: 94
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: ""

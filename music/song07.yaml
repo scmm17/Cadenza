@@ -3,52 +3,52 @@ song:
     V3-1:
       deviceName: "U2MIDI Pro"
       midiChannel: 1
-      patchName: "Atmosguitar"
+      patchName: "Organ 800000000 fast 4"
       uiName: "V3"
       muted: 0
-      volume: 120
+      volume: 104
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 24
-      bank: 2
-      programChange: 1
-    V3-0:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 0
-      patchName: "Synth Strings analog M12 2"
-      uiName: "V3"
-      muted: 0
-      volume: 75
-      filterCutoff: -1
-      filterResonance: -1
-      pan: 64
-      program: 91
+      program: 61
       bank: 0
       programChange: 1
     V3-2:
       deviceName: "U2MIDI Pro"
       midiChannel: 2
-      patchName: "Bells 2"
+      patchName: "Englishhorn"
       uiName: "V3"
       muted: 0
-      volume: 114
+      volume: 115
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 120
-      bank: 0
+      program: 94
+      bank: 5
       programChange: 1
-    SH-4d-9:
-      deviceName: "SH-4d"
-      midiChannel: 9
-      patchName: "Drums"
-      uiName: "SH-4d"
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Crystal"
+      uiName: "V3"
       muted: 0
-      volume: 46
+      volume: 111
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 0
-      bank: 0
-      programChange: 0
+      program: 36
+      bank: 2
+      programChange: 1
+    V3-3:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 3
+      patchName: "Voice Kit (page 43)"
+      uiName: "V3"
+      muted: 0
+      volume: 99
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 123
+      bank: 4
+      programChange: 1

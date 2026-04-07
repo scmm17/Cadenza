@@ -136,7 +136,7 @@ Fragment frag7("frag7", 1, parts7);
 //FragmentTransition ft1(frag2, 1.0);
 FragmentTransition ft1(frag2, 1.0);
 FragmentTransition ft2(frag3, 1.0);
-FragmentTransition ft3(frag3, 1.0);
+FragmentTransition ft3(frag4, 1.0);
 FragmentTransition ft4(frag5, 1.0);
 FragmentTransition ft5(frag6, 1.0);
 FragmentTransition ft6(frag7, 1.0);
