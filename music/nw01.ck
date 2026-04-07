@@ -160,7 +160,7 @@ true => verseMelody.useAllNotes;
     "0.3:0.0:0.5"    // occasional hi-hat
 ] @=> string drumProbs[];
 
-[127, 0, 90, 0, 120, 0, 95, 0, 127, 0, 85, 0, 120, 0, 100, 80] @=> int drumVelocities[];
+[127, 0, 100, 0, 120, 0, 105, 0, 127, 0, 105, 0, 120, 0, 100, 100] @=> int drumVelocities[];
 
 [
     DrumMachine.BassDrum(),   // 1
@@ -366,7 +366,7 @@ Fragment preChorus1("preChorus1", 1, preChorusParts);
 Fragment chorus1("chorus1", 2, chorusParts);
 Fragment verse2("verse2", 2, verseParts);
 Fragment preChorus2("preChorus2", 1, preChorusParts);
-Fragment chorus2("chorus2", 2, allParts);
+Fragment chorus2("chorus2", 4, allParts);
 Fragment bridge("bridge", 2, bridgeParts);
 Fragment chorus3("chorus3", 2, chorusParts);
 Fragment outro("outro", 2, outroParts);
@@ -380,7 +380,7 @@ FragmentTransition ft_to_c2(chorus2, 1.0);
 FragmentTransition ft_to_bridge(bridge, 1.0);
 FragmentTransition ft_to_c3(chorus3, 1.0);
 FragmentTransition ft_to_outro(outro, 1.0);
-FragmentTransition ft_end(preChorus1, 1.0);  // Loop outro to end
+FragmentTransition ft_end(verse1, 1.0);  // Loop outro to end
 
 // Wire up the transitions
 [ft_to_pc1] @=> verse1.nextFragments;
