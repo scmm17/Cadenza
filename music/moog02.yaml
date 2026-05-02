@@ -6,7 +6,7 @@ song:
       patchName: "Bank: 1 Program: 1"
       uiName: "Moog"
       muted: 0
-      volume: 127
+      volume: 59
       filterCutoff: -1
       filterResonance: -1
       pan: 64
