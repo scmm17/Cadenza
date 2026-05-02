@@ -16,15 +16,15 @@ song:
     Moog-0:
       deviceName: "Moog Messenger"
       midiChannel: 0
-      patchName: "Bank: 1 Program: 1"
+      patchName: "Bank: 4 Program: 12"
       uiName: "Moog"
       muted: 0
       volume: 127
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 1
-      bank: 1
+      program: 11
+      bank: 3
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0

@@ -16,7 +16,7 @@
 RolandS1 s1(2, 10, 64);
 //RolandS1 s1(2, 9);
 //
-MoogMessenger moog(1, 1, 3, 127);
+MoogMessenger moog(1, 4, 12, 127);
 V3GrandPiano piano(1, "Steel drums", 110);
 RolandSH4d sh4d_2(2, "channel 2", 64);
 RolandSH4d sh4d_3(3, "channel 3", 127);
