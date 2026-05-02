@@ -272,15 +272,34 @@ public class MoogMessenger extends Patch
         "Moog Messenger" => deviceName;
         "Moog" => uiName;
         channel - 1 => midiChannel;
-        bank => this.bank;
-        program => this.program;
+        bank - 1 => this.bank;
+        program  - 1 => this.program;
         "Bank: " + Std.itoa(bank) + " Program: " + Std.itoa(program) => patchName;
         Patch(v);
     }
 
-    fun void setPreset()
+    fun void programChangeMoogMessenger(int program, int bank)
     {
-        // programChangeHydra(program - 1, bank);
+         MidiMsg msg;
+/*        0xB0 | midiChannel => msg.data1;
+        bank => msg.data2;
+        0 => msg.data3;
+        gma.send(msg);
+    
+        0xB0 | midiChannel => msg.data1;
+        32 => msg.data2;
+        0 => msg.data3;
+        gma.send(msg);
+ */    
+        0xC0 | midiChannel => msg.data1;
+        program => msg.data2;
+        0 => msg.data3;
+        gma.send(msg);
+    }
+    
+        fun void setPreset()
+    {
+        // programChangeMoogMessenger(program, bank);
     }
 
     fun void saveConfig(YamlNode @config)

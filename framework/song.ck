@@ -84,7 +84,7 @@ public class Song
         new LaunchControl(this) @=> launchControl;
         loadConfig();
 
-        .25 ::second => now;
+        2.0 ::second => now;
 
         spork ~ hydraEvents.startEventLoop();       
         spork ~ launchControl.startEventLoop();
