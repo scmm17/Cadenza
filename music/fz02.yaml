@@ -1,29 +1,28 @@
 song:
   devices:
-    V3-2:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 2
-      patchName: "Upright Jazz Bass Random"
-      uiName: "V3"
+    Moog-0:
+      deviceName: "Moog Messenger"
+      midiChannel: 0
+      patchName: "Bank: 1 Program: 1"
+      uiName: "Moog"
       muted: 0
-      volume: 110
+      volume: 40
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 65
-      bank: 3
-      programChange: 1
+      program: 1
+      bank: 1
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
-      patchName: "Xylophone Octave"
+      patchName: "E-Accordion Retro long release"
       uiName: "V3"
       muted: 0
       volume: 110
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 15
+      program: 121
       bank: 3
       programChange: 1
     V3-1:
@@ -32,7 +31,7 @@ song:
       patchName: "Vibraphone"
       uiName: "V3"
       muted: 0
-      volume: 80
+      volume: 99
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -45,7 +44,7 @@ song:
       patchName: "Tubular Bell 2"
       uiName: "V3"
       muted: 0
-      volume: 92
+      volume: 78
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -58,12 +57,25 @@ song:
       patchName: "Xylophon"
       uiName: "V3"
       muted: 0
-      volume: 95
+      volume: 38
       filterCutoff: -1
       filterResonance: -1
       pan: 64
       program: 14
       bank: 3
+      programChange: 1
+    V3-5:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 5
+      patchName: "Star Them"
+      uiName: "V3"
+      muted: 0
+      volume: 125
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 4
+      bank: 2
       programChange: 1
     SH-4d-9:
       deviceName: "SH-4d"
@@ -71,7 +83,7 @@ song:
       patchName: "Drums"
       uiName: "SH-4d"
       muted: 0
-      volume: 46
+      volume: 74
       filterCutoff: -1
       filterResonance: -1
       pan: 64

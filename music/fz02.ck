@@ -24,12 +24,14 @@
 
 // ----------------------------------------------------------------------------
 // V3 Grand Piano (bank 3 - "B3" percussion / stringed presets)
+// Moog Messenger — bass (same MIDI channel slot as former V3 bass: ch 3 → midi 2)
 // ----------------------------------------------------------------------------
 V3GrandPiano marimba(1, "Marimba", 110);                    // lead
 V3GrandPiano vibraphone(2, "Vibraphone", 80);               // sustained pad
-V3GrandPiano bass(3, "Upright Jazz Bass Random", 115);      // 5/4 walking bass
+MoogMessenger bass(1, 1, 1, 115);                            // 5/4 walking bass
 V3GrandPiano xylo(4, "Xylophon", 95);                       // counter-melody
 V3GrandPiano bells(5, "Tubular Bell", 70);                  // chorus colour
+V3GrandPiano synthPad(6, "Soft Pad", 65);                    // block chords (verse / pre / chorus)
 
 // Drums on the SH-4d (channel 10)
 RolandSH4d drumKit(10, "Drums", 75);
@@ -153,7 +155,15 @@ verseMarimbaVel @=> verseMarimba.velocities;
 1.0 => verseMarimba.mutateProbabilityRange;
 true => verseMarimba.useAllNotes;
 
-[verseBass, verseMarimba] @=> Part verseParts[];
+// Synth pad: full chordsStd voicing, one strike per bar (non-arpeggiated ChordProgression).
+[   "1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0"
+] @=> string sectionChordPadProbs[];
+[68, 62, 65, 70, 63, 66] @=> int sectionChordPadVel[];
+ChordProgression sectionChordPad(synthPad, chordsLow, progression, false, 1, numBars, sectionChordPadProbs);
+sectionChordPadVel @=> sectionChordPad.velocities;
+0.0 => sectionChordPad.mutateProbabilityRange;
+
+[sectionChordPad, verseBass, verseMarimba] @=> Part verseParts[];
 
 // ============================================================================
 // PRE-CHORUS - vibraphone enters, marimba doubles up, hint of drums
@@ -222,7 +232,7 @@ true => preChorusMarimba.useAllNotes;
     "0.8:0.5:1.0",    // 5   snare
     "0.4:0.1:0.6"     //  &  hat (occasional)
 ] @=> string drumProbs[];
-[70,  95, 100,  90, 127,  92, 122,  95, 110,  85] @=> int drumVel[];
+[95,  95, 100,  90, 127,  92, 122,  95, 110,  85] @=> int drumVel[];
 
 [
     DrumMachine.BassDrum(),    // 1
@@ -242,7 +252,7 @@ DrumMachine drums(drumNotesCollection, 10, numBars, drumProbs, drumKit);
 drumVel @=> drums.velocities;
 0.3 => drums.mutateProbabilityRange;
 
-[preChorusBass, preChorusVibe, preChorusMarimba, drums] @=> Part preChorusParts[];
+[sectionChordPad, preChorusBass, preChorusVibe, preChorusMarimba, drums] @=> Part preChorusParts[];
 
 // ============================================================================
 // CHORUS - everyone in, marimba pushed up, tubular bells punctuate
@@ -306,7 +316,7 @@ true => chorusBells.random;
 chorusBellsVel @=> chorusBells.velocities;
 0.3 => chorusBells.mutateProbabilityRange;
 
-[chorusBass, chorusVibe, chorusMarimba, chorusBells, drums] @=> Part chorusParts[];
+[sectionChordPad, chorusBass, chorusVibe, chorusMarimba, chorusBells, drums] @=> Part chorusParts[];
 
 // ============================================================================
 // BRIDGE - sparse, exposed.  Marimba alone with xylophon counter-line.
@@ -344,7 +354,7 @@ true => bridgeMarimba.useAllNotes;
     "0.55:0.2:0.8:1.0"
 ] @=> string bridgeXyloProbs[];
 [0, 100, 80, 95, 0, 95, 82, 100, 0, 92] @=> int bridgeXyloVel[];
-SequentialMelody bridgeXylo(xylo, fzMelody, 10, numBars, bridgeXyloProbs);
+SequentialMelody bridgeXylo(xylo, fzMelody, 20, numBars, bridgeXyloProbs);
 bridgeXyloVel @=> bridgeXylo.velocities;
 1.2 => bridgeXylo.mutateProbabilityRange;
 true => bridgeXylo.useAllNotes;
@@ -434,7 +444,7 @@ true => outroMarimba.useAllNotes;
 // ============================================================================
 // All parts (declared once for Song.parts[] - device init walks this list)
 // ============================================================================
-[verseBass, verseMarimba,
+[verseBass, verseMarimba, sectionChordPad,
  preChorusBass, preChorusVibe, preChorusMarimba,
  chorusBass, chorusVibe, chorusMarimba, chorusBells,
  bridgeVibe, bridgeMarimba, bridgeXylo, bridgeDrums,
@@ -482,10 +492,10 @@ FragmentTransition ft_loop(verse1,      1.0);
 Song song("fz02", BPM, root, verse1, allParts);
 
 <<< "================================================================" >>>;
-<<< "  fz01 - 'Quintuplet Cadenza'  (Frank Zappa-flavoured)" >>>;
+<<< "  fz02 - 'Quintuplet Cadenza'  (Frank Zappa-flavoured)" >>>;
 <<< "  Key: C major / A minor (white-key cycle Em F Am C Dm G Bdim)" >>>;
 <<< "  Time: 5/4   BPM:", BPM >>>;
-<<< "  Lead:  Marimba   Pads: Vibraphone   Bass: Upright Jazz" >>>;
+<<< "  Lead:  Marimba   Pads: Vibraphone   Bass: Moog Messenger" >>>;
 <<< "  Counter: Xylophon   Colour: Tubular Bell   Drums: SH-4d" >>>;
 <<< "================================================================" >>>;
 
