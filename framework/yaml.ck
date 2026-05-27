@@ -120,13 +120,11 @@ public class YamlNode
     }
     fun YamlNode GetValue(string key)
     {
-        if (type != 5) { <<< "Warning: YamlNode type mismatch in GetValue(): not a map, type=", type >>>; }
-        for (0 => int i; i < arrayValue.cap(); i++)
+        if (type != TYPE_MAP()) { <<< "Warning: YamlNode type mismatch in GetValue(): not a map, type=", type >>>; }
+        findChild(key) => int foundIdx;
+        if (foundIdx >= 0)
         {
-            if (arrayValue[i].GetName() == key)
-            {
-                return arrayValue[i];
-            }
+            return arrayValue[foundIdx];
         }
         // Return an empty YamlNode if not found
         <<< "Warning: Key '" + key + "' not found in YamlNode map." >>>;
@@ -141,6 +139,16 @@ public class YamlNode
         return type;
     }
 
+    // Find the index of a child node by name, or -1 if not found.
+    fun int findChild(string key)
+    {
+        for (0 => int i; i < arrayValue.cap(); i++)
+        {
+            if (arrayValue[i].GetName() == key) { return i; }
+        }
+        return -1;
+    }
+
     // ---------------- map utilities ----------------
     // Set or add a string property on a map node
     fun void SetInt(string key, int value)
@@ -150,11 +158,7 @@ public class YamlNode
             return;
         }
         // find existing child with name
-        -1 => int foundIdx;
-        for (0 => int i; i < arrayValue.cap(); i++)
-        {
-            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
-        }
+        findChild(key) => int foundIdx;
         if (foundIdx >= 0)
         {
             arrayValue[foundIdx].SetInt(value);
@@ -174,11 +178,7 @@ public class YamlNode
             return 0;
         }
         // find existing child with name
-        -1 => int foundIdx;
-        for (0 => int i; i < arrayValue.cap(); i++)
-        {
-            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
-        }
+        findChild(key) => int foundIdx;
 
         if (foundIdx < 0) {
             <<< "Warning: Key '" + key + "' not found in YamlNode map." >>>;
@@ -196,11 +196,7 @@ public class YamlNode
             return;
         }
         // find existing child with name
-        -1 => int foundIdx;
-        for (0 => int i; i < arrayValue.cap(); i++)
-        {
-            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
-        }
+        findChild(key) => int foundIdx;
         if (foundIdx >= 0)
         {
             arrayValue[foundIdx].SetString(value);
@@ -220,11 +216,7 @@ public class YamlNode
             return "";
         }
         // find existing child with name
-        -1 => int foundIdx;
-        for (0 => int i; i < arrayValue.cap(); i++)
-        {
-            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
-        }
+        findChild(key) => int foundIdx;
 
         if (foundIdx < 0) {
             <<< "Warning: Key '" + key + "' not found in YamlNode map." >>>;
@@ -243,11 +235,7 @@ public class YamlNode
             return;
         }
         // find existing child with name
-        -1 => int foundIdx;
-        for (0 => int i; i < arrayValue.cap(); i++)
-        {
-            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
-        }
+        findChild(key) => int foundIdx;
         if (foundIdx >= 0)
         {
             arrayValue[foundIdx].SetFloat(value);
@@ -267,11 +255,7 @@ public class YamlNode
             return 0.0;
         }
         // find existing child with name
-        -1 => int foundIdx;
-        for (0 => int i; i < arrayValue.cap(); i++)
-        {
-            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
-        }
+        findChild(key) => int foundIdx;
         if (foundIdx < 0) {
                 <<< "Warning: Key '" + key + "' not found in YamlNode map." >>>;
                 return 0.0;
@@ -288,11 +272,7 @@ public class YamlNode
             SetMap(empty);
         }
         // find existing child with name
-        -1 => int foundIdx;
-        for (0 => int i; i < arrayValue.cap(); i++)
-        {
-            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
-        }
+        findChild(key) => int foundIdx;
         if (foundIdx >= 0)
         {
             return arrayValue[foundIdx];
@@ -313,11 +293,7 @@ public class YamlNode
             return null;
         }
         // find existing child with name
-        -1 => int foundIdx;
-        for (0 => int i; i < arrayValue.cap(); i++)
-        {
-            if (arrayValue[i].GetName() == key) { i => foundIdx; break; }
-        }
+        findChild(key) => int foundIdx;
         if (foundIdx < 0) {
             <<< "Warning: Key '" + key + "' not found in YamlNode map." >>>;
             return null;

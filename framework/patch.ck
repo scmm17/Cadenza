@@ -212,7 +212,6 @@ public class Patch
     {
         duration => now;
         noteOff(note);
-        duration => now;
     }
 }
 
@@ -280,27 +279,17 @@ public class MoogMessenger extends Patch
 
     fun void programChangeMoogMessenger(int program, int bank)
     {
-         MidiMsg msg;
-/*        0xB0 | midiChannel => msg.data1;
-        bank => msg.data2;
-        0 => msg.data3;
-        gma.send(msg);
-    
-        0xB0 | midiChannel => msg.data1;
-        32 => msg.data2;
-        0 => msg.data3;
-        gma.send(msg);
- */    
+        MidiMsg msg;
         0xC0 | midiChannel => msg.data1;
         program => msg.data2;
         0 => msg.data3;
         gma.send(msg);
     }
     
-        fun void setPreset()
+    fun void setPreset()
     {
-        // programChangeMoogMessenger(program, bank);
     }
+
 
     fun void saveConfig(YamlNode @config)
     {
@@ -435,9 +424,7 @@ public class BehringerRD6 extends Patch
         Patch(v);
     }
 
-    fun void setPreset()
-    {
-    }
+
 
     fun void saveConfig(YamlNode @config)
     {
@@ -1260,7 +1247,6 @@ new V3Preset(120, 5, "Ullian Drone & Chords", "Winds"),
 public class V3GrandPiano extends Patch
 {
     int programChange;
-    V3Preset preset();
 
     fun V3GrandPiano(int channel, int b, int p, int v)
     {

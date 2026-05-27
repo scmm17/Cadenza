@@ -48,7 +48,7 @@ public class ChordProgression extends Part
       int numMeasures, 
       float probabilities[])
     {
-        initPatch @=> patch;
+        initPart(initPatch);
         progression @=> chords;
         progOffsets @=> offsets;
         isArpeggiated => arpeggiated;
@@ -56,17 +56,8 @@ public class ChordProgression extends Part
         npm => notesPerMeasure;
         numMeasures => numberOfMeasures;
         false => random;
-        0.0 => mutateProbabilityRange;
         false => useMelody;
         0 => curMelodyPosition;
-        
-        // Initialize the new probability arrays
-        string emptyStrings[0];
-        float emptyFloats[0];
-        emptyStrings @=> rhythmProbabilityStrings;
-        emptyFloats @=> rhythmProbabilityMins;
-        emptyFloats @=> rhythmProbabilityMaxs;
-        emptyFloats @=> rhythmProbabilityRanges;
     }
 
     // Overloaded constructor for string-based probabilities
@@ -79,14 +70,13 @@ public class ChordProgression extends Part
       int numMeasures, 
       string probabilities[])
     {
-        initPatch @=> patch;
+        initPart(initPatch);
         progression @=> chords;
         progOffsets @=> offsets;
         isArpeggiated => arpeggiated;
         npm => notesPerMeasure;
         numMeasures => numberOfMeasures;
         false => random;
-        0.0 => mutateProbabilityRange;
         false => useMelody;
         0 => curMelodyPosition;
         
@@ -101,12 +91,7 @@ public class ChordProgression extends Part
      
      fun play(Song song)
      {
-        if (arpeggiated) 
-        {
-            song.whole()/notesPerMeasure => noteDuration;
-        } else {
-            song.whole()/notesPerMeasure => noteDuration;
-        }
+        song.whole()/notesPerMeasure => noteDuration;
         playProgression(song);
     }
 

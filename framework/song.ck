@@ -84,7 +84,7 @@ public class Song
         new LaunchControl(this) @=> launchControl;
         loadConfig();
 
-//        2.0 ::second => now;
+
 
         spork ~ hydraEvents.startEventLoop();       
         spork ~ launchControl.startEventLoop();
@@ -94,7 +94,6 @@ public class Song
     fun initDevicesFromParts()
     {
         parts[0].patch @=> currentDevice;
-        0 => int deviceIndex;
         for(Part part : parts) 
         {
             part.patch @=> Patch patch;
@@ -174,62 +173,42 @@ public class Song
         return "V3GrandPiano instrument(" + Std.itoa(hydraEvents.outputChannel+1) + ", \"" + preset.name + "\");";
     }
 
-    fun setNextPreset(int volume) 
+    fun void applyPreset(V3Preset preset, int volume)
     {
-        if (currentDevice.uiName != "V3") {
-            return;
-        }
-        presets.getNextPreset() @=> V3Preset preset;
         V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
         v3.programChangeV3GrandPiano(preset.program, preset.bank);
         preset.name => currentDevice.patchName;
         preset.program => currentDevice.program;
         preset.bank => currentDevice.bank;
         <<< getPresetDeclaration(preset), "" >>>;
+    }
+
+    fun setNextPreset(int volume) 
+    {
+        if (currentDevice.uiName != "V3") { return; }
+        applyPreset(presets.getNextPreset(), volume);
     }
 
     fun setNextPresetCategory(int volume) 
     {
-        if (currentDevice.uiName != "V3") {
-            return;
-        }
+        if (currentDevice.uiName != "V3") { return; }
         presets.getNextCategory() @=> V3Preset preset;
-        V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
-        v3.programChangeV3GrandPiano(preset.program, preset.bank);
-        preset.name => currentDevice.patchName;
-        preset.program => currentDevice.program;
-        preset.bank => currentDevice.bank;
         <<< "Category:", preset.category >>>;
-        <<< getPresetDeclaration(preset), "" >>>;
+        applyPreset(preset, volume);
     }
 
     fun setPreviousPreset(int volume) 
     {
-        if (currentDevice.uiName != "V3") {
-            return;
-        }
-        presets.getPreviousPreset() @=> V3Preset preset;
-        V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
-        v3.programChangeV3GrandPiano(preset.program, preset.bank);
-        preset.name => currentDevice.patchName;
-        preset.program => currentDevice.program;
-        preset.bank => currentDevice.bank;
-        <<< getPresetDeclaration(preset), "" >>>;
+        if (currentDevice.uiName != "V3") { return; }
+        applyPreset(presets.getPreviousPreset(), volume);
     }
 
     fun setPreviousPresetCategory(int volume) 
     {
-        if (currentDevice.uiName != "V3") {
-            return;
-        }
+        if (currentDevice.uiName != "V3") { return; }
         presets.getPreviousCategory() @=> V3Preset preset;
-        V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
-        v3.programChangeV3GrandPiano(preset.program, preset.bank);
-        preset.name => currentDevice.patchName;
-        preset.program => currentDevice.program;
-        preset.bank => currentDevice.bank;
         <<< "Category:", preset.category >>>;
-        <<< getPresetDeclaration(preset), "" >>>;
+        applyPreset(preset, volume);
     }
 
     Patch @ currentDevice;
@@ -344,7 +323,7 @@ public class Song
     {
         false => patch.muted;
         for(0 => int i; i < mutedPatches.cap(); i++) {
-            if (mutedPatches[i] != patch) {
+            if (mutedPatches[i] == patch) {
                 mutedPatches.erase(i);
                 break;
             }
@@ -618,18 +597,22 @@ public class Part
 
     Patch patch;
 
-    fun Part(Patch initPatch)
+    fun void initPart(Patch initPatch)
     {
         initPatch @=> patch;
         0.0 => mutateProbabilityRange;
         
-        // Initialize the new probability arrays
         string emptyStrings[0];
         float emptyFloats[0];
         emptyStrings @=> rhythmProbabilityStrings;
         emptyFloats @=> rhythmProbabilityMins;
         emptyFloats @=> rhythmProbabilityMaxs;
         emptyFloats @=> rhythmProbabilityRanges;
+    }
+
+    fun Part(Patch initPatch)
+    {
+        initPart(initPatch);
     }
 
    fun void play(Song song)
@@ -750,10 +733,9 @@ public class Part
                 }
             }
             
-            rhythmProbabilities[i] => float oldProb;
             change => rhythmProbabilities[i];
         }
-//        <<< "New probabilities: ", arrayToString(rhythmProbabilities) >>>;
+
     }
 
     fun string arrayToString(float a[])
@@ -902,14 +884,13 @@ public class Fragment
         }
         0 => float prob;
 
-        // <<< "Random: ", r >>>;
-        // <<< "Num next fragments: ", nextFragments.cap() >>>;
+
         for(FragmentTransition frag : nextFragments)
         {
             frag.probability + prob => prob;
             if (r <= prob)
             {
-                // <<< "Picked number: ", i >>>;
+
                 return frag.nextFragment;
             }
         }
@@ -925,7 +906,7 @@ public class Fragment
         }
         getNextSongFragment() @=> Fragment next;
         <<< "Next Fragment:", next.name >>>;
-        return getNextSongFragment();
+        return next;
     }
 }
 
@@ -942,12 +923,13 @@ public class ControlChange
     int mapToController;
     static int ccMsg;
 
+    0xB0 => ccMsg;
+
     fun ControlChange(string n, int min, int max, int outController) {
         min => minController;
         max => maxController;
         outController => mapToController;
         n => name;
-        0xB0 => ccMsg;
     }
 }
 
@@ -1102,12 +1084,12 @@ public class LaunchControl
         // open midi receiver, exit on fail
         min.open(inputDeviceName) => int status;
         if ( !status ) {
-            <<< "Filed to open Launch Control input", inputDeviceName >>>;
+            <<< "Failed to open Launch Control input", inputDeviceName >>>;
             me.exit(); 
         }
         mout.open(inputDeviceName) => status;
         if ( !status ) {
-            <<< "Filed to open Launch Control output", inputDeviceName >>>;
+            <<< "Failed to open Launch Control output", inputDeviceName >>>;
             me.exit(); 
         }
 
@@ -1155,21 +1137,17 @@ public class LaunchControl
                     baseControlNumber - cc.minController => int channel;
                     song.devices[channel] @=> Patch patch;
                     if (patch != null) {
-                        // <<< "Handle control change:", cc.name >>>;
                         patch.sendControllerChange(cc.mapToController, value);
                         if (cc.mapToController == 7) {
                             value => patch.volume;
-                            spork ~ printDevices();
                         } else if (cc.mapToController == 74) {
                             value => patch.filterCutoff;
-                            spork ~ printDevices();
                         } else if (cc.mapToController == 71) {
                             value => patch.filterResonance;
-                            spork ~ printDevices();
                         } else if (cc.mapToController == 10) {
                             value => patch.pan;
-                            spork ~ printDevices();
                         }
+                        spork ~ printDevices();
                         return true;
                     }
                     return false;
