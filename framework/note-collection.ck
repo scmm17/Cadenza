@@ -1,3 +1,5 @@
+// Note Collections
+
 @import "song.ck"
 @import "yaml.ck"
 
@@ -382,7 +384,6 @@ public class LSystemNotes extends NoteCollection
         <<< "l-system size: ", size, " maxDepth: ", maxDepth >>>;
         int eNotes[size];
         eNotes @=> expandedNotes;
-        expandedNotes[size-1] => int lastNote;
         0 => currentIndex;
         expand(startSymbol, 0, 0);
         expandedNotes @=> notes;
@@ -427,11 +428,7 @@ public class LSystemNotes extends NoteCollection
         return size;
     }
 
-    fun int getMidiNote(Song song, int noteIndex, int offset)
-    {
-        // get the note, adding or subtracting octaves, as needed
-        return song.rootNote + offset + expandedNotes[noteIndex % numNotes()] /* + 12 * (noteIndex / numNotes()) */;
-    }
+
 
     fun string arrayToString(int a[])
     {

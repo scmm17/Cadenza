@@ -1,4 +1,4 @@
-// Chords
+// Melody
 
 @import "note-collection.ck"
 @import "song.ck"
@@ -12,33 +12,24 @@ public class Melody extends Part
 {
     NoteCollection scale;
 
-    fun Melody(Patch initPatch, NoteCollection initSale, int npm, int numMeasures, float probabilities[])
+    fun void initMelody(Patch initPatch, NoteCollection initScale, int npm, int numMeasures)
     {
-        initPatch @=> patch;
-        initSale @=> scale;
-        probabilities @=> rhythmProbabilities;
-
+        initPart(initPatch);
+        initScale @=> scale;
         npm => notesPerMeasure;
         numMeasures => numberOfMeasures;
-        
-        // Initialize the new probability arrays
-        string emptyStrings[0];
-        float emptyFloats[0];
-        emptyStrings @=> rhythmProbabilityStrings;
-        emptyFloats @=> rhythmProbabilityMins;
-        emptyFloats @=> rhythmProbabilityMaxs;
-        emptyFloats @=> rhythmProbabilityRanges;
+    }
+
+    fun Melody(Patch initPatch, NoteCollection initScale, int npm, int numMeasures, float probabilities[])
+    {
+        initMelody(initPatch, initScale, npm, numMeasures);
+        probabilities @=> rhythmProbabilities;
     }
 
     // Overloaded constructor for string-based probabilities
-    fun Melody(Patch initPatch, NoteCollection initSale, int npm, int numMeasures, string probabilities[])
+    fun Melody(Patch initPatch, NoteCollection initScale, int npm, int numMeasures, string probabilities[])
     {
-        initPatch @=> patch;
-        initSale @=> scale;
-        npm => notesPerMeasure;
-        numMeasures => numberOfMeasures;
-        
-        // Parse string probabilities
+        initMelody(initPatch, initScale, npm, numMeasures);
         setProbabilitiesFromStrings(probabilities);
     }
 
@@ -59,42 +50,22 @@ public class Melody extends Part
 
 }
 
-// AleatoricMelody is a class that represents an aleatoric melody in the framework.
-// It extends Melody and adds a use note from chord probability.
+// AleatoricMelody generates notes by randomly selecting from the scale.
+// It extends Melody to produce non-deterministic melodic content.
 //
 // This class is used to create aleatoric melodies for musical parts.
 public class AleatoricMelody extends Melody
 {
-    float useNoteFromChordProbability;
-    fun AleatoricMelody(Patch initPatch, NoteCollection initSale, int npm, int numMeasures, float probabilities[])
+    fun AleatoricMelody(Patch initPatch, NoteCollection initScale, int npm, int numMeasures, float probabilities[])
     {
-        initPatch @=> patch;
-        initSale @=> scale;
+        initMelody(initPatch, initScale, npm, numMeasures);
         probabilities @=> rhythmProbabilities;
-
-        npm => notesPerMeasure;
-        numMeasures => numberOfMeasures;
-        0.0 => useNoteFromChordProbability;
-        
-        // Initialize the new probability arrays
-        string emptyStrings[0];
-        float emptyFloats[0];
-        emptyStrings @=> rhythmProbabilityStrings;
-        emptyFloats @=> rhythmProbabilityMins;
-        emptyFloats @=> rhythmProbabilityMaxs;
-        emptyFloats @=> rhythmProbabilityRanges;
     }
 
     // Overloaded constructor for string-based probabilities
-    fun AleatoricMelody(Patch initPatch, NoteCollection initSale, int npm, int numMeasures, string probabilities[])
+    fun AleatoricMelody(Patch initPatch, NoteCollection initScale, int npm, int numMeasures, string probabilities[])
     {
-        initPatch @=> patch;
-        initSale @=> scale;
-        npm => notesPerMeasure;
-        numMeasures => numberOfMeasures;
-        0.0 => useNoteFromChordProbability;
-        
-        // Parse string probabilities
+        initMelody(initPatch, initScale, npm, numMeasures);
         setProbabilitiesFromStrings(probabilities);
     }
 
@@ -106,50 +77,30 @@ public class AleatoricMelody extends Melody
     }
 }
 
-// SequentialMelody is a class that represents a sequential melody in the framework.
-// It extends Melody and adds a use note from chord probability.
+// SequentialMelody generates notes by stepping sequentially through the scale.
+// It extends Melody and supports both per-measure cycling and continuous note stepping.
 //
 // This class is used to create sequential melodies for musical parts.
 public class SequentialMelody extends Melody
 {
-    float useNoteFromChordProbability;
     int useAllNotes;
     int currentNote;
 
-    fun SequentialMelody(Patch initPatch, NoteCollection initSale, int npm, int numMeasures, float probabilities[])
+    fun SequentialMelody(Patch initPatch, NoteCollection initScale, int npm, int numMeasures, float probabilities[])
     {
-        initPatch @=> patch;
-        initSale @=> scale;
+        initMelody(initPatch, initScale, npm, numMeasures);
         probabilities @=> rhythmProbabilities;
-
-        npm => notesPerMeasure;
-        numMeasures => numberOfMeasures;
-        0.0 => useNoteFromChordProbability;
         false => useAllNotes;
         0 => currentNote;
-        
-        // Initialize the new probability arrays
-        string emptyStrings[0];
-        float emptyFloats[0];
-        emptyStrings @=> rhythmProbabilityStrings;
-        emptyFloats @=> rhythmProbabilityMins;
-        emptyFloats @=> rhythmProbabilityMaxs;
-        emptyFloats @=> rhythmProbabilityRanges;
     }
 
     // Overloaded constructor for string-based probabilities
-    fun SequentialMelody(Patch initPatch, NoteCollection initSale, int npm, int numMeasures, string probabilities[])
+    fun SequentialMelody(Patch initPatch, NoteCollection initScale, int npm, int numMeasures, string probabilities[])
     {
-        initPatch @=> patch;
-        initSale @=> scale;
-        npm => notesPerMeasure;
-        numMeasures => numberOfMeasures;
-        0.0 => useNoteFromChordProbability;
+        initMelody(initPatch, initScale, npm, numMeasures);
+        setProbabilitiesFromStrings(probabilities);
         false => useAllNotes;
         0 => currentNote;
-        
-        // Parse string probabilities
-        setProbabilitiesFromStrings(probabilities);
     }
 
     fun int generateNote(Song song, int measure, int noteInMeasure)
@@ -169,42 +120,22 @@ public class SequentialMelody extends Melody
     }
 }
 
-// DrumMachine is a class that represents a drum machine in the framework.
-// It extends Melody and adds a use note from chord probability.
+// DrumMachine generates drum patterns using MIDI note mappings for standard percussion.
+// It extends Melody and provides static accessors for common General MIDI drum note numbers.
 //
 // This class is used to create drum machines for musical parts.
 public class DrumMachine extends Melody
 {
-    float useNoteFromChordProbability;
-    fun DrumMachine(NoteCollection initSale, int npm, int numMeasures, float probabilities[], Patch drums)
+    fun DrumMachine(NoteCollection initScale, int npm, int numMeasures, float probabilities[], Patch drums)
     {
-        drums @=> patch;
-        initSale @=> scale;
+        initMelody(drums, initScale, npm, numMeasures);
         probabilities @=> rhythmProbabilities;
-
-        npm => notesPerMeasure;
-        numMeasures => numberOfMeasures;
-        0.0 => useNoteFromChordProbability;
-        
-        // Initialize the new probability arrays
-        string emptyStrings[0];
-        float emptyFloats[0];
-        emptyStrings @=> rhythmProbabilityStrings;
-        emptyFloats @=> rhythmProbabilityMins;
-        emptyFloats @=> rhythmProbabilityMaxs;
-        emptyFloats @=> rhythmProbabilityRanges;
     }
 
     // Overloaded constructor for string-based probabilities
-    fun DrumMachine(NoteCollection initSale, int npm, int numMeasures, string probabilities[], Patch drums)
+    fun DrumMachine(NoteCollection initScale, int npm, int numMeasures, string probabilities[], Patch drums)
     {
-        drums @=> patch;
-        initSale @=> scale;
-        npm => notesPerMeasure;
-        numMeasures => numberOfMeasures;
-        0.0 => useNoteFromChordProbability;
-        
-        // Parse string probabilities
+        initMelody(drums, initScale, npm, numMeasures);
         setProbabilitiesFromStrings(probabilities);
     }
 
