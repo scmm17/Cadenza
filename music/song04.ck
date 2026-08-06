@@ -4,7 +4,7 @@
 @import "../framework/midi-events.ck"
 
 // Global parameters
-50 => float BPM;          // Beats per minute
+65 => float BPM;          // Beats per minute
 57 => int root;           // A below Middle C as the root note
 
 // Midi devices
@@ -24,7 +24,7 @@ Chord minorChordH(NoteCollection.minorChordNotes(), 0);
 // Chord progression, arpeggiated
 [0, -3, 5, 7] @=> int progression[];
 [majorChord, minorChord, majorChord, majorChord] @=> Chord chords1[];
-[0.65, 0, .65, 0, .65, 0, .65, 0, 
+[0.65, 0, .65, 0, .65, 0, .65, 0,
  0.65, 0, .30, 0, .65, .35, 1.0, 1.0] @=> float probabilities1[];
 [124, 100, 120, 100] @=> int velocities1[];
 ChordProgression prog(s1, chords1, progression, true, 16, 4, probabilities1);
@@ -80,7 +80,7 @@ true => prog4.random;
  0,
  DrumMachine.BassDrum(),
  0,
- 0, 
+ 0,
  0,
  DrumMachine.SnareDrum(),
  0,

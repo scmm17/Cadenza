@@ -9,4 +9,4 @@ offsets:
   C: [0, 1, -4, -2]
 
 startSymbol: A
-maxDepth: 4
+maxDepth: 3

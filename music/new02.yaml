@@ -1,0 +1,53 @@
+song:
+  devices:
+    Moog-0:
+      deviceName: "Moog Messenger"
+      midiChannel: 0
+      patchName: "Bank: 1 Program: 1"
+      uiName: "Moog"
+      muted: 0
+      volume: 46
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Grand Piano Hamburg"
+      uiName: "V3"
+      muted: 0
+      volume: 82
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 1
+      bank: 0
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Grand Piano Hamburg"
+      uiName: "V3"
+      muted: 0
+      volume: 89
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 1
+      bank: 0
+      programChange: 1
+    V3-3:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 3
+      patchName: "Jazz Drum Kit (page 43)"
+      uiName: "V3"
+      muted: 0
+      volume: 104
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 121
+      bank: 4
+      programChange: 1

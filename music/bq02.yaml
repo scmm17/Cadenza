@@ -1,0 +1,28 @@
+song:
+  devices:
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Atmos"
+      uiName: "V3"
+      muted: 0
+      volume: 102
+      filterCutoff: 64
+      filterResonance: -1
+      pan: 64
+      program: 7
+      bank: 2
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Accordion Jazz Reed 16´ 2"
+      uiName: "V3"
+      muted: 0
+      volume: 96
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 76
+      bank: 0
+      programChange: 1
