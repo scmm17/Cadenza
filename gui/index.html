@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadenza — Live Dashboard</title>
+  <meta name="description" content="Real-time dashboard and controller for the Cadenza ChucK music system">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ─── Design System ──────────────────────────────────────────────────────── */
+    :root {
+      --bg-deep:       #06060f;
+      --bg-card:       rgba(14, 12, 28, 0.88);
+      --border:        rgba(110, 70, 240, 0.14);
+      --border-bright: rgba(110, 70, 240, 0.42);
+      --accent:        #7c3aed;
+      --accent-lite:   #a78bfa;
+      --accent-glow:   rgba(124, 58, 237, 0.28);
+      --cyan:          #06b6d4;
+      --cyan-glow:     rgba(6, 182, 212, 0.18);
+      --green:         #10b981;
+      --amber:         #f59e0b;
+      --red:           #ef4444;
+      --text-primary:  #ede9ff;
+      --text-secondary:#9585c8;
+      --text-dim:      #4a4070;
+      --row-active:    rgba(124, 58, 237, 0.13);
+      --row-playing:   rgba(6, 182, 212, 0.07);
+      --row-muted:     rgba(239, 68, 68, 0.06);
+      --transition:    0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      --radius-card:   16px;
+      --radius-btn:    10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    body {
+      background-image:
+        radial-gradient(ellipse 70% 50% at 10% 30%,  rgba(124,58,237,0.09) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 40% at 90% 10%,  rgba(6,182,212,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 60% at 50% 100%, rgba(124,58,237,0.04) 0%, transparent 60%);
+      min-height: 100vh;
+      padding: 24px 28px 40px;
+    }
+
+    /* ─── Header ──────────────────────────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .logo { display: flex; align-items: center; gap: 14px; }
+
+    .logo-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--accent) 0%, #1e40af 100%);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    h1 {
+      font-size: 24px; font-weight: 700; letter-spacing: -0.6px;
+      background: linear-gradient(120deg, #ddd6fe 30%, var(--cyan) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 11px; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 1.8px; font-weight: 600;
+      margin-top: 1px;
+    }
+
+    /* ─── Connection Badge ────────────────────────────────────────────────────── */
+    .conn-badge {
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      backdrop-filter: blur(16px);
+      font-size: 12px; font-weight: 500; color: var(--text-secondary);
+      user-select: none;
+    }
+
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--text-dim);
+      transition: background var(--transition), box-shadow var(--transition);
+      flex-shrink: 0;
+    }
+    .status-dot.connected    { background: var(--green);  box-shadow: 0 0 8px rgba(16,185,129,.55); animation: blink 2.5s ease-in-out infinite; }
+    .status-dot.disconnected { background: var(--red);    animation: blink 0.9s ease-in-out infinite; }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+    /* ─── Page grid ───────────────────────────────────────────────────────────── */
+    .layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
+
+    /* ─── Card ────────────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 20px 24px 24px;
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .card:hover { border-color: var(--border-bright); box-shadow: 0 0 28px rgba(110,70,240,.07); }
+
+    .card-title {
+      font-size: 10.5px; text-transform: uppercase; letter-spacing: 1.8px;
+      color: var(--text-dim); font-weight: 700; margin-bottom: 18px;
+    }
+
+    /* ─── Tables ──────────────────────────────────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; }
+
+    thead th {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 1.3px;
+      color: var(--text-dim); font-weight: 700;
+      padding: 0 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    thead th:first-child { text-align: center; }
+
+    tbody td {
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(110,70,240,.055);
+      font-size: 13px;
+      vertical-align: middle;
+      transition: background var(--transition);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody td:first-child   { text-align: center; }
+
+    tbody tr { transition: background var(--transition); }
+    tbody tr:hover td { background: rgba(110,70,240,.04); }
+
+    .row-active  { background: var(--row-active) !important; }
+    .row-playing { background: var(--row-playing); }
+    .row-muted   { background: var(--row-muted); opacity: .55; }
+
+    .cell-mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: var(--text-secondary);
+    }
+    .cell-patch {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px; color: var(--cyan);
+      max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cell-synth { font-weight: 600; }
+    .status-icons { font-size: 15px; letter-spacing: 1px; }
+
+    /* ─── Mode badges ─────────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 3px 11px; border-radius: 14px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-on  { background: rgba(16,185,129,.14); color: var(--green);     border: 1px solid rgba(16,185,129,.3); }
+    .badge-off { background: rgba(100,90,140,.1);  color: var(--text-dim);  border: 1px solid var(--border); }
+
+    /* ─── Controls ────────────────────────────────────────────────────────────── */
+    .controls { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; }
+
+    .ctrl-group { display: flex; flex-direction: column; gap: 7px; }
+    .ctrl-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 1.4px;
+      color: var(--text-dim); font-weight: 700;
+    }
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    button {
+      cursor: pointer; border: none;
+      font-family: 'Inter', sans-serif; font-weight: 600;
+      transition: all var(--transition); outline: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Device selector buttons */
+    .btn-device {
+      width: 42px; height: 42px;
+      border-radius: var(--radius-btn);
+      background: rgba(110,70,240,.09);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+    .btn-device:hover {
+      background: rgba(124,58,237,.22); border-color: var(--accent);
+      color: var(--text-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px var(--accent-glow);
+    }
+    .btn-device.active {
+      background: linear-gradient(135deg, var(--accent) 0%, #4f46e5 100%);
+      border-color: transparent; color: #fff;
+      box-shadow: 0 4px 18px var(--accent-glow);
+    }
+    .btn-device:disabled { opacity: .22; cursor: default; pointer-events: none; }
+
+    /* Toggle buttons */
+    .btn-toggle {
+      padding: 9px 18px; border-radius: var(--radius-btn); font-size: 13px;
+      background: rgba(110,70,240,.09); border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .btn-toggle:hover { border-color: var(--accent); color: var(--text-primary); }
+    .btn-toggle.active {
+      background: rgba(124,58,237,.2); border-color: var(--accent);
+      color: var(--accent-lite);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+
+    /* Action buttons */
+    .btn-action {
+      padding: 9px 18px; border-radius: var(--radius-btn); font-size: 13px;
+      background: rgba(6,182,212,.08); border: 1px solid rgba(6,182,212,.2);
+      color: var(--cyan);
+    }
+    .btn-action:hover {
+      background: rgba(6,182,212,.16); border-color: var(--cyan);
+      transform: translateY(-1px); box-shadow: 0 5px 14px var(--cyan-glow);
+    }
+    .btn-danger {
+      background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.2); color: #f87171;
+    }
+    .btn-danger:hover {
+      background: rgba(239,68,68,.16); border-color: #f87171;
+      box-shadow: 0 5px 14px rgba(239,68,68,.22);
+    }
+
+    /* Keyboard hints */
+    .kbd {
+      display: inline-block; padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(110,70,240,.13); border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
+      color: var(--text-dim); margin-left: 5px; vertical-align: middle;
+    }
+
+    /* ─── Shutdown Modal ──────────────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(5px);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #100e20;
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-card);
+      padding: 30px 32px;
+      max-width: 380px; width: 92%;
+      box-shadow: 0 24px 64px rgba(0,0,0,.55);
+      animation: modal-in .18s ease;
+    }
+    @keyframes modal-in { from { opacity:0; transform:scale(.95) } to { opacity:1; transform:scale(1) } }
+
+    .modal h3 { font-size: 17px; margin-bottom: 9px; color: #f87171; }
+    .modal p  { color: var(--text-secondary); font-size: 13px; line-height: 1.7; margin-bottom: 24px; }
+
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-cancel {
+      padding: 8px 18px; border-radius: 9px;
+      background: rgba(110,70,240,.1); border: 1px solid var(--border);
+      color: var(--text-secondary); font-size: 13px; font-family: 'Inter', sans-serif;
+      cursor: pointer; transition: all var(--transition);
+    }
+    .btn-cancel:hover { border-color: var(--border-bright); color: var(--text-primary); }
+
+    .btn-confirm {
+      padding: 8px 18px; border-radius: 9px;
+      background: rgba(239,68,68,.2); border: 1px solid rgba(239,68,68,.4);
+      color: #f87171; font-size: 13px; font-weight: 600;
+      font-family: 'Inter', sans-serif; cursor: pointer;
+      transition: all var(--transition);
+    }
+    .btn-confirm:hover { background: rgba(239,68,68,.32); }
+
+    /* ─── Empty / loading states ──────────────────────────────────────────────── */
+    .empty {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 44px 20px; color: var(--text-dim);
+      gap: 10px;
+    }
+    .empty-icon { font-size: 34px; }
+    .empty-text { font-size: 13px; }
+
+    /* Flash on update */
+    @keyframes flash-row { 0%{opacity:.4} 100%{opacity:1} }
+    .flash { animation: flash-row .35s ease; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🎵</div>
+    <div>
+      <h1>Cadenza</h1>
+      <div class="subtitle">Live Dashboard</div>
+    </div>
+  </div>
+  <div class="conn-badge" id="connBadge">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Connecting…</span>
+  </div>
+</header>
+
+<!-- ── Main layout ─────────────────────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- Controls card -->
+  <section class="card" aria-label="Controls">
+    <div class="card-title">Controls</div>
+    <div class="controls">
+
+      <div class="ctrl-group">
+        <div class="ctrl-label">Device <span class="kbd">1 – 8</span></div>
+        <div class="btn-row" id="deviceButtons">
+          <!-- Populated dynamically from ChucK state -->
+          <button class="btn-device" disabled>1</button>
+          <button class="btn-device" disabled>2</button>
+          <button class="btn-device" disabled>3</button>
+          <button class="btn-device" disabled>4</button>
+          <button class="btn-device" disabled>5</button>
+          <button class="btn-device" disabled>6</button>
+          <button class="btn-device" disabled>7</button>
+          <button class="btn-device" disabled>8</button>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label">Modes</div>
+        <div class="btn-row">
+          <button class="btn-toggle" id="btnGolden"  onclick="send('golden')"  title="Toggle golden (deterministic) mode">✨ Golden <span class="kbd">g</span></button>
+          <button class="btn-toggle" id="btnAllMode" onclick="send('allMode')" title="Toggle all-devices mode">🔀 All Mode <span class="kbd">a</span></button>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label">Actions</div>
+        <div class="btn-row">
+          <button class="btn-action"              onclick="send('save')"    title="Write config YAML to disk">💾 Save Config <span class="kbd">w</span></button>
+          <button class="btn-action btn-danger"   onclick="openShutdown()" title="Shutdown ChucK process">⏹ Shutdown <span class="kbd">Q</span></button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Devices table card -->
+  <section class="card" aria-label="Device status">
+    <div class="card-title">Devices</div>
+    <div id="devicesWrap">
+      <div class="empty"><div class="empty-icon">🎹</div><div class="empty-text">Waiting for ChucK…</div></div>
+    </div>
+  </section>
+
+  <!-- Song status table card -->
+  <section class="card" aria-label="Song status">
+    <div class="card-title">Song Status</div>
+    <div id="songWrap">
+      <div class="empty"><div class="empty-icon">🎼</div><div class="empty-text">Waiting for ChucK…</div></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── Shutdown Modal ──────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="shutdownModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <h3 id="modalTitle">⏹ Shutdown ChucK?</h3>
+    <p>This will stop all audio, send All-Notes-Off on every MIDI channel, and exit the ChucK process. This cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="cancelShutdown" onclick="closeShutdown()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmShutdown()">Shutdown</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ─── State ────────────────────────────────────────────────────────────────────
+let chuckState = null;
+let ws         = null;
+let reconnect  = null;
+
+// ─── WebSocket ────────────────────────────────────────────────────────────────
+function connect() {
+  ws = new WebSocket('ws://localhost:3000');
+
+  ws.addEventListener('open', () => {
+    setConnected(true);
+    clearTimeout(reconnect);
+  });
+
+  ws.addEventListener('message', ({ data }) => {
+    try {
+      const msg = JSON.parse(data);
+      if (msg.type === 'state') {
+        chuckState = msg.data;
+        render();
+      }
+    } catch (e) {
+      console.error('Parse error:', e);
+    }
+  });
+
+  ws.addEventListener('close',  () => { setConnected(false); reconnect = setTimeout(connect, 2000); });
+  ws.addEventListener('error',  () => ws.close());
+}
+
+function setConnected(ok) {
+  const dot  = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  dot.className  = 'status-dot ' + (ok ? 'connected' : 'disconnected');
+  text.textContent = ok ? 'Connected' : 'Disconnected — retrying…';
+}
+
+function send(type, value) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type, value }));
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function render() {
+  if (!chuckState) return;
+  renderDeviceButtons();
+  renderDevicesTable();
+  renderSongTable();
+  syncModeButtons();
+}
+
+// Device selector buttons
+function renderDeviceButtons() {
+  const s   = chuckState;
+  const row = document.getElementById('deviceButtons');
+  if (!s.devices || s.devices.length === 0) return;
+
+  // Rebuild if device count changed
+  if (row.children.length !== s.devices.length) {
+    row.innerHTML = '';
+    s.devices.forEach(dev => {
+      const b = document.createElement('button');
+      b.className   = 'btn-device';
+      b.id          = 'dev-btn-' + dev.index;
+      b.textContent = dev.index;
+      b.onclick     = () => send('device', dev.index);
+      row.appendChild(b);
+    });
+  }
+
+  s.devices.forEach(dev => {
+    const b = document.getElementById('dev-btn-' + dev.index);
+    if (!b) return;
+    b.disabled = false;
+    b.classList.toggle('active', dev.active === 1);
+    b.title = dev.uiName + ': ' + dev.patchName;
+  });
+}
+
+// Devices table
+function renderDevicesTable() {
+  const s    = chuckState;
+  const wrap = document.getElementById('devicesWrap');
+  if (!s.devices || s.devices.length === 0) return;
+
+  const rows = s.devices.map(dev => {
+    const icons = [
+      dev.active  === 1 ? '&#x1F441;&#xFE0F;' : '',
+      dev.playing === 1 ? '&#x2611;&#xFE0F;'  : '',
+      dev.muted   === 1 ? '&#x274C;'           : '',
+    ].filter(Boolean).join(' ');
+
+    const cls = [
+      dev.active  === 1 ? 'row-active'  : '',
+      dev.playing === 1 ? 'row-playing' : '',
+      dev.muted   === 1 ? 'row-muted'   : '',
+    ].filter(Boolean).join(' ');
+
+    return '<tr class="' + cls + '">'
+         + '<td><span class="status-icons">' + (icons || '&nbsp;') + '</span></td>'
+         + '<td class="cell-mono">' + dev.index + '</td>'
+         + '<td class="cell-synth">' + esc(dev.uiName) + '</td>'
+         + '<td class="cell-mono">'  + dev.channel + '</td>'
+         + '<td class="cell-patch">' + esc(dev.patchName) + '</td>'
+         + '<td class="cell-mono">'  + dev.volume + '</td>'
+         + '<td class="cell-mono">'  + dev.filterCutoff + '</td>'
+         + '<td class="cell-mono">'  + dev.filterResonance + '</td>'
+         + '<td class="cell-mono">'  + dev.pan + '</td>'
+         + '</tr>';
+  }).join('');
+
+  wrap.innerHTML =
+    '<table>'
+    + '<thead><tr>'
+    + '<th>Status</th><th>Device</th><th>Synth</th><th>Channel</th>'
+    + '<th>Patch</th><th>Vol</th><th>Cutoff</th><th>Res</th><th>Pan</th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table>';
+}
+
+// Song status table
+function renderSongTable() {
+  const s    = chuckState;
+  const wrap = document.getElementById('songWrap');
+  if (!s) return;
+
+  const badge = v => v
+    ? '<span class="badge badge-on">&#x2611;&#xFE0F; On</span>'
+    : '<span class="badge badge-off">&#x274C; Off</span>';
+
+  wrap.innerHTML =
+    '<table>'
+    + '<thead><tr>'
+    + '<th>Song</th><th>Fragment</th><th>Mute Mode</th>'
+    + '<th>Solo Mode</th><th>Golden</th><th>All Mode</th>'
+    + '</tr></thead>'
+    + '<tbody><tr>'
+    + '<td class="cell-synth">' + esc(s.songName)      + '</td>'
+    + '<td class="cell-patch">' + esc(s.fragmentName)  + '</td>'
+    + '<td>' + badge(s.muteMode)  + '</td>'
+    + '<td>' + badge(s.soloMode)  + '</td>'
+    + '<td>' + badge(s.golden)    + '</td>'
+    + '<td>' + badge(s.allMode)   + '</td>'
+    + '</tr></tbody>'
+    + '</table>';
+}
+
+// Mode toggle button visual state
+function syncModeButtons() {
+  const s = chuckState;
+  document.getElementById('btnGolden') .classList.toggle('active', !!s.golden);
+  document.getElementById('btnAllMode').classList.toggle('active', !!s.allMode);
+}
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ─── Shutdown Modal ───────────────────────────────────────────────────────────
+function openShutdown()    { document.getElementById('shutdownModal').classList.add('open'); }
+function closeShutdown()   { document.getElementById('shutdownModal').classList.remove('open'); }
+function confirmShutdown() { closeShutdown(); send('shutdown'); }
+
+// ─── Keyboard Shortcuts ───────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input,textarea,select')) return;
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+  const k = e.key;
+
+  // Device 1-8 (mirrors keyboardLoop: keys 1-9)
+  if (k >= '1' && k <= '8') { send('device', parseInt(k, 10)); return; }
+
+  switch (k) {
+    case 'g': send('golden');  break;
+    case 'a': send('allMode'); break;
+    case 'w': send('save');    break;
+    case 'Q': openShutdown();  break;       // Shift+Q, matching ChucK's keyboardLoop
+    case 'Escape': closeShutdown(); break;
+  }
+});
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+connect();
+</script>
+</body>
+</html>

@@ -88,7 +88,8 @@ public class Song
 
         spork ~ hydraEvents.startEventLoop();       
         spork ~ launchControl.startEventLoop();
-        spork ~ keyboardLoop(); 
+        spork ~ keyboardLoop();
+        spork ~ oscControlLoop();
     }
 
     fun initDevicesFromParts()
@@ -554,6 +555,90 @@ public class Song
     fun dur tripletEighth()
     {
         return quarter()/3;
+    }
+
+    // ── OSC Control Loop ──────────────────────────────────────────────────────
+    // Mirrors all keyboardLoop commands over OSC port 9449 so an external GUI
+    // (e.g. the HTML dashboard at localhost:3000) can control ChucK in real time.
+    fun oscControlLoop()
+    {
+        OscRecv recv;
+        9449 => recv.port;
+        recv.listen();
+
+        recv.event("/cadenza/device, i")   @=> OscEvent devEvent;
+        recv.event("/cadenza/golden, i")   @=> OscEvent goldenEvent;
+        recv.event("/cadenza/allMode, i")  @=> OscEvent allModeEvent;
+        recv.event("/cadenza/save, i")     @=> OscEvent saveEvent;
+        recv.event("/cadenza/shutdown, i") @=> OscEvent shutdownEvent;
+
+        spork ~ handleOscDevice(devEvent);
+        spork ~ handleOscGolden(goldenEvent);
+        spork ~ handleOscAllMode(allModeEvent);
+        spork ~ handleOscSave(saveEvent);
+        spork ~ handleOscShutdown(shutdownEvent);
+
+        // Keep this shred alive
+        while (true) { 1::second => now; }
+    }
+
+    fun handleOscDevice(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int i;
+                i - 1 => int idx;
+                if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
+                    devices[idx] @=> currentDevice;
+                    devices[idx].midiChannel => hydraEvents.outputChannel;
+                    launchControl.printDevices();
+                }
+            }
+        }
+    }
+
+    fun handleOscGolden(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                !golden => golden;
+                launchControl.printDevices();
+            }
+        }
+    }
+
+    fun handleOscAllMode(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                !allMode => allMode;
+                launchControl.printDevices();
+            }
+        }
+    }
+
+    fun handleOscSave(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                saveConfig();
+                <<< "Saved config", "" >>>;
+            }
+        }
+    }
+
+    fun handleOscShutdown(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                shutdown();
+            }
+        }
     }
 }
 
@@ -1073,6 +1158,7 @@ public class LaunchControl
         "| " + song.name + " | " + song.currentFragment.name + " | " + (song.muteMode ? "☑️" : "❌") + " | " + (song.soloMode ? "☑️" : "❌") + " | " + (Song.golden ? "☑️" : "❌") + " | " + (song.allMode ? "☑️" : "❌") + " |\n" => string statusLine;
         fout.write(statusLine);
         fout.close();
+        broadcastState();
     }
 
     fun startEventLoop()
@@ -1280,5 +1366,76 @@ public class LaunchControl
     {
         // <<< "Button Up, note:", note, "Velocity:", velocity >>>;
         return true;
+    }
+
+    // ── OSC State Broadcast ───────────────────────────────────────────────────
+    // Called at the end of write_markdown_panel() to push the current state
+    // as a JSON string to the Node.js GUI bridge on UDP port 9450.
+    fun broadcastState()
+    {
+        OscSend xmit;
+        xmit.setHost("localhost", 9450);
+
+        // Find index of currentDevice (0-based)
+        0 => int curIdx;
+        for (0 => int i; i < song.devices.cap(); i++) {
+            if (song.devices[i] != null && song.devices[i] == song.currentDevice) {
+                i => curIdx;
+            }
+        }
+
+        // Build JSON string
+        "{" => string j;
+        j + "\"songName\":\""     + escJson(song.name)                   + "\"," => j;
+        j + "\"fragmentName\":\"" + escJson(song.currentFragment.name)   + "\"," => j;
+        j + "\"muteMode\":"       + song.muteMode                        + ","   => j;
+        j + "\"soloMode\":"       + song.soloMode                        + ","   => j;
+        j + "\"golden\":"         + Song.golden                          + ","   => j;
+        j + "\"allMode\":"        + song.allMode                         + ","   => j;
+        j + "\"currentDeviceIndex\":" + curIdx                           + ","   => j;
+        j + "\"devices\":["                                                       => j;
+
+        0 => int first;
+        0 => int dNum;
+        for (Patch p : song.devices) {
+            if (p != null) {
+                if (first) { j + "," => j; }
+                j + "{" => j;
+                j + "\"index\":"          + (dNum + 1)                     + "," => j;
+                j + "\"uiName\":\""       + escJson(p.uiName)              + "\"," => j;
+                j + "\"channel\":"        + (p.midiChannel + 1)            + "," => j;
+                j + "\"patchName\":\""    + escJson(p.patchName)           + "\"," => j;
+                j + "\"volume\":"         + p.volume                       + "," => j;
+                j + "\"filterCutoff\":"   + p.filterCutoff                 + "," => j;
+                j + "\"filterResonance\":" + p.filterResonance             + "," => j;
+                j + "\"pan\":"            + (p.pan - 64)                   + "," => j;
+                j + "\"muted\":"          + p.muted                        + "," => j;
+                j + "\"active\":"         + (p == song.currentDevice ? 1 : 0) + "," => j;
+                j + "\"playing\":"        + isPlaying(p)                   + "}" => j;
+                1 => first;
+            }
+            dNum++;
+        }
+        j + "]}" => j;
+
+        xmit.startMsg("/cadenza/state", "s");
+        j => xmit.addString;
+    }
+
+    // Escape double-quotes and backslashes so the JSON string is valid.
+    fun string escJson(string s)
+    {
+        "" => string r;
+        for (0 => int i; i < s.length(); i++) {
+            s.charAt(i) => int c;
+            if (c == 34) {          // double-quote
+                r + "\\\"" => r;
+            } else if (c == 92) {   // backslash
+                r + "\\\\" => r;
+            } else {
+                r + s.substring(i, 1) => r;
+            }
+        }
+        return r;
     }
 }
