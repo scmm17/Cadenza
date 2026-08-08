@@ -6,7 +6,7 @@ song:
       patchName: "channel 3"
       uiName: "SH-4d"
       muted: 0
-      volume: 70
+      volume: 111
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -19,9 +19,9 @@ song:
       patchName: "Bank: 3 Program: 5"
       uiName: "SH-4d"
       muted: 0
-      volume: 114
-      filterCutoff: -1
-      filterResonance: -1
+      volume: 127
+      filterCutoff: 91
+      filterResonance: 46
       pan: 64
       program: 5
       bank: 3
@@ -29,14 +29,14 @@ song:
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
-      patchName: "Marimba 1"
+      patchName: "Electric Grand Layered MKS - - 2"
       uiName: "V3"
       muted: 0
-      volume: 78
+      volume: 84
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 80
+      program: 26
       bank: 0
       programChange: 1
     S-1-2:
@@ -57,10 +57,11 @@ song:
       patchName: "Drums"
       uiName: "SH-4d"
       muted: 0
-      volume: 40
+      volume: 94
       filterCutoff: -1
       filterResonance: -1
       pan: 64
       program: 0
       bank: 0
       programChange: 0
+  bpm: 100.000000

@@ -23,7 +23,8 @@ public class Patch
     // Name to display in the UI
     string uiName;
     // Muted state (0 = not muted, 1 = muted, or use as boolean)
-    int muted;
+    int muted;     // Effective runtime muted state (used by noteOn)
+    int userMuted; // User-toggled explicit mute state
 
     // Program and bank for program change, used by some devices
     int program;
@@ -48,6 +49,7 @@ public class Patch
         -1 => filterResonance;
         64 => pan;
         false => muted;
+        false => userMuted;
         updateControllers();
     }
 
@@ -71,7 +73,8 @@ public class Patch
         config.GetInt("midiChannel") => midiChannel;
         config.GetString("patchName") => patchName;
         config.GetString("uiName") => uiName;
-        config.GetInt("muted") => muted;
+        config.GetInt("muted") => userMuted;
+        userMuted => muted;
         config.GetInt("volume") => volume;
         config.GetInt("filterCutoff") => filterCutoff;
         config.GetInt("filterResonance") => filterResonance;
@@ -84,7 +87,7 @@ public class Patch
         config.SetInt("midiChannel", midiChannel);
         config.SetString("patchName", patchName);
         config.SetString("uiName", uiName);
-        config.SetInt("muted", muted);
+        config.SetInt("muted", userMuted);
         config.SetInt("volume", volume);
         config.SetInt("filterCutoff", filterCutoff);
         config.SetInt("filterResonance", filterResonance);
@@ -120,6 +123,11 @@ public class Patch
 
     fun void sendAllNotesOff() 
     {
+        if (noteXmit == null) { initNoteXmit(); }
+        if (devIndex > 0) {
+            noteXmit.startMsg("/cadenza/allNotesOff", "i");
+            devIndex => noteXmit.addInt;
+        }
         MidiMsg msg;
         0xB0 | midiChannel => msg.data1;
         0x7B => msg.data2;
@@ -185,10 +193,28 @@ public class Patch
         gma.send(msg);
     }
 
+    int devIndex; // 1-based device index (1-8)
+
+    static OscSend @ noteXmit;
+
+    fun static void initNoteXmit() {
+        if (noteXmit == null) {
+            new OscSend @=> noteXmit;
+            noteXmit.setHost("localhost", 9450);
+        }
+    }
+
     fun void noteOn(int note, int velocity, dur duration)
     {
         if (muted) {
             return;
+        }
+        if (noteXmit == null) { initNoteXmit(); }
+        if (devIndex > 0) {
+            noteXmit.startMsg("/cadenza/noteOn", "i i i");
+            devIndex => noteXmit.addInt;
+            note => noteXmit.addInt;
+            velocity => noteXmit.addInt;
         }
         MidiMsg msg;
         0x90 | midiChannel => msg.data1;
@@ -202,6 +228,12 @@ public class Patch
         
     fun void noteOff(int note)
     {
+        if (noteXmit == null) { initNoteXmit(); }
+        if (devIndex > 0) {
+            noteXmit.startMsg("/cadenza/noteOff", "i i");
+            devIndex => noteXmit.addInt;
+            note => noteXmit.addInt;
+        }
         MidiMsg msg;
         0x80 | midiChannel => msg.data1;
         note => msg.data2;

@@ -6,7 +6,7 @@ song:
       patchName: "Bank: 1 Program: 1"
       uiName: "Moog"
       muted: 0
-      volume: 46
+      volume: 33
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -15,14 +15,14 @@ song:
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
-      patchName: "Grand Piano Hamburg"
+      patchName: "E-Piano V3 Bella Layered Pad velocity splits 4"
       uiName: "V3"
       muted: 0
       volume: 82
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 1
+      program: 55
       bank: 0
       programChange: 1
     V3-1:
@@ -44,10 +44,11 @@ song:
       patchName: "Jazz Drum Kit (page 43)"
       uiName: "V3"
       muted: 0
-      volume: 104
+      volume: 112
       filterCutoff: -1
       filterResonance: -1
       pan: 64
       program: 121
       bank: 4
       programChange: 1
+  bpm: 140.000000

@@ -7,9 +7,9 @@ song:
       uiName: "S-1"
       muted: 0
       volume: 127
-      filterCutoff: 53
-      filterResonance: 42
-      pan: 64
+      filterCutoff: 64
+      filterResonance: 30
+      pan: 80
       program: 13
       bank: 1
     Hydrasynth-0:
@@ -19,8 +19,8 @@ song:
       uiName: "Hydrasynth"
       muted: 0
       volume: 91
-      filterCutoff: -1
-      filterResonance: -1
+      filterCutoff: 83
+      filterResonance: 63
       pan: 64
       presetName: "D035"
     SH-4d-0:
@@ -42,9 +42,9 @@ song:
       patchName: "Channel 2"
       uiName: "SH-4d"
       muted: 0
-      volume: 64
-      filterCutoff: -1
-      filterResonance: -1
+      volume: 127
+      filterCutoff: 84
+      filterResonance: 71
       pan: 64
       program: 0
       bank: 0
@@ -55,10 +55,11 @@ song:
       patchName: "Drums"
       uiName: "SH-4d"
       muted: 0
-      volume: 50
+      volume: 104
       filterCutoff: -1
       filterResonance: -1
       pan: 64
       program: 0
       bank: 0
       programChange: 0
+  bpm: 60.000000

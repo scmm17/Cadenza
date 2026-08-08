@@ -103,13 +103,20 @@ public class Song
                 if (devices[j] == null) 
                 {
                     patch @=> devices[j];
+                    (j + 1) => patch.devIndex;
                     break;
                 }
                 if (patch.deviceName == devices[j].deviceName &&
                     patch.midiChannel == devices[j].midiChannel) 
                     {
+                        (j + 1) => patch.devIndex;
                         break;
                     }
+            }
+        }
+        for(0 => int i; i < devices.cap(); i++) {
+            if (devices[i] != null) {
+                (i + 1) => devices[i].devIndex;
             }
         }
     }
@@ -123,10 +130,12 @@ public class Song
         if (f.good()) {
             f.close();
             YamlNode.ParseFile(configFile) @=> config;
+            loadSongConfig();
             loadDeviceConfigs();
         } else {
             f.close();
             new YamlNode("song") @=> config;
+            saveSongConfig();
             saveDeviceConfigs();
             config.WriteFile(configFile);
         }
@@ -135,6 +144,7 @@ public class Song
     fun void saveConfig()
     {
         name + ".yaml" => string configFile;
+        saveSongConfig();
         saveDeviceConfigs();
         config.WriteFile(configFile);
     }
@@ -164,6 +174,19 @@ public class Song
                     }
                 }
             }
+        }
+    }
+
+    fun void saveSongConfig()
+    {
+        config.SetFloat("bpm", BPM);
+    }
+
+    fun void loadSongConfig()
+    {
+        config.GetFloat("bpm") => float savedBpm;
+        if (savedBpm > 0.0) {
+            setBPM(savedBpm);
         }
     }
 
@@ -300,6 +323,27 @@ public class Song
         60::second / bpm => beat;
     }
 
+    fun void updateEffectiveMuteStates()
+    {
+        for(Patch p : devices) {
+            if (p != null) {
+                p.muted => int wasMuted;
+                if (soloPatch != null) {
+                    if (p == soloPatch) {
+                        false => p.muted;
+                    } else {
+                        true => p.muted;
+                    }
+                } else {
+                    p.userMuted => p.muted;
+                }
+                if (!wasMuted && p.muted) {
+                    p.sendAllNotesOff();
+                }
+            }
+        }
+    }
+
     fun void startMuteMode()
     {
         true => muteMode;
@@ -309,26 +353,29 @@ public class Song
     {
         false => muteMode;
         for(Patch p : mutedPatches) {
-            false => p.muted;
+            false => p.userMuted;
         }
         mutedPatches.clear();
+        updateEffectiveMuteStates();
     }
 
     fun void mutePatch(Patch patch)
     {
-        true => patch.muted;
+        true => patch.userMuted;
         mutedPatches << patch;
+        updateEffectiveMuteStates();
     }
 
     fun void unMutePatch(Patch patch)
     {
-        false => patch.muted;
+        false => patch.userMuted;
         for(0 => int i; i < mutedPatches.cap(); i++) {
             if (mutedPatches[i] == patch) {
                 mutedPatches.erase(i);
                 break;
             }
         }
+        updateEffectiveMuteStates();
     }
 
     fun void startSoloMode()
@@ -340,40 +387,28 @@ public class Song
     {
         false => soloMode;
         null @=> soloPatch;
-        for(Patch p : devices) {
-            if (p != null) {
-                false => p.muted;
-            }
-        }
+        updateEffectiveMuteStates();
     }
 
     fun void setSoloPatch(Patch patch)
     {
         <<< "Setting solo patch:", patch.deviceName >>>;
         patch @=> soloPatch;
-        for(Patch p : devices) {
-            if (p == patch) {
-                false => p.muted;
-            } else if (p != null)   {
-                true => p.muted;
-            }
-        }
+        updateEffectiveMuteStates();
     }
 
     fun void unsetSoloPatch()
     {
-        <<< "Unsetting solo patch:", soloPatch.deviceName >>>;
-        for(Patch p : devices) {
-            if (p != null) {
-                false => p.muted;
-            }
+        if (soloPatch != null) {
+            <<< "Unsetting solo patch:", soloPatch.deviceName >>>;
+            null @=> soloPatch;
         }
-        null @=> soloPatch;
+        updateEffectiveMuteStates();
     }
 
     fun void toggleMute(Patch patch)
     {
-        if (patch.muted) {
+        if (patch.userMuted) {
             unMutePatch(patch);
         } else {
             mutePatch(patch);
@@ -389,8 +424,6 @@ public class Song
         }
         if (originalSoloPatch != patch) {
             setSoloPatch(patch);
-        } else {
-            null @=> soloPatch;
         }
     }
 
@@ -566,17 +599,39 @@ public class Song
         9449 => recv.port;
         recv.listen();
 
-        recv.event("/cadenza/device, i")   @=> OscEvent devEvent;
-        recv.event("/cadenza/golden, i")   @=> OscEvent goldenEvent;
-        recv.event("/cadenza/allMode, i")  @=> OscEvent allModeEvent;
-        recv.event("/cadenza/save, i")     @=> OscEvent saveEvent;
-        recv.event("/cadenza/shutdown, i") @=> OscEvent shutdownEvent;
+        recv.event("/cadenza/device, i")     @=> OscEvent devEvent;
+        recv.event("/cadenza/golden, i")     @=> OscEvent goldenEvent;
+        recv.event("/cadenza/allMode, i")    @=> OscEvent allModeEvent;
+        recv.event("/cadenza/save, i")       @=> OscEvent saveEvent;
+        recv.event("/cadenza/shutdown, i")   @=> OscEvent shutdownEvent;
+        recv.event("/cadenza/volume, ii")    @=> OscEvent volumeEvent;
+        recv.event("/cadenza/cutoff, ii")    @=> OscEvent cutoffEvent;
+        recv.event("/cadenza/resonance, ii") @=> OscEvent resonanceEvent;
+        recv.event("/cadenza/pan, ii")       @=> OscEvent panEvent;
+        recv.event("/cadenza/tempo, i")      @=> OscEvent tempoEvent;
+        recv.event("/cadenza/muteDevice, i")  @=> OscEvent muteDevEvent;
+        recv.event("/cadenza/soloDevice, i")  @=> OscEvent soloDevEvent;
+        recv.event("/cadenza/prevPreset, i")  @=> OscEvent prevPresetEvent;
+        recv.event("/cadenza/nextPreset, i")  @=> OscEvent nextPresetEvent;
+        recv.event("/cadenza/prevPresetCat, i") @=> OscEvent prevPresetCatEvent;
+        recv.event("/cadenza/nextPresetCat, i") @=> OscEvent nextPresetCatEvent;
 
         spork ~ handleOscDevice(devEvent);
         spork ~ handleOscGolden(goldenEvent);
         spork ~ handleOscAllMode(allModeEvent);
         spork ~ handleOscSave(saveEvent);
         spork ~ handleOscShutdown(shutdownEvent);
+        spork ~ handleOscVolume(volumeEvent);
+        spork ~ handleOscCutoff(cutoffEvent);
+        spork ~ handleOscResonance(resonanceEvent);
+        spork ~ handleOscPan(panEvent);
+        spork ~ handleOscTempo(tempoEvent);
+        spork ~ handleOscMuteDevice(muteDevEvent);
+        spork ~ handleOscSoloDevice(soloDevEvent);
+        spork ~ handleOscPrevPreset(prevPresetEvent);
+        spork ~ handleOscNextPreset(nextPresetEvent);
+        spork ~ handleOscPrevPresetCat(prevPresetCatEvent);
+        spork ~ handleOscNextPresetCat(nextPresetCatEvent);
 
         // Keep this shred alive
         while (true) { 1::second => now; }
@@ -637,6 +692,169 @@ public class Song
             e => now;
             while (e.nextMsg()) {
                 shutdown();
+            }
+        }
+    }
+
+    fun handleOscVolume(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int devIdx;
+                e.getInt() => int val;
+                devIdx - 1 => int idx;
+                if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
+                    val => devices[idx].volume;
+                    devices[idx].sendControllerChange(7, val);
+                    launchControl.printDevices();
+                }
+            }
+        }
+    }
+
+    fun handleOscCutoff(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int devIdx;
+                e.getInt() => int val;
+                devIdx - 1 => int idx;
+                if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
+                    val => devices[idx].filterCutoff;
+                    devices[idx].sendControllerChange(74, val);
+                    launchControl.printDevices();
+                }
+            }
+        }
+    }
+
+    fun handleOscResonance(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int devIdx;
+                e.getInt() => int val;
+                devIdx - 1 => int idx;
+                if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
+                    val => devices[idx].filterResonance;
+                    devices[idx].sendControllerChange(71, val);
+                    launchControl.printDevices();
+                }
+            }
+        }
+    }
+
+    // Pan arrives as -64..63 from the GUI; convert to MIDI 0-127 (64 = center) for storage.
+    fun handleOscPan(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int devIdx;
+                e.getInt() => int val;   // -64 to 63
+                devIdx - 1 => int idx;
+                if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
+                    val + 64 => int midiPan;   // 0-127, 64 = center
+                    midiPan => devices[idx].pan;
+                    devices[idx].sendControllerChange(10, midiPan);
+                    launchControl.printDevices();
+                }
+            }
+        }
+    }
+
+    fun handleOscTempo(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int bpm;
+                if (bpm >= 40 && bpm <= 240) {
+                    setBPM(bpm * 1.0);
+                    launchControl.printDevices();
+                }
+            }
+        }
+    }
+
+    fun handleOscMuteDevice(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int devIdx;   // 1-based
+                devIdx - 1 => int idx;
+                if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
+                    toggleMute(devices[idx]);
+                    launchControl.printDevices();
+                }
+            }
+        }
+    }
+
+    fun handleOscSoloDevice(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int devIdx;   // 1-based
+                devIdx - 1 => int idx;
+                if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
+                    if (!soloMode) { startSoloMode(); }
+                    toggleSoloPatch(devices[idx]);
+                    launchControl.printDevices();
+                }
+            }
+        }
+    }
+
+    fun handleOscPrevPresetCat(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int dummy;
+                setPreviousPresetCategory(currentDevice.volume);
+                launchControl.printDevices();
+            }
+        }
+    }
+
+    fun handleOscPrevPreset(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int dummy;
+                setPreviousPreset(currentDevice.volume);
+                launchControl.printDevices();
+            }
+        }
+    }
+
+    fun handleOscNextPreset(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int dummy;
+                setNextPreset(currentDevice.volume);
+                launchControl.printDevices();
+            }
+        }
+    }
+
+    fun handleOscNextPresetCat(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int dummy;
+                setNextPresetCategory(currentDevice.volume);
+                launchControl.printDevices();
             }
         }
     }
@@ -1267,7 +1485,7 @@ public class LaunchControl
         for (baseNote => int i; i < baseNote + 8; i++) {
             i - baseNote => int j;
             if (song.muteMode && j >= 0 && j < song.devices.cap() && song.devices[j] != null) {
-                setLED(channel, i, color, song.devices[j].muted);
+                setLED(channel, i, color, song.devices[j].userMuted);
             } else {
                 setLED(channel, i, color, false);
             }
@@ -1388,6 +1606,7 @@ public class LaunchControl
         "{" => string j;
         j + "\"songName\":\""     + escJson(song.name)                   + "\"," => j;
         j + "\"fragmentName\":\"" + escJson(song.currentFragment.name)   + "\"," => j;
+        j + "\"bpm\":"            + song.BPM                             + ","   => j;
         j + "\"muteMode\":"       + song.muteMode                        + ","   => j;
         j + "\"soloMode\":"       + song.soloMode                        + ","   => j;
         j + "\"golden\":"         + Song.golden                          + ","   => j;
@@ -1409,7 +1628,8 @@ public class LaunchControl
                 j + "\"filterCutoff\":"   + p.filterCutoff                 + "," => j;
                 j + "\"filterResonance\":" + p.filterResonance             + "," => j;
                 j + "\"pan\":"            + (p.pan - 64)                   + "," => j;
-                j + "\"muted\":"          + p.muted                        + "," => j;
+                j + "\"muted\":"          + p.userMuted                    + "," => j;
+                j + "\"soloed\":"         + (p == song.soloPatch ? 1 : 0)   + "," => j;
                 j + "\"active\":"         + (p == song.currentDevice ? 1 : 0) + "," => j;
                 j + "\"playing\":"        + isPlaying(p)                   + "}" => j;
                 1 => first;

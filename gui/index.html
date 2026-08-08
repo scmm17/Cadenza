@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cadenza — Live Dashboard</title>
   <meta name="description" content="Real-time dashboard and controller for the Cadenza ChucK music system">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -58,10 +59,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 28px;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
 
-    .logo { display: flex; align-items: center; gap: 14px; }
+    .logo { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
 
     .logo-icon {
       width: 44px; height: 44px;
@@ -73,14 +78,14 @@
     }
 
     h1 {
-      font-size: 24px; font-weight: 700; letter-spacing: -0.6px;
+      font-size: 22px; font-weight: 700; letter-spacing: -0.6px;
       background: linear-gradient(120deg, #ddd6fe 30%, var(--cyan) 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
     .subtitle {
-      font-size: 11px; color: var(--text-dim);
+      font-size: 10.5px; color: var(--text-dim);
       text-transform: uppercase; letter-spacing: 1.8px; font-weight: 600;
       margin-top: 1px;
     }
@@ -95,6 +100,7 @@
       backdrop-filter: blur(16px);
       font-size: 12px; font-weight: 500; color: var(--text-secondary);
       user-select: none;
+      flex-shrink: 0;
     }
 
     .status-dot {
@@ -116,7 +122,7 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius-card);
-      padding: 20px 24px 24px;
+      padding: 14px 18px 18px;
       backdrop-filter: blur(22px);
       -webkit-backdrop-filter: blur(22px);
       transition: border-color var(--transition), box-shadow var(--transition);
@@ -125,7 +131,7 @@
 
     .card-title {
       font-size: 10.5px; text-transform: uppercase; letter-spacing: 1.8px;
-      color: var(--text-dim); font-weight: 700; margin-bottom: 18px;
+      color: var(--text-dim); font-weight: 700; margin-bottom: 12px;
     }
 
     /* ─── Tables ──────────────────────────────────────────────────────────────── */
@@ -134,16 +140,16 @@
     thead th {
       font-size: 10px; text-transform: uppercase; letter-spacing: 1.3px;
       color: var(--text-dim); font-weight: 700;
-      padding: 0 12px 10px;
+      padding: 0 10px 8px;
       text-align: left;
       border-bottom: 1px solid var(--border);
     }
     thead th:first-child { text-align: center; }
 
     tbody td {
-      padding: 11px 12px;
+      padding: 4px 8px;
       border-bottom: 1px solid rgba(110,70,240,.055);
-      font-size: 13px;
+      font-size: 12.5px;
       vertical-align: middle;
       transition: background var(--transition);
     }
@@ -179,9 +185,9 @@
     .badge-off { background: rgba(100,90,140,.1);  color: var(--text-dim);  border: 1px solid var(--border); }
 
     /* ─── Controls ────────────────────────────────────────────────────────────── */
-    .controls { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; }
+    .controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
 
-    .ctrl-group { display: flex; flex-direction: column; gap: 7px; }
+    .ctrl-group { display: flex; flex-direction: column; gap: 5px; }
     .ctrl-label {
       font-size: 10px; text-transform: uppercase; letter-spacing: 1.4px;
       color: var(--text-dim); font-weight: 700;
@@ -197,25 +203,104 @@
 
     /* Device selector buttons */
     .btn-device {
-      width: 42px; height: 42px;
+      width: 26px; height: 26px;
       border-radius: var(--radius-btn);
       background: rgba(110,70,240,.09);
       border: 1px solid var(--border);
       color: var(--text-secondary);
-      font-size: 15px;
+      font-size: 12px;
     }
     .btn-device:hover {
       background: rgba(124,58,237,.22); border-color: var(--accent);
       color: var(--text-primary);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px var(--accent-glow);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px var(--accent-glow);
     }
     .btn-device.active {
       background: linear-gradient(135deg, var(--accent) 0%, #4f46e5 100%);
       border-color: transparent; color: #fff;
-      box-shadow: 0 4px 18px var(--accent-glow);
+      box-shadow: 0 3px 14px var(--accent-glow);
     }
     .btn-device:disabled { opacity: .22; cursor: default; pointer-events: none; }
+
+    #devicesWrap { overflow-x: auto; }
+    .devices-table {
+      table-layout: fixed;
+      width: 100%;
+      min-width: 1020px;
+    }
+    .patch-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      height: 16px;
+      line-height: 16px;
+    }
+
+    /* Preset navigation buttons */
+    .preset-nav { display: flex; gap: 3px; margin-top: 2px; }
+    .btn-preset {
+      width: 28px; height: 20px; box-sizing: border-box;
+      padding: 0; display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 3px; font-size: 10px; font-weight: 700;
+      background: rgba(110,70,240,.12); border: 1px solid var(--border);
+      color: var(--text-secondary); cursor: pointer; font-family: 'JetBrains Mono', monospace;
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+    }
+    .btn-preset:hover {
+      background: rgba(124,58,237,.28); border-color: var(--accent); color: var(--text-primary);
+    }
+
+    /* Per-row Mute / Solo buttons */
+    .btn-ms {
+      width: 46px; height: 22px;
+      border-radius: var(--radius-btn);
+      background: rgba(110,70,240,.07);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 10px; font-weight: 600; letter-spacing: .03em;
+      cursor: pointer; transition: background var(--transition), border-color var(--transition),
+        color var(--transition), box-shadow var(--transition);
+    }
+    .btn-ms:hover { background: rgba(110,70,240,.18); border-color: rgba(110,70,240,.4); color: var(--text-primary); }
+    .btn-mute.on  {
+      background: rgba(245,158,11,.18); border-color: rgba(245,158,11,.6);
+      color: #fbbf24; box-shadow: 0 0 10px rgba(245,158,11,.25);
+    }
+    .btn-solo.on  {
+      background: rgba(6,182,212,.18);  border-color: rgba(6,182,212,.6);
+      color: #22d3ee; box-shadow: 0 0 10px rgba(6,182,212,.25);
+    }
+
+    /* Clickable numeric label editing */
+    .editable-num {
+      cursor: pointer;
+      border-radius: 3px;
+      padding: 1px 3px;
+      transition: background var(--transition), color var(--transition);
+    }
+    .editable-num:hover {
+      background: rgba(124,58,237,.25);
+      color: var(--cyan);
+    }
+
+    .inline-edit-input {
+      width: 36px;
+      height: 20px;
+      background: #0d091a;
+      border: 1px solid var(--accent);
+      border-radius: 3px;
+      color: var(--cyan);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: right;
+      padding: 0 2px;
+      outline: none;
+      box-shadow: 0 0 8px var(--accent-glow);
+      box-sizing: border-box;
+    }
 
     /* Toggle buttons */
     .btn-toggle {
@@ -225,9 +310,41 @@
     }
     .btn-toggle:hover { border-color: var(--accent); color: var(--text-primary); }
     .btn-toggle.active {
-      background: rgba(124,58,237,.2); border-color: var(--accent);
-      color: var(--accent-lite);
-      box-shadow: 0 0 14px var(--accent-glow);
+      background: linear-gradient(135deg, rgba(124,58,237,.35) 0%, rgba(99,102,241,.35) 100%);
+      border-color: var(--accent-light);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 0 16px var(--accent-glow), inset 0 0 8px rgba(167,139,250,.2);
+    }
+
+    /* Song & Fragment info displays in toolbar */
+    .song-info-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--cyan);
+      background: rgba(6,182,212,.08);
+      border: 1px solid rgba(6,182,212,.2);
+      border-radius: var(--radius-btn);
+      padding: 8px 14px;
+      height: 36px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    /* Tempo control container in toolbar */
+    .tempo-ctrl-container {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 12px;
+      background: rgba(110,70,240,.07);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-btn);
+      box-sizing: border-box;
     }
 
     /* Action buttons */
@@ -311,6 +428,52 @@
     /* Flash on update */
     @keyframes flash-row { 0%{opacity:.4} 100%{opacity:1} }
     .flash { animation: flash-row .35s ease; }
+
+    @keyframes flash-save {
+      0%   { background: rgba(34,197,94,.45); border-color: rgba(34,197,94,.8); color:#fff; box-shadow: 0 0 20px rgba(34,197,94,.45); }
+      100% { background: inherit; border-color: inherit; color: inherit; box-shadow: inherit; }
+    }
+    .btn-flash-save { animation: flash-save .7s ease-out; }
+
+    /* ─── Volume Slider ────────────────────────────────────────────────────────── */
+    .vol-slider {
+      -webkit-appearance: none; appearance: none;
+      width: 76px; height: 3px;
+      border-radius: 2px;
+      background: linear-gradient(
+        to right,
+        var(--accent) 0%,
+        var(--accent) var(--pct, 50%),
+        rgba(110,70,240,.18) var(--pct, 50%)
+      );
+      outline: none; cursor: ew-resize;
+    }
+    .vol-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px; height: 13px; border-radius: 50%;
+      background: var(--accent-lite);
+      box-shadow: 0 0 6px var(--accent-glow);
+      cursor: ew-resize;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .vol-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .vol-slider::-moz-range-thumb {
+      width: 13px; height: 13px; border-radius: 50%; border: none;
+      background: var(--accent-lite);
+    }
+
+    /* ─── Rotary Knob ───────────────────────────────────────────────────────────── */
+    .knob-track    { fill: none; stroke: rgba(110,70,240,.13); stroke-width: 2; stroke-linecap: round; }
+    .knob-bg       { fill: rgba(110,70,240,.11); stroke: rgba(110,70,240,.32); stroke-width: 1.5; transition: fill var(--transition), stroke var(--transition); }
+    .knob-indicator{ stroke: var(--accent-lite); stroke-width: 2.5; stroke-linecap: round; }
+    .knob-svg:hover:not(.knob-disabled) .knob-bg { fill: rgba(124,58,237,.22); stroke: var(--accent); }
+    .knob-svg:active .knob-bg { fill: rgba(124,58,237,.3); }
+    .knob-disabled .knob-bg       { fill: rgba(100,90,140,.06); stroke: rgba(110,70,240,.1); }
+    .knob-disabled .knob-indicator{ display: none; }
+    .knob-disabled .knob-track    { stroke: rgba(110,70,240,.07); }
   </style>
 </head>
 <body>
@@ -324,6 +487,46 @@
       <div class="subtitle">Live Dashboard</div>
     </div>
   </div>
+
+  <div class="controls">
+    <div class="ctrl-group">
+      <div class="ctrl-label">Modes</div>
+      <div class="btn-row">
+        <button class="btn-toggle" id="btnGolden"  onclick="send('golden')"  title="Toggle golden (deterministic) mode">✨ Golden <span class="kbd">g</span></button>
+        <button class="btn-toggle" id="btnAllMode" onclick="send('allMode')" title="Toggle all-devices mode">🔀 All Mode <span class="kbd">a</span></button>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Actions</div>
+      <div class="btn-row">
+        <button id="btnSave" class="btn-action" onclick="doSave()" title="Write config YAML to disk">💾 Save Config <span class="kbd">w</span></button>
+        <button class="btn-action btn-danger"   onclick="openShutdown()" title="Shutdown ChucK process">⏹ Shutdown <span class="kbd">Q</span></button>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Tempo</div>
+      <div class="tempo-ctrl-container">
+        <span class="cell-mono editable-num" id="bpmDisplay" style="min-width:32px;text-align:right;font-size:14px;color:var(--text-primary)" title="Click to edit tempo" onclick="editTempoInline(this)">—</span>
+        <span style="font-size:11px;color:var(--text-dim)">BPM</span>
+        <input type="range" class="vol-slider" id="tempoSlider" min="40" max="240" value="120"
+               style="width:120px;--pct:42%"
+               oninput="onTempoSlider(event)">
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Song</div>
+      <div class="song-info-display" id="songNameDisplay">—</div>
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Fragment</div>
+      <div class="song-info-display" id="fragmentNameDisplay">—</div>
+    </div>
+  </div>
+
   <div class="conn-badge" id="connBadge">
     <div class="status-dot" id="statusDot"></div>
     <span id="statusText">Connecting…</span>
@@ -333,45 +536,6 @@
 <!-- ── Main layout ─────────────────────────────────────────────────────────── -->
 <div class="layout">
 
-  <!-- Controls card -->
-  <section class="card" aria-label="Controls">
-    <div class="card-title">Controls</div>
-    <div class="controls">
-
-      <div class="ctrl-group">
-        <div class="ctrl-label">Device <span class="kbd">1 – 8</span></div>
-        <div class="btn-row" id="deviceButtons">
-          <!-- Populated dynamically from ChucK state -->
-          <button class="btn-device" disabled>1</button>
-          <button class="btn-device" disabled>2</button>
-          <button class="btn-device" disabled>3</button>
-          <button class="btn-device" disabled>4</button>
-          <button class="btn-device" disabled>5</button>
-          <button class="btn-device" disabled>6</button>
-          <button class="btn-device" disabled>7</button>
-          <button class="btn-device" disabled>8</button>
-        </div>
-      </div>
-
-      <div class="ctrl-group">
-        <div class="ctrl-label">Modes</div>
-        <div class="btn-row">
-          <button class="btn-toggle" id="btnGolden"  onclick="send('golden')"  title="Toggle golden (deterministic) mode">✨ Golden <span class="kbd">g</span></button>
-          <button class="btn-toggle" id="btnAllMode" onclick="send('allMode')" title="Toggle all-devices mode">🔀 All Mode <span class="kbd">a</span></button>
-        </div>
-      </div>
-
-      <div class="ctrl-group">
-        <div class="ctrl-label">Actions</div>
-        <div class="btn-row">
-          <button class="btn-action"              onclick="send('save')"    title="Write config YAML to disk">💾 Save Config <span class="kbd">w</span></button>
-          <button class="btn-action btn-danger"   onclick="openShutdown()" title="Shutdown ChucK process">⏹ Shutdown <span class="kbd">Q</span></button>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
   <!-- Devices table card -->
   <section class="card" aria-label="Device status">
     <div class="card-title">Devices</div>
@@ -380,11 +544,11 @@
     </div>
   </section>
 
-  <!-- Song status table card -->
-  <section class="card" aria-label="Song status">
-    <div class="card-title">Song Status</div>
-    <div id="songWrap">
-      <div class="empty"><div class="empty-icon">🎼</div><div class="empty-text">Waiting for ChucK…</div></div>
+  <!-- Song scroll card -->
+  <section class="card" aria-label="Song scroll">
+    <div class="card-title">Song Scroll</div>
+    <div id="scrollContainer" style="position:relative;width:100%;height:500px;background:#090614;border:1px solid var(--border);border-radius:var(--radius-btn);overflow:hidden">
+      <canvas id="scrollCanvas" style="display:block;width:100%;height:100%"></canvas>
     </div>
   </section>
 
@@ -424,6 +588,12 @@ function connect() {
       if (msg.type === 'state') {
         chuckState = msg.data;
         render();
+      } else if (msg.type === 'noteOn') {
+        onNoteOn(msg.dev, msg.note, msg.vel);
+      } else if (msg.type === 'noteOff') {
+        onNoteOff(msg.dev, msg.note);
+      } else if (msg.type === 'allNotesOff') {
+        onAllNotesOff(msg.dev);
       }
     } catch (e) {
       console.error('Parse error:', e);
@@ -446,55 +616,95 @@ function send(type, value) {
   ws.send(JSON.stringify({ type, value }));
 }
 
+function doSave() {
+  send('save');
+  const btn = document.getElementById('btnSave');
+  if (!btn) return;
+  btn.classList.remove('btn-flash-save');
+  void btn.offsetWidth; // force reflow so animation restarts on rapid saves
+  btn.classList.add('btn-flash-save');
+  btn.addEventListener('animationend', () => btn.classList.remove('btn-flash-save'), { once: true });
+}
+
+// ─── Device selection (UI-local toggle) ───────────────────────────────────────
+let selectedDevIdx = null;
+
+function toggleDeviceSelect(idx) {
+  if (selectedDevIdx === idx) {
+    selectedDevIdx = null;          // toggle off — deselect
+  } else {
+    selectedDevIdx = idx;
+    send('device', idx);            // sync ChucK's currentDevice for preset navigation
+  }
+  render();                         // re-render immediately so preset buttons appear/disappear
+}
+
+
 // ─── Render ───────────────────────────────────────────────────────────────────
 function render() {
   if (!chuckState) return;
-  renderDeviceButtons();
-  renderDevicesTable();
-  renderSongTable();
+  if (!isDragging) renderDevicesTable();
   syncModeButtons();
 }
 
-// Device selector buttons
-function renderDeviceButtons() {
-  const s   = chuckState;
-  const row = document.getElementById('deviceButtons');
-  if (!s.devices || s.devices.length === 0) return;
+// ─── Knob & Slider State ──────────────────────────────────────────────────────
+let isDragging = false;
+let activeDrag = null;
 
-  // Rebuild if device count changed
-  if (row.children.length !== s.devices.length) {
-    row.innerHTML = '';
-    s.devices.forEach(dev => {
-      const b = document.createElement('button');
-      b.className   = 'btn-device';
-      b.id          = 'dev-btn-' + dev.index;
-      b.textContent = dev.index;
-      b.onclick     = () => send('device', dev.index);
-      row.appendChild(b);
-    });
-  }
-
-  s.devices.forEach(dev => {
-    const b = document.getElementById('dev-btn-' + dev.index);
-    if (!b) return;
-    b.disabled = false;
-    b.classList.toggle('active', dev.active === 1);
-    b.title = dev.uiName + ': ' + dev.patchName;
-  });
+// Map a parameter value to a rotation angle (degrees, 0 = pointing up).
+// Cutoff/Resonance (0–127): sweeps 270° from 7 o'clock (−135°) to 5 o'clock (+135°).
+// Pan (−64…63): 0 = up (balanced), ±64 = ±135°.
+function valToAngle(param, val) {
+  if (param === 'pan') return (val / 64) * 135;
+  return -135 + (Math.max(0, val) / 127) * 270;
 }
 
-// Devices table
+function makeMuteSoloCell(dev) {
+  const soloed = dev.soloed === 1;
+  const muted  = dev.muted  === 1;
+  return '<div style="display:flex;flex-direction:row;gap:4px;align-items:center;justify-content:center">'
+    + '<button class="btn-ms btn-solo' + (soloed ? ' on' : '') + '"'
+    + ' onclick="send(\'soloDevice\',' + dev.index + ')" title="Solo">Solo</button>'
+    + '<button class="btn-ms btn-mute' + (muted  ? ' on' : '') + '"'
+    + ' onclick="send(\'muteDevice\',' + dev.index + ')" title="Mute">Mute</button>'
+    + '</div>';
+}
+
+function makeVolCell(devIdx, vol) {
+  const pct = Math.round((vol / 127) * 100);
+  return '<div style="display:flex;align-items:center;gap:7px;width:100%">'
+    + '<span class="cell-mono editable-num" id="val-' + devIdx + '-volume" style="width:28px;display:inline-block;flex-shrink:0;text-align:right" title="Click to edit volume" onclick="editParamInline(this,' + devIdx + ',\'volume\',0,127)">' + vol + '</span>'
+    + '<input type="range" class="vol-slider" id="slider-' + devIdx + '-volume" min="0" max="127" value="' + vol + '"'
+    + ' style="flex:1; --pct:' + pct + '%"'
+    + ' oninput="onVolSlider(event,' + devIdx + ')"'
+    + '>'
+    + '</div>';
+}
+
+function makeKnobCell(devIdx, param, val, min, max) {
+  const effVal  = val === -1 ? 64 : val;
+  const angle   = valToAngle(param, effVal).toFixed(1);
+  const downAttr = ' onmousedown="startKnobDrag(event,' + devIdx + ',\'' + param + '\',' + min + ',' + max + ',' + effVal + ')"';
+  return '<div style="display:flex;align-items:center;gap:4px">'
+    + '<span class="cell-mono editable-num" id="val-' + devIdx + '-' + param + '" style="width:28px;display:inline-block;flex-shrink:0;text-align:right" title="Click to edit ' + param + '" onclick="editParamInline(this,' + devIdx + ',\'' + param + '\',' + min + ',' + max + ')">' + effVal + '</span>'
+    + '<svg id="knob-' + devIdx + '-' + param + '" width="22" height="22" viewBox="-15 -15 30 30"'
+    + ' class="knob-svg" style="cursor:ew-resize;flex-shrink:0"'
+    + downAttr + '>'
+    + '<path d="M -7.78 7.78 A 11 11 0 1 1 7.78 7.78" class="knob-track"/>'
+    + '<circle r="10" class="knob-bg"/>'
+    + '<line x1="0" y1="-4" x2="0" y2="-8" class="knob-indicator" transform="rotate(' + angle + ')"/>'
+    + '</svg>'
+    + '</div>';
+}
+
+// Devices table — first column is a device-select button, status shows playing/muted only
 function renderDevicesTable() {
   const s    = chuckState;
   const wrap = document.getElementById('devicesWrap');
   if (!s.devices || s.devices.length === 0) return;
 
   const rows = s.devices.map(dev => {
-    const icons = [
-      dev.active  === 1 ? '&#x1F441;&#xFE0F;' : '',
-      dev.playing === 1 ? '&#x2611;&#xFE0F;'  : '',
-      dev.muted   === 1 ? '&#x274C;'           : '',
-    ].filter(Boolean).join(' ');
+    const icons = dev.playing === 1 ? '&#x2611;&#xFE0F;' : '';
 
     const cls = [
       dev.active  === 1 ? 'row-active'  : '',
@@ -502,61 +712,264 @@ function renderDevicesTable() {
       dev.muted   === 1 ? 'row-muted'   : '',
     ].filter(Boolean).join(' ');
 
+    // Device-select button — colored per device palette and highlighted when selected.
+    const isSelected  = selectedDevIdx === dev.index;
+    const selectedCls = isSelected ? ' active' : '';
+    const devColor    = DEVICE_COLORS[(dev.index - 1) % DEVICE_COLORS.length];
+    const btnStyle    = isSelected
+      ? 'width:26px;height:26px;font-size:12px;background:' + devColor + ';border-color:' + devColor + ';color:#fff;box-shadow:0 0 10px ' + devColor + '88;'
+      : 'width:26px;height:26px;font-size:12px;background:' + devColor + '22;border-color:' + devColor + '66;color:' + devColor + ';';
+
+    const btnCell = '<td style="padding:4px 6px">'
+      + '<button class="btn-device' + selectedCls + '" '
+      + 'onclick="toggleDeviceSelect(' + dev.index + ')" '
+      + 'title="Select ' + esc(dev.uiName) + ': ' + esc(dev.patchName) + '" '
+      + 'style="' + btnStyle + '">'
+      + dev.index
+      + '</button></td>';
+
+    // Preset nav buttons — only when this row is selected AND synth is V3.
+    const presetNav = (isSelected && dev.uiName === 'V3')
+      ? '<div class="preset-nav">'
+        + '<button class="btn-preset" onclick="send(\'prevPresetCat\',1)" title="Previous preset category">&lt;&lt;</button>'
+        + '<button class="btn-preset" onclick="send(\'prevPreset\',1)"    title="Previous preset">&lt;</button>'
+        + '<button class="btn-preset" onclick="send(\'nextPreset\',1)"    title="Next preset">&gt;</button>'
+        + '<button class="btn-preset" onclick="send(\'nextPresetCat\',1)" title="Next preset category">&gt;&gt;</button>'
+        + '</div>'
+      : '';
+
     return '<tr class="' + cls + '">'
-         + '<td><span class="status-icons">' + (icons || '&nbsp;') + '</span></td>'
-         + '<td class="cell-mono">' + dev.index + '</td>'
+         + btnCell
+         + '<td style="text-align:center"><span class="status-icons">' + (icons || '&nbsp;') + '</span></td>'
          + '<td class="cell-synth">' + esc(dev.uiName) + '</td>'
          + '<td class="cell-mono">'  + dev.channel + '</td>'
-         + '<td class="cell-patch">' + esc(dev.patchName) + '</td>'
-         + '<td class="cell-mono">'  + dev.volume + '</td>'
-         + '<td class="cell-mono">'  + dev.filterCutoff + '</td>'
-         + '<td class="cell-mono">'  + dev.filterResonance + '</td>'
-         + '<td class="cell-mono">'  + dev.pan + '</td>'
+         + '<td class="cell-patch"><div class="patch-title" title="' + esc(dev.patchName) + '">' + esc(dev.patchName) + '</div>' + presetNav + '</td>'
+         + '<td style="white-space:nowrap">' + makeVolCell(dev.index, dev.volume) + '</td>'
+         + '<td style="white-space:nowrap">' + makeKnobCell(dev.index, 'cutoff',    dev.filterCutoff,   0,   127) + '</td>'
+         + '<td style="white-space:nowrap">' + makeKnobCell(dev.index, 'resonance', dev.filterResonance, 0,   127) + '</td>'
+         + '<td style="white-space:nowrap">' + makeKnobCell(dev.index, 'pan',       dev.pan,           -64,   63) + '</td>'
+         + '<td>' + makeMuteSoloCell(dev) + '</td>'
          + '</tr>';
   }).join('');
 
   wrap.innerHTML =
-    '<table>'
+    '<table class="devices-table">'
+    + '<colgroup>'
+    + '<col style="width:50px">'
+    + '<col style="width:65px">'
+    + '<col style="width:85px">'
+    + '<col style="width:70px">'
+    + '<col style="width:250px">'
+    + '<col style="width:175px">'
+    + '<col style="width:70px">'
+    + '<col style="width:70px">'
+    + '<col style="width:70px">'
+    + '<col style="width:115px">'
+    + '</colgroup>'
     + '<thead><tr>'
-    + '<th>Status</th><th>Device</th><th>Synth</th><th>Channel</th>'
-    + '<th>Patch</th><th>Vol</th><th>Cutoff</th><th>Res</th><th>Pan</th>'
+    + '<th></th><th style="text-align:center">Playing</th><th>Synth</th><th>Channel</th>'
+    + '<th>Patch</th><th>Vol</th><th>Cutoff</th><th>Res</th><th>Pan</th><th></th>'
     + '</tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table>';
 }
 
-// Song status table
-function renderSongTable() {
-  const s    = chuckState;
-  const wrap = document.getElementById('songWrap');
+// Update a knob indicator and value label without re-rendering the table.
+function updateParamDisplay(devIdx, param, val) {
+  const label = document.getElementById('val-' + devIdx + '-' + param);
+  if (label && !label.querySelector('input')) label.textContent = val;
+  const knob = document.getElementById('knob-' + devIdx + '-' + param);
+  if (knob) {
+    const ind = knob.querySelector('.knob-indicator');
+    if (ind) ind.setAttribute('transform', 'rotate(' + valToAngle(param, val).toFixed(1) + ')');
+  }
+}
+
+function updateVolDisplay(devIdx, val) {
+  const label = document.getElementById('val-' + devIdx + '-volume');
+  if (label && !label.querySelector('input')) label.textContent = val;
+  const slider = document.getElementById('slider-' + devIdx + '-volume');
+  if (slider) {
+    slider.value = val;
+    slider.style.setProperty('--pct', Math.round((val / 127) * 100) + '%');
+  }
+}
+
+// Volume slider — native <input type=range>, updates live.
+function onVolSlider(e, devIdx) {
+  const val = parseInt(e.target.value, 10);
+  isDragging = true;
+  e.target.style.setProperty('--pct', Math.round((val / 127) * 100) + '%');
+  const label = document.getElementById('val-' + devIdx + '-volume');
+  if (label && !label.querySelector('input')) label.textContent = val;
+  send('setParam', { devIdx, param: 'volume', value: val });
+  clearTimeout(onVolSlider._t);
+  onVolSlider._t = setTimeout(() => { isDragging = false; }, 500);
+}
+
+// Tempo slider
+function onTempoSlider(e) {
+  const bpm = parseInt(e.target.value, 10);
+  updateTempoDisplay(bpm);
+  send('setTempo', bpm);
+}
+
+function updateTempoDisplay(bpm) {
+  const disp = document.getElementById('bpmDisplay');
+  if (disp && !disp.querySelector('input')) disp.textContent = bpm;
+  const slider = document.getElementById('tempoSlider');
+  if (slider) {
+    slider.value = bpm;
+    const pct = Math.round(((bpm - 40) / 200) * 100);
+    slider.style.setProperty('--pct', pct + '%');
+  }
+}
+
+function syncTempoSlider(bpm) {
+  if (isDragging) return;
+  if (bpm == null) return;
+  updateTempoDisplay(Math.round(bpm));
+}
+
+// ─── Inline Numeric Editing ───────────────────────────────────────────────────
+let activeInlineEdit = null;
+
+function startInlineEdit(spanEl, min, max, currentVal, onCommit) {
+  if (activeInlineEdit) {
+    activeInlineEdit.cancel();
+  }
+
+  isDragging = true; // Prevent websocket updates while editing
+
+  const origText = spanEl.textContent;
+  spanEl.innerHTML = '';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.inputMode = 'numeric';
+  input.value = currentVal;
+  input.className = 'inline-edit-input';
+  if (spanEl.id === 'bpmDisplay') {
+    input.style.width = '44px';
+    input.style.fontSize = '14px';
+  }
+
+  spanEl.appendChild(input);
+  input.focus();
+  input.select();
+
+  let finished = false;
+
+  function commit() {
+    if (finished) return;
+    finished = true;
+    activeInlineEdit = null;
+
+    let num = parseInt(input.value.trim(), 10);
+    if (isNaN(num)) {
+      num = currentVal;
+    } else {
+      num = Math.max(min, Math.min(max, num));
+    }
+
+    spanEl.textContent = num;
+    onCommit(num);
+    setTimeout(() => { isDragging = false; }, 200);
+  }
+
+  function cancel() {
+    if (finished) return;
+    finished = true;
+    activeInlineEdit = null;
+
+    spanEl.textContent = origText;
+    setTimeout(() => { isDragging = false; }, 200);
+  }
+
+  activeInlineEdit = { commit, cancel };
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      commit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      cancel();
+    }
+  });
+
+  input.addEventListener('blur', () => {
+    commit();
+  });
+
+  input.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+}
+
+function editTempoInline(span) {
+  const currentBpm = parseInt(document.getElementById('tempoSlider').value, 10) || 120;
+  startInlineEdit(span, 40, 240, currentBpm, (newBpm) => {
+    updateTempoDisplay(newBpm);
+    send('setTempo', newBpm);
+  });
+}
+
+function editParamInline(span, devIdx, param, min, max) {
+  const currentVal = parseInt(span.textContent, 10) || 0;
+  startInlineEdit(span, min, max, currentVal, (newVal) => {
+    if (param === 'volume') {
+      updateVolDisplay(devIdx, newVal);
+      send('setParam', { devIdx, param: 'volume', value: newVal });
+    } else {
+      updateParamDisplay(devIdx, param, newVal);
+      send('setParam', { devIdx, param: param, value: newVal });
+    }
+  });
+}
+
+// Knob drag — horizontal drag maps to value range.
+function startKnobDrag(e, devIdx, param, min, max, startVal) {
+  e.preventDefault();
+  isDragging = true;
+  activeDrag = { startX: e.clientX, startVal, devIdx, param, min, max };
+}
+
+document.addEventListener('mousemove', e => {
+  if (!activeDrag) return;
+  const range = activeDrag.max - activeDrag.min;
+  const delta = Math.round((e.clientX - activeDrag.startX) * (range / 200));
+  const newVal = Math.max(activeDrag.min, Math.min(activeDrag.max, activeDrag.startVal + delta));
+  updateParamDisplay(activeDrag.devIdx, activeDrag.param, newVal);
+  send('setParam', { devIdx: activeDrag.devIdx, param: activeDrag.param, value: newVal });
+});
+
+document.addEventListener('mouseup', () => {
+  if (activeDrag) {
+    activeDrag = null;
+    setTimeout(() => { isDragging = false; }, 400);
+  }
+});
+
+function syncSongInfo() {
+  const s = chuckState;
   if (!s) return;
-
-  const badge = v => v
-    ? '<span class="badge badge-on">&#x2611;&#xFE0F; On</span>'
-    : '<span class="badge badge-off">&#x274C; Off</span>';
-
-  wrap.innerHTML =
-    '<table>'
-    + '<thead><tr>'
-    + '<th>Song</th><th>Fragment</th><th>Mute Mode</th>'
-    + '<th>Solo Mode</th><th>Golden</th><th>All Mode</th>'
-    + '</tr></thead>'
-    + '<tbody><tr>'
-    + '<td class="cell-synth">' + esc(s.songName)      + '</td>'
-    + '<td class="cell-patch">' + esc(s.fragmentName)  + '</td>'
-    + '<td>' + badge(s.muteMode)  + '</td>'
-    + '<td>' + badge(s.soloMode)  + '</td>'
-    + '<td>' + badge(s.golden)    + '</td>'
-    + '<td>' + badge(s.allMode)   + '</td>'
-    + '</tr></tbody>'
-    + '</table>';
+  const songEl = document.getElementById('songNameDisplay');
+  if (songEl) songEl.textContent = s.songName || '—';
+  const fragEl = document.getElementById('fragmentNameDisplay');
+  if (fragEl) fragEl.textContent = s.fragmentName || '—';
 }
 
 // Mode toggle button visual state
 function syncModeButtons() {
   const s = chuckState;
+  if (!s) return;
   document.getElementById('btnGolden') .classList.toggle('active', !!s.golden);
   document.getElementById('btnAllMode').classList.toggle('active', !!s.allMode);
+  syncTempoSlider(s.bpm);
+  syncSongInfo();
 }
 
 function esc(s) {
@@ -584,14 +997,261 @@ document.addEventListener('keydown', e => {
   switch (k) {
     case 'g': send('golden');  break;
     case 'a': send('allMode'); break;
-    case 'w': send('save');    break;
+    case 'w': doSave(); break;
     case 'Q': openShutdown();  break;       // Shift+Q, matching ChucK's keyboardLoop
     case 'Escape': closeShutdown(); break;
   }
 });
 
+// ─── Song Scroll / Piano Roll Visualizer Engine ──────────────────────────────
+const DEVICE_COLORS = [
+  '#06b6d4', // Dev 1: Luminous Cyan
+  '#a855f7', // Dev 2: Neon Purple / Violet
+  '#f59e0b', // Dev 3: Vivid Amber
+  '#10b981', // Dev 4: Emerald Green
+  '#f43f5e', // Dev 5: Electric Rose
+  '#3b82f6', // Dev 6: Royal Blue
+  '#ff6b4a', // Dev 7: Bright Coral
+  '#eab308', // Dev 8: Gold
+];
+
+const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+
+function getNoteLabel(midiNote) {
+  if (midiNote === -1) return 'Drums';
+  const name = NOTE_NAMES[midiNote % 12];
+  const oct  = Math.floor(midiNote / 12) - 1;
+  return name + oct;
+}
+
+function isDrumDevice(devIdx) {
+  if (!chuckState || !chuckState.devices) return false;
+  const dev = chuckState.devices.find(d => d.index === devIdx);
+  if (!dev) return false;
+  if (dev.channel === 10) return true;
+  if (dev.uiName && dev.uiName.toLowerCase().includes('drum')) return true;
+  if (dev.patchName && dev.patchName.toLowerCase().includes('drum')) return true;
+  return false;
+}
+
+let activePitchRows = []; // Sorted list of pitch keys (-1 for Drums, or MIDI note number)
+let noteBlocks = [];       // Array of { dev, pitchKey, startT, endT }
+const activeNotesMap = new Map(); // Key `${dev}-${pitchKey}` -> block
+
+function addPitchRow(pitchKey) {
+  if (!activePitchRows.includes(pitchKey)) {
+    activePitchRows.push(pitchKey);
+    // Sort: highest pitch on top, lowest pitch on bottom, Drums (-1) at bottom
+    activePitchRows.sort((a, b) => {
+      if (a === -1) return 1;
+      if (b === -1) return -1;
+      return b - a; // descending numeric order
+    });
+  }
+}
+
+function onNoteOn(dev, note, vel) {
+  const now = performance.now();
+  const isDrum = isDrumDevice(dev);
+  const pitchKey = isDrum ? -1 : note;
+  addPitchRow(pitchKey);
+
+  const key = `${dev}-${pitchKey}`;
+  const existing = activeNotesMap.get(key);
+  if (existing) {
+    // Crucial fix: close any open note block on this key when a re-trigger noteOn arrives!
+    existing.endT = Math.max(existing.startT + 1, now - 2);
+    activeNotesMap.delete(key);
+  }
+
+  // Drum hits are staccato: fixed short duration (60ms ~ 7-8px wide blips)
+  const endT = isDrum ? (now + 60) : null;
+  const block = { dev, pitchKey, isDrum, startT: now, endT };
+  noteBlocks.push(block);
+  if (!isDrum) {
+    activeNotesMap.set(key, block);
+  }
+}
+
+function onNoteOff(dev, note) {
+  const now = performance.now();
+  const isDrum = isDrumDevice(dev);
+  if (isDrum) return; // Drum hits expire automatically via staccato duration
+
+  const pitchKey = note;
+  const key = `${dev}-${pitchKey}`;
+  const block = activeNotesMap.get(key);
+  if (block) {
+    block.endT = Math.max(block.startT + 1, now);
+    activeNotesMap.delete(key);
+  }
+}
+
+function onAllNotesOff(dev) {
+  const now = performance.now();
+  for (const [key, block] of activeNotesMap.entries()) {
+    if (!dev || block.dev === dev) {
+      block.endT = Math.max(block.startT + 1, now);
+      activeNotesMap.delete(key);
+    }
+  }
+}
+
+let scrollAnimationId = null;
+
+function initScrollCanvas() {
+  const canvas = document.getElementById('scrollCanvas');
+  if (!canvas) return;
+
+  function renderFrame(now) {
+    scrollAnimationId = requestAnimationFrame(renderFrame);
+
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = rect.width;
+    const h = rect.height;
+
+    if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+    }
+
+    const ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.scale(dpr, dpr);
+
+    // Clear background
+    ctx.fillStyle = '#080512';
+    ctx.fillRect(0, 0, w, h);
+
+    const gutterW = 64;                   // Left column width for pitch labels
+    const spaceGap = 16;                  // Space between note labels and playhead line
+    const playheadX = gutterW + spaceGap; // Playhead line position (immediately right of labels & gap)
+    const pxPerMs = 0.12;                 // Scroll speed: 120px per second
+
+    // Safety timeout: auto-close any open note block held > 6000ms without noteOff
+    for (const [key, block] of activeNotesMap.entries()) {
+      if (block.endT === null && (now - block.startT) > 6000) {
+        block.endT = block.startT + 6000;
+        activeNotesMap.delete(key);
+      }
+    }
+
+    // Prune old blocks that are completely off-screen to the right
+    while (noteBlocks.length > 0 && noteBlocks[0].endT !== null && (playheadX + (now - noteBlocks[0].endT) * pxPerMs) > w) {
+      noteBlocks.shift();
+    }
+
+    const rowCount = Math.max(1, activePitchRows.length);
+    const rowH = h / rowCount;
+
+    // 1. Draw horizontal pitch row grid lines
+    ctx.strokeStyle = 'rgba(110, 70, 240, 0.22)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < activePitchRows.length; i++) {
+      const y = i * rowH;
+      ctx.moveTo(gutterW, y + rowH);
+      ctx.lineTo(w, y + rowH);
+    }
+    ctx.stroke();
+
+    // 2. Left gutter background & separator line
+    ctx.fillStyle = '#0a0718';
+    ctx.fillRect(0, 0, gutterW, h);
+    ctx.strokeStyle = 'rgba(110, 70, 240, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(gutterW, 0);
+    ctx.lineTo(gutterW, h);
+    ctx.stroke();
+
+    // Gutter text labels (aligned right inside left gutter)
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.font = '600 11px "JetBrains Mono", monospace';
+    for (let i = 0; i < activePitchRows.length; i++) {
+      const pKey = activePitchRows[i];
+      const y = i * rowH;
+      ctx.fillStyle = (pKey === -1) ? '#fbbf24' : '#a78bfa';
+      ctx.fillText(getNoteLabel(pKey), gutterW - 10, y + rowH / 2);
+    }
+
+    // 3. Playhead line (just after note labels & 16px space gap)
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(playheadX, 0);
+    ctx.lineTo(playheadX, h);
+    ctx.stroke();
+
+    // 4. Draw note blocks (starting at playheadX and scrolling left-to-right towards w)
+    const blocksByPitch = new Map();
+    for (let i = 0; i < noteBlocks.length; i++) {
+      const b = noteBlocks[i];
+      if (!blocksByPitch.has(b.pitchKey)) blocksByPitch.set(b.pitchKey, []);
+      blocksByPitch.get(b.pitchKey).push(b);
+    }
+
+    const pathByColor = new Map();
+
+    for (let i = 0; i < activePitchRows.length; i++) {
+      const pKey = activePitchRows[i];
+      const rowY = i * rowH;
+
+      const rowBlocks = blocksByPitch.get(pKey);
+      if (!rowBlocks) continue;
+
+      const devicesInRow = Array.from(new Set(rowBlocks.map(b => b.dev))).sort((a,b) => a - b);
+      const devCount = Math.max(1, devicesInRow.length);
+      const subH = Math.max(3, (rowH - 2) / devCount);
+
+      for (const block of rowBlocks) {
+        const leadX  = playheadX + (now - block.startT) * pxPerMs;
+        const trailX = (block.endT === null) ? playheadX : (playheadX + (now - block.endT) * pxPerMs);
+        let blockW   = leadX - trailX;
+        if (blockW < 2) blockW = 2;
+
+        if (trailX > w) continue; // Off screen right
+
+        const drawX = Math.max(playheadX, trailX);
+        const drawW = Math.min(w - drawX, blockW - (drawX - trailX));
+        if (drawW <= 0) continue;
+
+        const devIdx = devicesInRow.indexOf(block.dev);
+        const y = rowY + 1 + (devIdx >= 0 ? devIdx : 0) * subH;
+        const color = DEVICE_COLORS[(block.dev - 1) % DEVICE_COLORS.length];
+
+        let path = pathByColor.get(color);
+        if (!path) { path = new Path2D(); pathByColor.set(color, path); }
+
+        const r = Math.min(3, subH / 2, drawW / 2);
+        if (path.roundRect) {
+          path.roundRect(drawX, y, drawW, subH - 1, r);
+        } else {
+          path.rect(drawX, y, drawW, subH - 1);
+        }
+      }
+    }
+
+    for (const [color, path] of pathByColor.entries()) {
+      ctx.fillStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 6;
+      ctx.fill(path);
+    }
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
+  if (scrollAnimationId) cancelAnimationFrame(scrollAnimationId);
+  scrollAnimationId = requestAnimationFrame(renderFrame);
+}
+
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 connect();
+initScrollCanvas();
 </script>
 </body>
 </html>

@@ -28,17 +28,27 @@ const oscServer = new OscServer(GUI_OSC_IN, '0.0.0.0', () => {
   console.log(`OSC listening on port ${GUI_OSC_IN} (← ChucK)`);
 });
 
+// Last known state — replayed to new clients on connect.
+let lastState = null;
+
 oscServer.on('message', (msg) => {
   const address = msg[0];
   if (address === '/cadenza/state') {
     const jsonStr = msg[1];
     try {
       const state = JSON.parse(jsonStr);
+      lastState = state;
       broadcast({ type: 'state', data: state });
     } catch (e) {
       console.error('OSC: Failed to parse state JSON:', e.message);
       console.error('Raw:', jsonStr);
     }
+  } else if (address === '/cadenza/noteOn') {
+    broadcast({ type: 'noteOn', dev: msg[1], note: msg[2], vel: msg[3] });
+  } else if (address === '/cadenza/noteOff') {
+    broadcast({ type: 'noteOff', dev: msg[1], note: msg[2] });
+  } else if (address === '/cadenza/allNotesOff') {
+    broadcast({ type: 'allNotesOff', dev: msg[1] });
   }
 });
 
@@ -55,6 +65,11 @@ function broadcast(data) {
 wss.on('connection', (ws, req) => {
   clients.add(ws);
   console.log(`Browser connected (${clients.size} total)`);
+
+  // Send cached state immediately so the page renders without waiting.
+  if (lastState) {
+    ws.send(JSON.stringify({ type: 'state', data: lastState }));
+  }
 
   ws.on('message', (raw) => {
     try {
@@ -94,6 +109,51 @@ function handleBrowserCommand(cmd) {
       console.log('→ ChucK: /cadenza/shutdown');
       chuckClient.send('/cadenza/shutdown', 1);
       break;
+    case 'muteDevice':
+      console.log(`→ ChucK: /cadenza/muteDevice ${cmd.value}`);
+      chuckClient.send('/cadenza/muteDevice', parseInt(cmd.value, 10));
+      break;
+    case 'soloDevice':
+      console.log(`→ ChucK: /cadenza/soloDevice ${cmd.value}`);
+      chuckClient.send('/cadenza/soloDevice', parseInt(cmd.value, 10));
+      break;
+    case 'prevPresetCat':
+      console.log('→ ChucK: /cadenza/prevPresetCat');
+      chuckClient.send('/cadenza/prevPresetCat', 1);
+      break;
+    case 'prevPreset':
+      console.log('→ ChucK: /cadenza/prevPreset');
+      chuckClient.send('/cadenza/prevPreset', 1);
+      break;
+    case 'nextPreset':
+      console.log('→ ChucK: /cadenza/nextPreset');
+      chuckClient.send('/cadenza/nextPreset', 1);
+      break;
+    case 'nextPresetCat':
+      console.log('→ ChucK: /cadenza/nextPresetCat');
+      chuckClient.send('/cadenza/nextPresetCat', 1);
+      break;
+    case 'setTempo':
+      console.log(`→ ChucK: /cadenza/tempo ${cmd.value}`);
+      chuckClient.send('/cadenza/tempo', parseInt(cmd.value, 10));
+      break;
+    case 'setParam': {
+      const { devIdx, param, value } = cmd.value;  // browser wraps extra data in cmd.value
+      const paramToAddr = {
+        volume:    '/cadenza/volume',
+        cutoff:    '/cadenza/cutoff',
+        resonance: '/cadenza/resonance',
+        pan:       '/cadenza/pan',
+      };
+      const addr = paramToAddr[param];
+      if (addr) {
+        console.log(`→ ChucK: ${addr} dev=${devIdx} val=${value}`);
+        chuckClient.send(addr, parseInt(devIdx, 10), parseInt(value, 10));
+      } else {
+        console.warn('setParam: unknown param', param);
+      }
+      break;
+    }
     default:
       console.warn('WS: Unknown command type:', cmd.type);
   }
