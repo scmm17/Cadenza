@@ -73,6 +73,25 @@ Run with:
 chuck example.ck
 ```
 
+## Live Dashboard (GUI)
+Cadenza features a web-based Live Dashboard that visualizes the music being played in real-time. It includes a scrolling piano roll, tempo controls, global mode toggles, and playback controls.
+
+The dashboard uses a Node.js server to bridge OSC messages from ChucK to WebSockets for the browser.
+
+### Running the Dashboard
+1. Install the Node.js dependencies:
+   ```bash
+   cd gui
+   npm install
+   ```
+2. Start the bridge server:
+   ```bash
+   npm start
+   ```
+3. Open your browser and navigate to `http://localhost:3000`.
+
+Once the dashboard is open, run your ChucK script (e.g., `chuck example.ck`). The GUI will automatically sync with the ChucK process and display the active notes and devices in real-time.
+
 ## YAML Utilities (framework/yaml.ck)
 Cadenza includes a small YAML reader/writer used by tests and tools.
 
@@ -140,6 +159,9 @@ framework/
   midi-events.ck      # MIDI event handling and mapping
   note-collection.ck  # Scales, chords, and note sets
   yaml.ck             # Minimal YAML reader/writer and YamlNode class
+gui/
+  server.js           # Node.js backend bridging OSC from ChucK to WebSockets
+  index.html          # Web-based live dashboard and piano roll visualizer
 music/
   *.ck                # Example songs and performance scripts
 test/
@@ -154,6 +176,8 @@ test/
 - Any General MIDI-compatible device
 
 ## Recent Changes
+- GUI: Added Web-based Live Dashboard with real-time scrolling piano roll and playback controls
+- GUI: Node.js OSC-to-WebSocket bridge server (`gui/server.js`)
 - YAML: inline flow arrays parsing (`[1, 2, 3]`)
 - YAML: arrays of maps parsing and writer inlining (`- name: "x"`)
 - YAML: multiple top-level keys supported; top-level writer at column 0

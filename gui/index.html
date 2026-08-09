@@ -61,12 +61,31 @@
       justify-content: space-between;
       gap: 16px;
       margin-bottom: 20px;
-      flex-wrap: wrap;
+    }
+    
+    .header-left {
+      flex: 1;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      min-width: max-content;
+    }
+    
+    .header-right {
+      flex: 1;
+      display: flex;
+      justify-content: flex-end;
+      min-width: max-content;
     }
 
     .logo { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 
-    .controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+    .controls {
+      flex-shrink: 0;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
 
     .logo-icon {
       width: 44px; height: 44px;
@@ -191,8 +210,9 @@
     .ctrl-label {
       font-size: 10px; text-transform: uppercase; letter-spacing: 1.4px;
       color: var(--text-dim); font-weight: 700;
+      white-space: nowrap;
     }
-    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .btn-row { display: flex; gap: 6px; flex-wrap: nowrap; }
 
     button {
       cursor: pointer; border: none;
@@ -480,28 +500,43 @@
 
 <!-- ── Header ──────────────────────────────────────────────────────────────── -->
 <header>
-  <div class="logo">
-    <div class="logo-icon">🎵</div>
-    <div>
-      <h1>Cadenza</h1>
-      <div class="subtitle">Live Dashboard</div>
-    </div>
-  </div>
-
-  <div class="controls">
-    <div class="ctrl-group">
-      <div class="ctrl-label">Modes</div>
-      <div class="btn-row">
-        <button class="btn-toggle" id="btnGolden"  onclick="send('golden')"  title="Toggle golden (deterministic) mode">✨ Golden <span class="kbd">g</span></button>
-        <button class="btn-toggle" id="btnAllMode" onclick="send('allMode')" title="Toggle all-devices mode">🔀 All Mode <span class="kbd">a</span></button>
+  <div class="header-left">
+    <div class="logo">
+      <div class="logo-icon">🎵</div>
+      <div>
+        <h1>Cadenza</h1>
+        <div class="subtitle">Live Dashboard</div>
       </div>
     </div>
 
     <div class="ctrl-group">
-      <div class="ctrl-label">Actions</div>
+      <div class="ctrl-label">Song</div>
+      <div class="song-info-display" id="songNameDisplay">—</div>
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Fragment</div>
+      <div class="song-info-display" id="fragmentNameDisplay">—</div>
+    </div>
+
+    <div class="ctrl-group" style="margin-left: 16px;">
+      <div class="ctrl-label">Modes & Data</div>
       <div class="btn-row">
-        <button id="btnSave" class="btn-action" onclick="doSave()" title="Write config YAML to disk">💾 Save Config <span class="kbd">w</span></button>
-        <button class="btn-action btn-danger"   onclick="openShutdown()" title="Shutdown ChucK process">⏹ Shutdown <span class="kbd">Q</span></button>
+        <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnGolden"  onclick="send('golden')"  title="Toggle golden (deterministic) mode (g)">✨</button>
+        <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnAllMode" onclick="send('allMode')" title="Toggle all-devices mode (a)">🔀</button>
+        <button id="btnSave" class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="doSave()" title="Write config YAML to disk (w)">💾</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Playback</div>
+      <div class="btn-row">
+        <button class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="doRestart()" title="Restart song">⏮</button>
+        <button class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnPlayPause" onclick="togglePlayPause()" title="Pause">⏸</button>
+        <button class="btn-action btn-danger" onclick="openShutdown()" title="Shutdown ChucK process">⏹ Shutdown <span class="kbd">q</span></button>
       </div>
     </div>
 
@@ -515,21 +550,13 @@
                oninput="onTempoSlider(event)">
       </div>
     </div>
-
-    <div class="ctrl-group">
-      <div class="ctrl-label">Song</div>
-      <div class="song-info-display" id="songNameDisplay">—</div>
-    </div>
-
-    <div class="ctrl-group">
-      <div class="ctrl-label">Fragment</div>
-      <div class="song-info-display" id="fragmentNameDisplay">—</div>
-    </div>
   </div>
 
-  <div class="conn-badge" id="connBadge">
-    <div class="status-dot" id="statusDot"></div>
-    <span id="statusText">Connecting…</span>
+  <div class="header-right">
+    <div class="conn-badge" id="connBadge">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Connecting…</span>
+    </div>
   </div>
 </header>
 
@@ -614,6 +641,33 @@ function setConnected(ok) {
 function send(type, value) {
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
   ws.send(JSON.stringify({ type, value }));
+}
+
+let isPlaying = true;
+
+function togglePlayPause() {
+  isPlaying = !isPlaying;
+  const btn = document.getElementById('btnPlayPause');
+  if (isPlaying) {
+    send('play');
+    btn.innerHTML = '⏸';
+    btn.title = 'Pause';
+  } else {
+    send('pause');
+    btn.innerHTML = '▶';
+    btn.title = 'Play';
+  }
+}
+
+function doRestart() {
+  send('restart');
+  isPlaying = false;
+  clearNotes();
+  const btn = document.getElementById('btnPlayPause');
+  if (btn) {
+    btn.innerHTML = '▶';
+    btn.title = 'Play';
+  }
 }
 
 function doSave() {
@@ -953,11 +1007,19 @@ document.addEventListener('mouseup', () => {
   }
 });
 
+let currentSongName = null;
+
 function syncSongInfo() {
   const s = chuckState;
   if (!s) return;
   const songEl = document.getElementById('songNameDisplay');
-  if (songEl) songEl.textContent = s.songName || '—';
+  if (songEl) {
+    songEl.textContent = s.songName || '—';
+    if (currentSongName !== s.songName) {
+      if (currentSongName !== null) clearNotes();
+      currentSongName = s.songName;
+    }
+  }
   const fragEl = document.getElementById('fragmentNameDisplay');
   if (fragEl) fragEl.textContent = s.fragmentName || '—';
 }
@@ -991,6 +1053,20 @@ document.addEventListener('keydown', e => {
 
   const k = e.key;
 
+  const isShutdownOpen = document.getElementById('shutdownModal').classList.contains('open');
+
+  if (isShutdownOpen) {
+    if (k === 'Enter') {
+      confirmShutdown();
+      return;
+    } else if (k === 'Escape') {
+      closeShutdown();
+      return;
+    }
+    // Block other shortcuts while modal is open
+    return;
+  }
+
   // Device 1-8 (mirrors keyboardLoop: keys 1-9)
   if (k >= '1' && k <= '8') { send('device', parseInt(k, 10)); return; }
 
@@ -998,8 +1074,7 @@ document.addEventListener('keydown', e => {
     case 'g': send('golden');  break;
     case 'a': send('allMode'); break;
     case 'w': doSave(); break;
-    case 'Q': openShutdown();  break;       // Shift+Q, matching ChucK's keyboardLoop
-    case 'Escape': closeShutdown(); break;
+    case 'q': openShutdown();  break;
   }
 });
 
@@ -1038,6 +1113,12 @@ let activePitchRows = []; // Sorted list of pitch keys (-1 for Drums, or MIDI no
 let noteBlocks = [];       // Array of { dev, pitchKey, startT, endT }
 const activeNotesMap = new Map(); // Key `${dev}-${pitchKey}` -> block
 
+function clearNotes() {
+  activePitchRows.length = 0;
+  noteBlocks.length = 0;
+  activeNotesMap.clear();
+}
+
 function addPitchRow(pitchKey) {
   if (!activePitchRows.includes(pitchKey)) {
     activePitchRows.push(pitchKey);
@@ -1068,6 +1149,13 @@ function onNoteOn(dev, note, vel) {
   const endT = isDrum ? (now + 60) : null;
   const block = { dev, pitchKey, isDrum, startT: now, endT };
   noteBlocks.push(block);
+  
+  // Cap the array to prevent memory leaks or extreme lag if the browser tab is backgrounded
+  // and requestAnimationFrame stops firing for a long time.
+  if (noteBlocks.length > 3000) {
+    noteBlocks.splice(0, noteBlocks.length - 3000);
+  }
+
   if (!isDrum) {
     activeNotesMap.set(key, block);
   }
@@ -1138,8 +1226,12 @@ function initScrollCanvas() {
     }
 
     // Prune old blocks that are completely off-screen to the right
-    while (noteBlocks.length > 0 && noteBlocks[0].endT !== null && (playheadX + (now - noteBlocks[0].endT) * pxPerMs) > w) {
-      noteBlocks.shift();
+    let pruneIndex = 0;
+    while (pruneIndex < noteBlocks.length && noteBlocks[pruneIndex].endT !== null && (playheadX + (now - noteBlocks[pruneIndex].endT) * pxPerMs) > w) {
+      pruneIndex++;
+    }
+    if (pruneIndex > 0) {
+      noteBlocks.splice(0, pruneIndex);
     }
 
     const rowCount = Math.max(1, activePitchRows.length);

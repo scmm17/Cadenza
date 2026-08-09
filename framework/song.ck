@@ -53,6 +53,10 @@ public class Song
     static int debug;
     static int golden;
     static int shuttingDown;
+    static int isPaused;
+
+    Event pauseEvent;
+    Event resumeEvent;
 
     // All the currently active shreds playing parts
     static Shred shreds[];
@@ -72,6 +76,7 @@ public class Song
         startFrag @=> startFragment;
         false => debug;
         false => shuttingDown;
+        false => isPaused;
         false => golden;
         false => muteMode;
         true => soloMode;
@@ -180,6 +185,53 @@ public class Song
     fun void saveSongConfig()
     {
         config.SetFloat("bpm", BPM);
+    }
+
+    fun void pause() {
+        1 => isPaused;
+        for (0 => int i; i < devices.cap(); i++) {
+            if (devices[i] != null) {
+                devices[i].sendAllNotesOff();
+            }
+        }
+        pauseEvent.broadcast();
+    }
+    fun void resume() {
+        0 => isPaused;
+        resumeEvent.broadcast();
+    }
+
+    fun void advance(dur d) {
+        now + d => time target;
+        while (now < target) {
+            if (restartRequested) break;
+            
+            target - now => dur remain;
+            
+            if (isPaused) {
+                resumeEvent => now;
+                now + remain => target;
+                target - now => remain;
+            }
+            
+            if (remain <= 0::samp) break;
+            
+            if (remain > 20::ms) {
+                20::ms => now;
+            } else {
+                remain => now;
+            }
+        }
+    }
+
+    int restartRequested;
+
+    fun void restart() {
+        1 => restartRequested;
+        pause();
+        for(0 => int i; i < shreds.cap(); i++) { 
+            if (shreds[i] != null) shreds[i].exit(); 
+        }
     }
 
     fun void loadSongConfig()
@@ -455,16 +507,19 @@ public class Song
 
     fun void play()
     {
-        if (startFragment != null) {
-            for( startFragment @=>  Fragment frag; 
-                 frag != null; 
-                 playFragment(frag) @=> frag) {
-                    frag @=> currentFragment;
-                 }
-        }
-        if (parts != null) 
-        {
-            playParts();
+        while(true) {
+            0 => restartRequested;
+            if (startFragment != null) {
+                for( startFragment @=>  Fragment frag; 
+                     frag != null; 
+                     playFragment(frag) @=> frag) {
+                        frag @=> currentFragment;
+                        if (restartRequested) break;
+                     }
+            } else if (parts != null) {
+                playParts();
+            }
+            if (!restartRequested) break;
         }
     }
 
@@ -525,10 +580,11 @@ public class Song
         }
         if (forever) {
             while(true) {
-                5::second => now;
+                advance(5::second);
+                if (restartRequested) break;
             }
         } else {
-            total => now;
+            advance(total);
             if (shuttingDown) {
                 <<< "Exiting" >>> ;
                 me.exit();
@@ -543,8 +599,15 @@ public class Song
         }
     }
 
+    fun void waitIfPaused() {
+        while (isPaused) {
+            resumeEvent => now;
+        }
+    }
+
     fun void playPart(Part part, int maxBars)
     {
+        waitIfPaused();
         for(0 => int i; i < maxBars/part.numberOfMeasures; i++) {
             part.play(this);
         }
@@ -615,6 +678,9 @@ public class Song
         recv.event("/cadenza/nextPreset, i")  @=> OscEvent nextPresetEvent;
         recv.event("/cadenza/prevPresetCat, i") @=> OscEvent prevPresetCatEvent;
         recv.event("/cadenza/nextPresetCat, i") @=> OscEvent nextPresetCatEvent;
+        recv.event("/cadenza/play, i") @=> OscEvent playEvent;
+        recv.event("/cadenza/pause, i") @=> OscEvent pauseOscEvent;
+        recv.event("/cadenza/restart, i") @=> OscEvent restartEvent;
 
         spork ~ handleOscDevice(devEvent);
         spork ~ handleOscGolden(goldenEvent);
@@ -632,6 +698,9 @@ public class Song
         spork ~ handleOscNextPreset(nextPresetEvent);
         spork ~ handleOscPrevPresetCat(prevPresetCatEvent);
         spork ~ handleOscNextPresetCat(nextPresetCatEvent);
+        spork ~ handleOscPlay(playEvent);
+        spork ~ handleOscPause(pauseOscEvent);
+        spork ~ handleOscRestart(restartEvent);
 
         // Keep this shred alive
         while (true) { 1::second => now; }
@@ -650,6 +719,27 @@ public class Song
                     launchControl.printDevices();
                 }
             }
+        }
+    }
+
+    fun handleOscPlay(OscEvent e) {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) { resume(); }
+        }
+    }
+
+    fun handleOscPause(OscEvent e) {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) { pause(); }
+        }
+    }
+
+    fun handleOscRestart(OscEvent e) {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) { restart(); }
         }
     }
 
@@ -982,7 +1072,7 @@ public class Part
                 }
                 patch.noteOn(note, velocitiesToPlay[i], duration);
             }
-            song.whole()/notesPerMeasure => now;
+            song.advance(song.whole()/notesPerMeasure);
         }
     }
 

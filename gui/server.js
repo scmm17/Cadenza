@@ -109,6 +109,18 @@ function handleBrowserCommand(cmd) {
       console.log('→ ChucK: /cadenza/shutdown');
       chuckClient.send('/cadenza/shutdown', 1);
       break;
+    case 'play':
+      console.log('→ ChucK: /cadenza/play');
+      chuckClient.send('/cadenza/play', 1);
+      break;
+    case 'pause':
+      console.log('→ ChucK: /cadenza/pause');
+      chuckClient.send('/cadenza/pause', 1);
+      break;
+    case 'restart':
+      console.log('→ ChucK: /cadenza/restart');
+      chuckClient.send('/cadenza/restart', 1);
+      break;
     case 'muteDevice':
       console.log(`→ ChucK: /cadenza/muteDevice ${cmd.value}`);
       chuckClient.send('/cadenza/muteDevice', parseInt(cmd.value, 10));
