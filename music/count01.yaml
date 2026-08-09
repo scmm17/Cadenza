@@ -3,10 +3,10 @@ song:
     SH-4d-0:
       deviceName: "SH-4d"
       midiChannel: 0
-      patchName: "Bank: 3 Program: 1"
+      patchName: "Bank: 3 Program: 12"
       uiName: "SH-4d"
       muted: 0
-      volume: 83
+      volume: 94
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -19,7 +19,7 @@ song:
       patchName: "Channel 2"
       uiName: "SH-4d"
       muted: 0
-      volume: 91
+      volume: 85
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -32,7 +32,7 @@ song:
       patchName: "Bank: 2 Program: 10"
       uiName: "S-1"
       muted: 0
-      volume: 0
+      volume: 127
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -41,28 +41,15 @@ song:
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
-      patchName: "Englishhorn 2"
+      patchName: "Marimba & Xylophon"
       uiName: "V3"
       muted: 0
-      volume: 117
-      filterCutoff: 31
-      filterResonance: 81
+      volume: 116
+      filterCutoff: -1
+      filterResonance: -1
       pan: 64
-      program: 106
-      bank: 0
-      programChange: 1
-    V3-1:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 1
-      patchName: "Clarinet 2"
-      uiName: "V3"
-      muted: 0
-      volume: 82
-      filterCutoff: 31
-      filterResonance: 81
-      pan: 64
-      program: 108
-      bank: 0
+      program: 13
+      bank: 3
       programChange: 1
     SH-4d-3:
       deviceName: "SH-4d"
@@ -70,20 +57,33 @@ song:
       patchName: "Channel 4"
       uiName: "SH-4d"
       muted: 0
-      volume: 51
+      volume: 100
       filterCutoff: -1
       filterResonance: -1
       pan: 64
       program: 0
       bank: 0
       programChange: 0
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Theatre O. Royal + Xylo Reiteration"
+      uiName: "V3"
+      muted: 0
+      volume: 116
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 35
+      bank: 1
+      programChange: 1
     SH-4d-9:
       deviceName: "SH-4d"
       midiChannel: 9
       patchName: "Drums"
       uiName: "SH-4d"
       muted: 0
-      volume: 31
+      volume: 43
       filterCutoff: -1
       filterResonance: -1
       pan: 64

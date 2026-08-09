@@ -133,7 +133,7 @@ public class Song
 
     fun void loadConfig()
     {
-        name + ".yaml" => string configFile;
+        "music/" + name + ".yaml" => string configFile;
         FileIO f;
         f.open(configFile, FileIO.READ);
         <<< "configFile:", configFile >>>;
@@ -153,7 +153,7 @@ public class Song
 
     fun void saveConfig()
     {
-        name + ".yaml" => string configFile;
+        "music/" + name + ".yaml" => string configFile;
         saveSongConfig();
         saveDeviceConfigs();
         config.WriteFile(configFile);
@@ -728,6 +728,9 @@ public class Song
                 if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
                     devices[idx] @=> currentDevice;
                     devices[idx].midiChannel => hydraEvents.outputChannel;
+                    if (currentDevice.uiName == "V3") {
+                        presets.setPresetState(currentDevice.patchName);
+                    }
                     launchControl.printDevices();
                 }
             }

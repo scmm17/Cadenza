@@ -6,7 +6,7 @@ song:
       patchName: "Bank: 1 Program: 1"
       uiName: "Moog"
       muted: 0
-      volume: 33
+      volume: 70
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -15,28 +15,28 @@ song:
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
-      patchName: "E-Piano V3 Bella Layered Pad velocity splits 4"
+      patchName: "E-Piano MK1 Dyno - velocity splits 9 2"
       uiName: "V3"
       muted: 0
-      volume: 82
+      volume: 105
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 55
+      program: 29
       bank: 0
       programChange: 1
     V3-1:
       deviceName: "U2MIDI Pro"
       midiChannel: 1
-      patchName: "Grand Piano Hamburg"
+      patchName: "Max Jazz Tenor velo. split 64 Random Key & breath noise"
       uiName: "V3"
       muted: 0
-      volume: 89
+      volume: 100
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 1
-      bank: 0
+      program: 80
+      bank: 5
       programChange: 1
     V3-3:
       deviceName: "U2MIDI Pro"
@@ -44,11 +44,10 @@ song:
       patchName: "Jazz Drum Kit (page 43)"
       uiName: "V3"
       muted: 0
-      volume: 112
+      volume: 90
       filterCutoff: -1
       filterResonance: -1
       pan: 64
       program: 121
       bank: 4
       programChange: 1
-  bpm: 140.000000

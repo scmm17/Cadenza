@@ -6,7 +6,7 @@ song:
       patchName: "Upright Jazz Bass Random"
       uiName: "V3"
       muted: 0
-      volume: 83
+      volume: 125
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -45,7 +45,7 @@ song:
       patchName: "Fantasia"
       uiName: "V3"
       muted: 0
-      volume: 95
+      volume: 125
       filterCutoff: -1
       filterResonance: -1
       pan: 64

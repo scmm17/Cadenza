@@ -10,9 +10,9 @@
 // Hydrasynth hydrasynth("F005");
 //Hydrasynth hydrasynth("F006");
 Hydrasynth hydrasynth("A026", 127);
-//RolandS1 s1(2, 8);
+//RolandS1 s1(2, 8, 100);
 RolandS1 s1(2, 10, 64);
-//RolandS1 s1(2, 9);
+//RolandS1 s1(2, 9, 100);
 RolandSH4d sh4d_1(1, 3, 1, 94);
 RolandSH4d sh4d_2(2, "Channel 2", 85);
 RolandSH4d sh4d_3(3, "Channel 3", 120);

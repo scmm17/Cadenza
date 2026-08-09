@@ -6,7 +6,7 @@ song:
       patchName: "Vibraphone"
       uiName: "V3"
       muted: 0
-      volume: 127
+      volume: 116
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -19,7 +19,7 @@ song:
       patchName: "Classic Choir Aah Filter"
       uiName: "V3"
       muted: 0
-      volume: 99
+      volume: 116
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -32,7 +32,7 @@ song:
       patchName: "Marimba"
       uiName: "V3"
       muted: 0
-      volume: 127
+      volume: 116
       filterCutoff: -1
       filterResonance: -1
       pan: 64

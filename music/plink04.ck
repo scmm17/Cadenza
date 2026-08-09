@@ -7,8 +7,8 @@
 57 => int root;           // A below Middle C as the root note
 
 // Midi devices
-Hydrasynth hydrasynth("E021");
-RolandS1 s1(1, 13);
+Hydrasynth hydrasynth("E021", 100);
+RolandS1 s1(1, 13, 100);
 
 // Chords
 Chord majorChord(NoteCollection.majorChordNotes(), -1);
@@ -79,11 +79,13 @@ velocities @=> melody.velocities;
 
  ] @=> int drumNotes[];
 NoteCollection drumNotesCollection(drumNotes);
-DrumMachine drums(drumNotesCollection, 64, 1, probabilities3);
+RolandSH4d drumKit(10, "Drums", 100);
+DrumMachine drums(drumNotesCollection, 64, 1, probabilities3, drumKit);
 velocities3 @=> drums.velocities;
 
 [prog, prog2,  /* melody, */ drums] @=> Part parts[];
 // [prog, prog2, melody, drums] @=> Part parts[];
 
-Song song("plink04", BPM, root, parts);
+Fragment frag("main", 1, parts);
+Song song("plink04", BPM, root, frag, parts);
 song.play();

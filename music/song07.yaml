@@ -3,41 +3,41 @@ song:
     V3-1:
       deviceName: "U2MIDI Pro"
       midiChannel: 1
-      patchName: "Organ 800000000 fast 4"
+      patchName: "Harp"
       uiName: "V3"
       muted: 0
-      volume: 104
+      volume: 126
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 61
-      bank: 0
+      program: 59
+      bank: 3
       programChange: 1
     V3-2:
       deviceName: "U2MIDI Pro"
       midiChannel: 2
-      patchName: "Englishhorn"
+      patchName: "EB & Baritone horn layered"
       uiName: "V3"
       muted: 0
-      volume: 115
+      volume: 116
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 94
-      bank: 5
+      program: 87
+      bank: 3
       programChange: 1
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
-      patchName: "Crystal"
+      patchName: "Harpsichord & Octave"
       uiName: "V3"
       muted: 0
-      volume: 111
+      volume: 116
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 36
-      bank: 2
+      program: 48
+      bank: 3
       programChange: 1
     V3-3:
       deviceName: "U2MIDI Pro"
@@ -45,10 +45,11 @@ song:
       patchName: "Voice Kit (page 43)"
       uiName: "V3"
       muted: 0
-      volume: 99
+      volume: 79
       filterCutoff: -1
       filterResonance: -1
       pan: 64
       program: 123
       bank: 4
       programChange: 1
+  bpm: 78.000000

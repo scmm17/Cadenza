@@ -75,3 +75,4 @@ song:
       program: 0
       bank: 0
       programChange: 0
+  bpm: 55.000000

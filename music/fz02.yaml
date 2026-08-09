@@ -1,28 +1,29 @@
 song:
   devices:
-    Moog-0:
-      deviceName: "Moog Messenger"
-      midiChannel: 0
-      patchName: "Bank: 1 Program: 1"
-      uiName: "Moog"
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Upright Jazz Bass Random"
+      uiName: "V3"
       muted: 0
-      volume: 40
+      volume: 115
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 1
-      bank: 1
+      program: 65
+      bank: 3
+      programChange: 1
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
-      patchName: "E-Accordion Retro long release"
+      patchName: "Marimba"
       uiName: "V3"
       muted: 0
       volume: 110
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 121
+      program: 11
       bank: 3
       programChange: 1
     V3-1:
@@ -31,7 +32,7 @@ song:
       patchName: "Vibraphone"
       uiName: "V3"
       muted: 0
-      volume: 99
+      volume: 80
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -41,14 +42,14 @@ song:
     V3-4:
       deviceName: "U2MIDI Pro"
       midiChannel: 4
-      patchName: "Tubular Bell 2"
+      patchName: "Tubular Bell"
       uiName: "V3"
       muted: 0
-      volume: 78
+      volume: 70
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 17
+      program: 16
       bank: 3
       programChange: 1
     V3-3:
@@ -57,25 +58,12 @@ song:
       patchName: "Xylophon"
       uiName: "V3"
       muted: 0
-      volume: 38
+      volume: 95
       filterCutoff: -1
       filterResonance: -1
       pan: 64
       program: 14
       bank: 3
-      programChange: 1
-    V3-5:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 5
-      patchName: "Star Them"
-      uiName: "V3"
-      muted: 0
-      volume: 125
-      filterCutoff: -1
-      filterResonance: -1
-      pan: 64
-      program: 4
-      bank: 2
       programChange: 1
     SH-4d-9:
       deviceName: "SH-4d"
@@ -83,7 +71,7 @@ song:
       patchName: "Drums"
       uiName: "SH-4d"
       muted: 0
-      volume: 74
+      volume: 75
       filterCutoff: -1
       filterResonance: -1
       pan: 64

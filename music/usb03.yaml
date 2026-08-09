@@ -6,7 +6,7 @@ song:
       patchName: "channel 3"
       uiName: "SH-4d"
       muted: 0
-      volume: 28
+      volume: 70
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -29,15 +29,15 @@ song:
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
-      patchName: "Organ 776555678 fast"
+      patchName: "Full Strings Pizzicato 2"
       uiName: "V3"
       muted: 0
-      volume: 45
+      volume: 127
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 1
-      bank: 1
+      program: 88
+      bank: 0
       programChange: 1
     S-1-2:
       deviceName: "S-1 MIDI IN"
@@ -45,9 +45,9 @@ song:
       patchName: "Bank: 2 Program: 10"
       uiName: "S-1"
       muted: 0
-      volume: 111
-      filterCutoff: 49
-      filterResonance: 48
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
       pan: 64
       program: 10
       bank: 2
@@ -57,7 +57,7 @@ song:
       patchName: "Drums"
       uiName: "SH-4d"
       muted: 0
-      volume: 68
+      volume: 30
       filterCutoff: -1
       filterResonance: -1
       pan: 64

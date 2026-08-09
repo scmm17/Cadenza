@@ -12,9 +12,9 @@
 // Hydrasynth hydrasynth("F005");
 //Hydrasynth hydrasynth("F006");
 // Hydrasynth hydrasynth("A003");
-//RolandS1 s1(2, 8);
+//RolandS1 s1(2, 8, 100);
 RolandS1 s1(2, 10, 64);
-//RolandS1 s1(2, 9);
+//RolandS1 s1(2, 9, 100);
 //
 MoogMessenger moog(1, 4, 12, 127);
 V3GrandPiano piano(1, "Steel drums", 110);

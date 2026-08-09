@@ -6,7 +6,7 @@ song:
       patchName: "Upright Jazz Bass Random"
       uiName: "V3"
       muted: 0
-      volume: 110
+      volume: 115
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -16,14 +16,14 @@ song:
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
-      patchName: "Xylophone Octave"
+      patchName: "Marimba"
       uiName: "V3"
       muted: 0
       volume: 110
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 15
+      program: 11
       bank: 3
       programChange: 1
     V3-1:
@@ -42,14 +42,14 @@ song:
     V3-4:
       deviceName: "U2MIDI Pro"
       midiChannel: 4
-      patchName: "Tubular Bell 2"
+      patchName: "Tubular Bell"
       uiName: "V3"
       muted: 0
-      volume: 92
+      volume: 70
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 17
+      program: 16
       bank: 3
       programChange: 1
     V3-3:
@@ -71,7 +71,7 @@ song:
       patchName: "Drums"
       uiName: "SH-4d"
       muted: 0
-      volume: 46
+      volume: 75
       filterCutoff: -1
       filterResonance: -1
       pan: 64
