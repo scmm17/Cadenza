@@ -723,8 +723,8 @@ function toggleDeviceSelect(idx) {
 }
 
 function handleRowClick(event, devIdx) {
-  // If the user clicked on an input, button, inline-editable number, or preset navigation, do not trigger row selection
-  if (event.target.closest('input, button, .editable-num, .preset-nav')) return;
+  // If the user clicked on an input, button, or inline-editable number, do not trigger row selection
+  if (event.target.closest('input, button, .editable-num')) return;
   toggleDeviceSelect(devIdx);
 }
 
