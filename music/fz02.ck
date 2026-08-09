@@ -115,7 +115,7 @@ Chord Bdim_low(Bdim_notes(), -1); Chord Bdim_std(Bdim_notes(), 0); Chord Bdim_hi
 // L-system melody  (see music/fz01-lsystem.yaml)
 // 4 symbols x 4-deep expansion = 256 notes of angular C-major lines
 // ============================================================================
-LSystemNotes fzMelody(C_major_scale(), "fz01-lsystem.yaml");
+LSystemNotes fzMelody(C_major_scale(), me.dir() + "fz01-lsystem.yaml");
 
 // ============================================================================
 // VERSE - sparse, lurching marimba over a thumping 5/4 bass

@@ -1,0 +1,54 @@
+song:
+  devices:
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Marimba"
+      uiName: "V3"
+      muted: 0
+      volume: 70
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 11
+      bank: 3
+      programChange: 1
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Xylophon"
+      uiName: "V3"
+      muted: 0
+      volume: 75
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 14
+      bank: 3
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Vibraphone"
+      uiName: "V3"
+      muted: 0
+      volume: 65
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 6
+      bank: 3
+      programChange: 1
+    SH-4d-9:
+      deviceName: "SH-4d"
+      midiChannel: 9
+      patchName: "Drums"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 37
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0

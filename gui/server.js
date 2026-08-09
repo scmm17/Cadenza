@@ -3,6 +3,8 @@
 const express  = require('express');
 const http     = require('http');
 const path     = require('path');
+const fs       = require('fs');
+const { spawn } = require('child_process');
 const { WebSocketServer } = require('ws');
 const { Client, Server: OscServer } = require('node-osc');
 
@@ -30,6 +32,7 @@ const oscServer = new OscServer(GUI_OSC_IN, '0.0.0.0', () => {
 
 // Last known state — replayed to new clients on connect.
 let lastState = null;
+let currentChuckProc = null;
 
 oscServer.on('message', (msg) => {
   const address = msg[0];
@@ -74,7 +77,7 @@ wss.on('connection', (ws, req) => {
   ws.on('message', (raw) => {
     try {
       const cmd = JSON.parse(raw.toString());
-      handleBrowserCommand(cmd);
+      handleBrowserCommand(cmd, ws);
     } catch (e) {
       console.error('WS: Invalid JSON:', e.message);
     }
@@ -87,8 +90,74 @@ wss.on('connection', (ws, req) => {
 });
 
 // ─── Command Router ───────────────────────────────────────────────────────────
-function handleBrowserCommand(cmd) {
+function handleBrowserCommand(cmd, ws) {
   switch (cmd.type) {
+    case 'getSongs': {
+      const musicDir = path.join(__dirname, '..', 'music');
+      const songs = [];
+      try {
+        const scanDir = (dir) => {
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const fullPath = path.join(dir, file);
+            if (fs.statSync(fullPath).isDirectory()) {
+              scanDir(fullPath);
+            } else if (file.endsWith('.ck')) {
+              songs.push(path.relative(musicDir, fullPath));
+            }
+          }
+        };
+        scanDir(musicDir);
+        songs.sort();
+        ws.send(JSON.stringify({ type: 'songList', songs }));
+      } catch (err) {
+        console.error('Failed to scan songs:', err);
+        ws.send(JSON.stringify({ type: 'songList', songs: [] }));
+      }
+      break;
+    }
+    case 'loadSong': {
+      console.log(`→ ChucK: shutdown & load ${cmd.value}`);
+      
+      const startNewProcess = () => {
+        const songPath = path.join('music', cmd.value);
+        console.log(`Spawning: chuck ${songPath}`);
+        const proc = spawn('chuck', [songPath], { cwd: path.join(__dirname, '..') });
+        currentChuckProc = proc;
+        
+        proc.stdout.on('data', data => process.stdout.write(`[ChucK] ${data}`));
+        proc.stderr.on('data', data => process.stderr.write(`[ChucK ERR] ${data}`));
+        proc.on('close', code => {
+          console.log(`ChucK process exited with code ${code}`);
+          if (currentChuckProc === proc) {
+            currentChuckProc = null;
+          }
+        });
+      };
+
+      if (currentChuckProc) {
+        // Send shutdown via OSC, but also forcefully kill if it takes too long
+        chuckClient.send('/cadenza/shutdown', 1);
+        
+        const forceKillTimeout = setTimeout(() => {
+          if (currentChuckProc) {
+            console.log('ChucK did not exit after shutdown command. Force killing...');
+            currentChuckProc.kill('SIGKILL');
+          }
+        }, 500);
+
+        // Wait for the existing process to exit before starting the new one
+        currentChuckProc.once('close', () => {
+          clearTimeout(forceKillTimeout);
+          startNewProcess();
+        });
+      } else {
+        // Just send shutdown in case a headless process is running
+        chuckClient.send('/cadenza/shutdown', 1);
+        setTimeout(startNewProcess, 100);
+      }
+      break;
+    }
     case 'device':
       console.log(`→ ChucK: /cadenza/device ${cmd.value}`);
       chuckClient.send('/cadenza/device', parseInt(cmd.value, 10));

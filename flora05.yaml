@@ -1,0 +1,13 @@
+song:
+  devices:
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "B016"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 24
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "B016"

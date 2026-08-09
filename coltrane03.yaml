@@ -1,0 +1,54 @@
+song:
+  devices:
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Crystal"
+      uiName: "V3"
+      muted: 0
+      volume: 116
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 36
+      bank: 2
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "VP1"
+      uiName: "V3"
+      muted: 0
+      volume: 116
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 48
+      bank: 2
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "OBArp"
+      uiName: "V3"
+      muted: 0
+      volume: 116
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 67
+      bank: 2
+      programChange: 1
+    SH-4d-9:
+      deviceName: "SH-4d"
+      midiChannel: 9
+      patchName: "Drums"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 70
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0

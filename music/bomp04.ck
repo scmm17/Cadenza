@@ -74,7 +74,7 @@ velocities2 @=> prog2.velocities;
 
 // Melody
 [120, 90, 90, 90] @=> int velocities5[];
-LSystemNotes lSystemNotes(NoteCollection.mixolydian_octave_notes(), "l-system01.yaml");
+LSystemNotes lSystemNotes(NoteCollection.mixolydian_octave_notes(), me.dir() + "l-system01.yaml");
 
 // Try new probability strings feature (single, 3-part, 4-part)
 [ "1.0",          // Only initial probability, no mutation

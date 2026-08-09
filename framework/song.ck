@@ -74,13 +74,16 @@ public class Song
         root => rootNote;
         allParts @=> parts;
         startFrag @=> startFragment;
+        startFrag @=> currentFragment;
         false => debug;
         false => shuttingDown;
-        false => isPaused;
         false => golden;
         false => muteMode;
         true => soloMode;
         false => allMode;
+        1 => isPaused;
+        0 => restartRequested;
+
         Patch empty[0];
         empty @=> mutedPatches;
         initDevicesFromParts();
@@ -95,6 +98,8 @@ public class Song
         spork ~ launchControl.startEventLoop();
         spork ~ keyboardLoop();
         spork ~ oscControlLoop();
+        
+        launchControl.printDevices();
     }
 
     fun initDevicesFromParts()
@@ -173,7 +178,12 @@ public class Song
             for(Patch p : devices) {
                 if (p != null) {    
                     p.uiName + "-" + Std.itoa(p.midiChannel) => string propName;
-                    p.loadConfig(deviceSettings.GetMap(propName));
+                    deviceSettings.GetMap(propName) @=> YamlNode @ patchConfig;
+                    if (patchConfig != null) {
+                        p.loadConfig(patchConfig);
+                    } else {
+                        <<< "Warning: Config for patch ", propName, " not found in YAML." >>>;
+                    }
                     if (p.uiName == "V3") {
                         presets.setPresetState(p.patchName);
                     }
@@ -195,10 +205,12 @@ public class Song
             }
         }
         pauseEvent.broadcast();
+        if (launchControl != null) launchControl.printDevices();
     }
     fun void resume() {
         0 => isPaused;
         resumeEvent.broadcast();
+        if (launchControl != null) launchControl.printDevices();
     }
 
     fun void advance(dur d) {
@@ -1701,6 +1713,7 @@ public class LaunchControl
         j + "\"soloMode\":"       + song.soloMode                        + ","   => j;
         j + "\"golden\":"         + Song.golden                          + ","   => j;
         j + "\"allMode\":"        + song.allMode                         + ","   => j;
+        j + "\"isPaused\":"       + Song.isPaused                        + ","   => j;
         j + "\"currentDeviceIndex\":" + curIdx                           + ","   => j;
         j + "\"devices\":["                                                       => j;
 

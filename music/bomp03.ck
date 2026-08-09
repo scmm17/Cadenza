@@ -75,7 +75,7 @@ velocities2 @=> prog2.velocities;
 // Melody
 [1.0, 0.2, 0.75, 0.5 /*, 1.0, 0.35*/] @=> float probabilities[];
 [120, 90, 90, 90] @=> int velocities5[];
-LSystemNotes lSystemNotes(NoteCollection.mixolydian_octave_notes(), "l-system01.yaml");
+LSystemNotes lSystemNotes(NoteCollection.mixolydian_octave_notes(), me.dir() + "l-system01.yaml");
 SequentialMelody melody(sh4d_3, lSystemNotes, 32, 4, probabilities);
 velocities5 @=> melody.velocities;
 // 0.4 => melody.mutateProbabilityRange;

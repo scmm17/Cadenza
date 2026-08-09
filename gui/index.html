@@ -448,6 +448,27 @@
     /* Flash on update */
     @keyframes flash-row { 0%{opacity:.4} 100%{opacity:1} }
     .flash { animation: flash-row .35s ease; }
+    
+    .song-list {
+      max-height: 400px; overflow-y: auto;
+      background: rgba(14, 12, 28, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin: 16px 0;
+    }
+    .song-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition), color var(--transition);
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    }
+    .song-item:last-child { border-bottom: none; }
+    .song-item:hover, .song-item.selected {
+      background: var(--row-active);
+      color: var(--text-primary);
+    }
 
     @keyframes flash-save {
       0%   { background: rgba(34,197,94,.45); border-color: rgba(34,197,94,.8); color:#fff; box-shadow: 0 0 20px rgba(34,197,94,.45); }
@@ -520,8 +541,9 @@
     </div>
 
     <div class="ctrl-group" style="margin-left: 16px;">
-      <div class="ctrl-label">Modes & Data</div>
+      <div class="ctrl-label">Commands</div>
       <div class="btn-row">
+        <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="openSongModal()" title="Open song (o)">📂</button>
         <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnGolden"  onclick="send('golden')"  title="Toggle golden (deterministic) mode (g)">✨</button>
         <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnAllMode" onclick="send('allMode')" title="Toggle all-devices mode (a)">🔀</button>
         <button id="btnSave" class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="doSave()" title="Write config YAML to disk (w)">💾</button>
@@ -536,7 +558,6 @@
       <div class="btn-row">
         <button class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="doRestart()" title="Restart song">⏮</button>
         <button class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnPlayPause" onclick="togglePlayPause()" title="Pause">⏸</button>
-        <button class="btn-action btn-danger" onclick="openShutdown()" title="Shutdown ChucK process">⏹ Shutdown <span class="kbd">q</span></button>
       </div>
     </div>
 
@@ -552,7 +573,8 @@
     </div>
   </div>
 
-  <div class="header-right">
+  <div class="header-right" style="gap: 12px; align-items: center;">
+    <button class="btn-action btn-danger" onclick="openShutdown()" title="Shutdown ChucK process">⏹ Shutdown</button>
     <div class="conn-badge" id="connBadge">
       <div class="status-dot" id="statusDot"></div>
       <span id="statusText">Connecting…</span>
@@ -587,8 +609,23 @@
     <h3 id="modalTitle">⏹ Shutdown ChucK?</h3>
     <p>This will stop all audio, send All-Notes-Off on every MIDI channel, and exit the ChucK process. This cannot be undone.</p>
     <div class="modal-btns">
-      <button class="btn-cancel" id="cancelShutdown" onclick="closeShutdown()">Cancel</button>
-      <button class="btn-confirm" onclick="confirmShutdown()">Shutdown</button>
+      <button type="button" class="btn-cancel" id="cancelShutdown" onclick="closeShutdown()">Cancel</button>
+      <button type="button" class="btn-confirm" onclick="confirmShutdown()">Shutdown</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="openModal" role="dialog" aria-modal="true" aria-labelledby="openModalTitle">
+  <div class="modal">
+    <h3 id="openModalTitle">📂 Open Song</h3>
+    <p>Select a ChucK script to load. This will stop the current song.</p>
+    <input type="text" id="songSearchInput" placeholder="Search songs..." oninput="renderSongList()" style="width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; background: var(--surface-light); color: var(--text); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; outline: none;">
+    <div class="song-list" id="songListContainer">
+      <!-- Populated via JS -->
+    </div>
+    <div class="modal-btns">
+      <button type="button" class="btn-cancel" onclick="closeSongModal()">Cancel</button>
+      <button type="button" class="btn-confirm" onclick="confirmOpenSong()">Open</button>
     </div>
   </div>
 </div>
@@ -599,6 +636,8 @@
 let chuckState = null;
 let ws         = null;
 let reconnect  = null;
+let songs      = [];
+let selectedSongIdx = -1;
 
 // ─── WebSocket ────────────────────────────────────────────────────────────────
 function connect() {
@@ -621,6 +660,9 @@ function connect() {
         onNoteOff(msg.dev, msg.note);
       } else if (msg.type === 'allNotesOff') {
         onAllNotesOff(msg.dev);
+      } else if (msg.type === 'songList') {
+        songs = msg.songs;
+        renderSongList();
       }
     } catch (e) {
       console.error('Parse error:', e);
@@ -643,31 +685,18 @@ function send(type, value) {
   ws.send(JSON.stringify({ type, value }));
 }
 
-let isPlaying = true;
-
 function togglePlayPause() {
-  isPlaying = !isPlaying;
-  const btn = document.getElementById('btnPlayPause');
-  if (isPlaying) {
+  if (!chuckState) return;
+  if (chuckState.isPaused) {
     send('play');
-    btn.innerHTML = '⏸';
-    btn.title = 'Pause';
   } else {
     send('pause');
-    btn.innerHTML = '▶';
-    btn.title = 'Play';
   }
 }
 
 function doRestart() {
   send('restart');
-  isPlaying = false;
   clearNotes();
-  const btn = document.getElementById('btnPlayPause');
-  if (btn) {
-    btn.innerHTML = '▶';
-    btn.title = 'Play';
-  }
 }
 
 function doSave() {
@@ -1032,6 +1061,17 @@ function syncModeButtons() {
   document.getElementById('btnAllMode').classList.toggle('active', !!s.allMode);
   syncTempoSlider(s.bpm);
   syncSongInfo();
+
+  const btn = document.getElementById('btnPlayPause');
+  if (btn) {
+    if (s.isPaused) {
+      btn.innerHTML = '▶';
+      btn.title = 'Play';
+    } else {
+      btn.innerHTML = '⏸';
+      btn.title = 'Pause';
+    }
+  }
 }
 
 function esc(s) {
@@ -1046,24 +1086,122 @@ function openShutdown()    { document.getElementById('shutdownModal').classList.
 function closeShutdown()   { document.getElementById('shutdownModal').classList.remove('open'); }
 function confirmShutdown() { closeShutdown(); send('shutdown'); }
 
+// ─── Open Modal ───────────────────────────────────────────────────────────────
+function openSongModal() {
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({ type: 'getSongs' }));
+  }
+  document.getElementById('openModal').classList.add('open');
+  const searchInput = document.getElementById('songSearchInput');
+  if (searchInput) {
+    searchInput.value = '';
+    setTimeout(() => searchInput.focus(), 50);
+  }
+  selectedSongIdx = -1;
+  renderSongList();
+}
+function closeSongModal() {
+  document.getElementById('openModal').classList.remove('open');
+  const searchInput = document.getElementById('songSearchInput');
+  if (searchInput) searchInput.blur();
+  document.body.focus();
+}
+function confirmOpenSong(explicitSong = null) {
+  let songToLoad = explicitSong;
+  
+  if (!songToLoad) {
+    const searchInput = document.getElementById('songSearchInput');
+    const query = searchInput ? searchInput.value.toLowerCase() : '';
+    const filteredSongs = songs.filter(song => song.toLowerCase().includes(query));
+    
+    if (selectedSongIdx >= 0 && selectedSongIdx < filteredSongs.length) {
+      songToLoad = filteredSongs[selectedSongIdx];
+    }
+  }
+  
+  if (songToLoad) {
+    send('loadSong', songToLoad);
+    closeSongModal();
+  }
+}
+function renderSongList() {
+  const container = document.getElementById('songListContainer');
+  const searchInput = document.getElementById('songSearchInput');
+  const query = searchInput ? searchInput.value.toLowerCase() : '';
+  
+  container.innerHTML = '';
+  const filteredSongs = songs.filter(song => song.toLowerCase().includes(query));
+  
+  if (selectedSongIdx < 0 || selectedSongIdx >= filteredSongs.length) {
+    selectedSongIdx = filteredSongs.length > 0 ? 0 : -1;
+  }
+  
+  filteredSongs.forEach((song, idx) => {
+    const div = document.createElement('div');
+    div.className = 'song-item' + (idx === selectedSongIdx ? ' selected' : '');
+    div.textContent = song;
+    div.onclick = () => {
+      selectedSongIdx = idx;
+      Array.from(container.children).forEach(el => el.classList.remove('selected'));
+      div.classList.add('selected');
+    };
+    div.ondblclick = () => {
+      selectedSongIdx = idx;
+      confirmOpenSong(song);
+    };
+    container.appendChild(div);
+  });
+  if (selectedSongIdx >= 0) {
+    const selectedEl = container.children[selectedSongIdx];
+    if (selectedEl) selectedEl.scrollIntoView({ block: 'nearest' });
+  }
+}
+
 // ─── Keyboard Shortcuts ───────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.target.matches('input,textarea,select')) return;
-  if (e.ctrlKey || e.altKey || e.metaKey) return;
-
+  const isInput = e.target.matches('input,textarea,select');
   const k = e.key;
 
   const isShutdownOpen = document.getElementById('shutdownModal').classList.contains('open');
+  const isOpenModalOpen  = document.getElementById('openModal').classList.contains('open');
 
   if (isShutdownOpen) {
-    if (k === 'Enter') {
-      confirmShutdown();
-      return;
-    } else if (k === 'Escape') {
-      closeShutdown();
+    if (k === 'Enter') { e.preventDefault(); confirmShutdown(); return; }
+    if (k === 'Escape') { e.preventDefault(); closeShutdown(); return; }
+    if (isInput) return;
+    return;
+  }
+  
+  if (isOpenModalOpen) {
+    if (k === 'Enter') { e.preventDefault(); confirmOpenSong(); return; }
+    if (k === 'Escape') { e.preventDefault(); closeSongModal(); return; }
+    if (k === 'ArrowDown') {
+      e.preventDefault();
+      const filteredLength = document.getElementById('songListContainer').children.length;
+      selectedSongIdx = Math.min(filteredLength - 1, selectedSongIdx + 1);
+      renderSongList();
       return;
     }
-    // Block other shortcuts while modal is open
+    if (k === 'ArrowUp') {
+      e.preventDefault();
+      selectedSongIdx = Math.max(0, selectedSongIdx - 1);
+      renderSongList();
+      return;
+    }
+    // Allow typing into search input
+    if (isInput) return;
+    return;
+  }
+
+  if (isInput) return;
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+  if (k === ' ' || k === 'p') {
+    e.preventDefault();
+    if (document.activeElement && document.activeElement.tagName === 'BUTTON') {
+      document.activeElement.blur();
+    }
+    togglePlayPause();
     return;
   }
 
@@ -1075,6 +1213,7 @@ document.addEventListener('keydown', e => {
     case 'a': send('allMode'); break;
     case 'w': doSave(); break;
     case 'q': openShutdown();  break;
+    case 'o': openSongModal(); break;
   }
 });
 
@@ -1212,9 +1351,8 @@ function initScrollCanvas() {
     ctx.fillStyle = '#080512';
     ctx.fillRect(0, 0, w, h);
 
-    const gutterW = 64;                   // Left column width for pitch labels
-    const spaceGap = 16;                  // Space between note labels and playhead line
-    const playheadX = gutterW + spaceGap; // Playhead line position (immediately right of labels & gap)
+    const gutterW = 72;                   // Left column width for pitch labels
+    const playheadX = gutterW;            // Notes start exactly at the divider
     const pxPerMs = 0.12;                 // Scroll speed: 120px per second
 
     // Safety timeout: auto-close any open note block held > 6000ms without noteOff
@@ -1266,16 +1404,10 @@ function initScrollCanvas() {
       const pKey = activePitchRows[i];
       const y = i * rowH;
       ctx.fillStyle = (pKey === -1) ? '#fbbf24' : '#a78bfa';
-      ctx.fillText(getNoteLabel(pKey), gutterW - 10, y + rowH / 2);
+      ctx.fillText(getNoteLabel(pKey), gutterW - 16, y + rowH / 2);
     }
 
-    // 3. Playhead line (just after note labels & 16px space gap)
-    ctx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(playheadX, 0);
-    ctx.lineTo(playheadX, h);
-    ctx.stroke();
+    // 3. Playhead line removed per user request
 
     // 4. Draw note blocks (starting at playheadX and scrolling left-to-right towards w)
     const blocksByPitch = new Map();
@@ -1286,6 +1418,7 @@ function initScrollCanvas() {
     }
 
     const pathByColor = new Map();
+    const flashes = [];
 
     for (let i = 0; i < activePitchRows.length; i++) {
       const pKey = activePitchRows[i];
@@ -1323,6 +1456,15 @@ function initScrollCanvas() {
         } else {
           path.rect(drawX, y, drawW, subH - 1);
         }
+
+        // Collect flash for brand new notes
+        const age = now - block.startT;
+        if (age < 400) {
+          const alpha = 1 - (age / 400);
+          // Animate the thickness as a strong pulse using a sine curve for a pop effect
+          const expand = 4 * Math.sin(alpha * Math.PI / 2); 
+          flashes.push({ x: drawX, y: y - expand, w: drawW, h: subH - 1 + expand * 2, r, alpha });
+        }
       }
     }
 
@@ -1331,6 +1473,19 @@ function initScrollCanvas() {
       ctx.shadowColor = color;
       ctx.shadowBlur = 6;
       ctx.fill(path);
+    }
+    
+    // Draw white flashes over new notes
+    for (const f of flashes) {
+      // Gamma correction for visually brighter fade curve
+      const brightAlpha = Math.pow(f.alpha, 0.6); 
+      ctx.fillStyle = `rgba(255, 255, 255, ${brightAlpha})`;
+      ctx.shadowColor = 'rgba(255, 255, 255, 1)';
+      ctx.shadowBlur = 24 * brightAlpha;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(f.x, f.y, f.w, f.h, f.r);
+      else ctx.rect(f.x, f.y, f.w, f.h);
+      ctx.fill();
     }
     ctx.shadowBlur = 0;
 

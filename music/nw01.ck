@@ -95,7 +95,7 @@ Chord V_high(V_A_notes(), 1);
 // ============================================================================
 // L-System Melody
 // ============================================================================
-LSystemNotes lSystemMelody(D_major_scale(), "nw01-lsystem.yaml");
+LSystemNotes lSystemMelody(D_major_scale(), me.dir() + "nw01-lsystem.yaml");
 
 // ============================================================================
 // VERSE - Sparse, gentle introduction
