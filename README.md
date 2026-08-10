@@ -1,3 +1,4 @@
+<img width="3840" height="2160" alt="Screenshot 2026-08-09 at 7 01 00 PM" src="https://github.com/user-attachments/assets/2f1411c5-18f5-48a1-94b1-78927f249f79" />
 # Cadenza
 
 Cadenza is a modular framework for real-time algorithmic music generation and MIDI control, built entirely with the ChucK programming language. It is designed for composers, performers, and researchers working with generative music, live coding, and external MIDI synthesis.
