@@ -4,7 +4,7 @@ const express  = require('express');
 const http     = require('http');
 const path     = require('path');
 const fs       = require('fs');
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 const { WebSocketServer } = require('ws');
 const { Client, Server: OscServer } = require('node-osc');
 
@@ -33,6 +33,7 @@ const oscServer = new OscServer(GUI_OSC_IN, '0.0.0.0', () => {
 // Last known state — replayed to new clients on connect.
 let lastState = null;
 let currentChuckProc = null;
+let lastLoadedSong = null;
 
 oscServer.on('message', (msg) => {
   const address = msg[0];
@@ -116,13 +117,24 @@ function handleBrowserCommand(cmd, ws) {
       }
       break;
     }
+    case 'editSong': {
+      if (lastLoadedSong) {
+        const songPath = path.join(__dirname, '..', 'music', lastLoadedSong);
+        console.log(`→ OS: open ${songPath}`);
+        exec(`open "${songPath}"`);
+      } else {
+        console.log(`→ OS: open failed, no song loaded`);
+      }
+      break;
+    }
     case 'loadSong': {
       console.log(`→ ChucK: shutdown & load ${cmd.value}`);
+      lastLoadedSong = cmd.value;
       
       const startNewProcess = () => {
         const songPath = path.join('music', cmd.value);
-        console.log(`Spawning: chuck ${songPath}`);
-        const proc = spawn('chuck', [songPath], { cwd: path.join(__dirname, '..') });
+        console.log(`Spawning: chuck --dac:6 --in:0 ${songPath}`);
+        const proc = spawn('chuck', ['--dac:6', '--in:0', songPath], { cwd: path.join(__dirname, '..') });
         currentChuckProc = proc;
         
         proc.stdout.on('data', data => process.stdout.write(`[ChucK] ${data}`));

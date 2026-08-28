@@ -32,6 +32,16 @@ public class Patch
 
     MidiOut gma;
 
+    fun Patch()
+    {
+        127 => volume;
+        -1 => filterCutoff;
+        -1 => filterResonance;
+        64 => pan;
+        false => muted;
+        false => userMuted;
+    }
+
     fun Patch(int v)
     {   
         if (deviceName != "") 

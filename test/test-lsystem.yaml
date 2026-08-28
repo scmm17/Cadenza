@@ -1,0 +1,8 @@
+startSymbol: "A"
+maxDepth: 3
+rules:
+  A: ["A", "B"]
+  B: ["A"]
+offsets:
+  A: [0, 1]
+  B: [2]

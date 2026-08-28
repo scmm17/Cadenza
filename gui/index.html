@@ -221,6 +221,39 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* Custom Tooltips */
+    [data-tooltip] {
+      position: relative;
+    }
+    [data-tooltip]::before {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      border: 1px solid var(--border-bright);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      z-index: 9999;
+      transition: opacity 0.2s, transform 0.2s;
+      transition-delay: 0s;
+      visibility: hidden;
+    }
+    [data-tooltip]:hover::before {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+      transition-delay: 1s; /* 1 second delay */
+    }
+
     /* Device selector buttons */
     .btn-device {
       width: 26px; height: 26px;
@@ -543,10 +576,11 @@
     <div class="ctrl-group" style="margin-left: 16px;">
       <div class="ctrl-label">Commands</div>
       <div class="btn-row">
-        <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="openSongModal()" title="Open song (o)">📂</button>
-        <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnGolden"  onclick="send('golden')"  title="Toggle golden (deterministic) mode (g)">✨</button>
-        <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnAllMode" onclick="send('allMode')" title="Toggle all-devices mode (a)">🔀</button>
-        <button id="btnSave" class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="doSave()" title="Write config YAML to disk (w)">💾</button>
+        <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="openSongModal()" data-tooltip="Open song (o)">📂</button>
+        <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="send('editSong')" data-tooltip="Edit current song (e)">✏️</button>
+        <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnGolden"  onclick="send('golden')"  data-tooltip="Toggle golden (deterministic) mode (g)">✨</button>
+        <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnAllMode" onclick="send('allMode')" data-tooltip="Toggle all-devices mode (a)">🔀</button>
+        <button id="btnSave" class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="doSave()" data-tooltip="Write config YAML to disk (w)">💾</button>
       </div>
     </div>
   </div>
@@ -556,8 +590,8 @@
     <div class="ctrl-group">
       <div class="ctrl-label">Playback</div>
       <div class="btn-row">
-        <button class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="doRestart()" title="Restart song">⏮</button>
-        <button class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnPlayPause" onclick="togglePlayPause()" title="Pause">⏸</button>
+        <button class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="doRestart()" data-tooltip="Restart song">⏮</button>
+        <button class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnPlayPause" onclick="togglePlayPause()" data-tooltip="Pause">⏸</button>
       </div>
     </div>
 
@@ -653,6 +687,7 @@ function connect() {
       const msg = JSON.parse(data);
       if (msg.type === 'state') {
         chuckState = msg.data;
+        drumDeviceCache.clear(); // Device list may have changed — invalidate isDrumDevice cache
         render();
       } else if (msg.type === 'noteOn') {
         onNoteOn(msg.dev, msg.note, msg.vel);
@@ -820,10 +855,10 @@ function renderDevicesTable() {
     // Preset nav buttons — only when this row is selected AND synth is V3.
     const presetNav = (isSelected && dev.uiName === 'V3')
       ? '<div class="preset-nav">'
-        + '<button class="btn-preset" onclick="send(\'prevPresetCat\',1)" title="Previous preset category">&lt;&lt;</button>'
-        + '<button class="btn-preset" onclick="send(\'prevPreset\',1)"    title="Previous preset">&lt;</button>'
-        + '<button class="btn-preset" onclick="send(\'nextPreset\',1)"    title="Next preset">&gt;</button>'
-        + '<button class="btn-preset" onclick="send(\'nextPresetCat\',1)" title="Next preset category">&gt;&gt;</button>'
+        + '<button class="btn-preset" onclick="send(\'prevPresetCat\',1)" data-tooltip="Previous preset category">&lt;&lt;</button>'
+        + '<button class="btn-preset" onclick="send(\'prevPreset\',1)"    data-tooltip="Previous preset">&lt;</button>'
+        + '<button class="btn-preset" onclick="send(\'nextPreset\',1)"    data-tooltip="Next preset">&gt;</button>'
+        + '<button class="btn-preset" onclick="send(\'nextPresetCat\',1)" data-tooltip="Next preset category">&gt;&gt;</button>'
         + '</div>'
       : '';
 
@@ -1072,10 +1107,10 @@ function syncModeButtons() {
   if (btn) {
     if (s.isPaused) {
       btn.innerHTML = '▶';
-      btn.title = 'Play';
+      btn.setAttribute('data-tooltip', 'Play');
     } else {
       btn.innerHTML = '⏸';
-      btn.title = 'Pause';
+      btn.setAttribute('data-tooltip', 'Pause');
     }
   }
 }
@@ -1220,6 +1255,7 @@ document.addEventListener('keydown', e => {
     case 'w': doSave(); break;
     case 'q': openShutdown();  break;
     case 'o': openSongModal(); break;
+    case 'e': send('editSong'); break;
   }
 });
 
@@ -1258,32 +1294,59 @@ function getNoteLabel(midiNote) {
   return name + oct;
 }
 
+// isDrumDevice cache: avoids .find() scan on chuckState.devices for every note-on.
+// Invalidated whenever chuckState is reassigned (devices list changes).
+const drumDeviceCache = new Map(); // devIdx -> bool
+
 function isDrumDevice(devIdx) {
+  if (drumDeviceCache.has(devIdx)) return drumDeviceCache.get(devIdx);
   if (!chuckState || !chuckState.devices) return false;
   const dev = chuckState.devices.find(d => d.index === devIdx);
-  if (!dev) return false;
-  if (dev.channel === 10) return true;
-  if (dev.uiName && (dev.uiName.toLowerCase().includes('drum') || dev.uiName.toLowerCase().includes('kit') || dev.uiName.toLowerCase().includes(' kick'))) return true;
-  if (dev.patchName && (dev.patchName.toLowerCase().includes('drum') || dev.patchName.toLowerCase().includes('kit') || dev.patchName.toLowerCase().includes(' kick'))) return true;
-  return false;
+  let result = false;
+  if (dev) {
+    if (dev.channel === 10) result = true;
+    else if (dev.uiName && (dev.uiName.toLowerCase().includes('drum') || dev.uiName.toLowerCase().includes('kit') || dev.uiName.toLowerCase().includes(' kick'))) result = true;
+    else if (dev.patchName && (dev.patchName.toLowerCase().includes('drum') || dev.patchName.toLowerCase().includes('kit') || dev.patchName.toLowerCase().includes(' kick'))) result = true;
+  }
+  drumDeviceCache.set(devIdx, result);
+  return result;
 }
 
-let activePitchRows = []; // Sorted list of pitch keys (-1 for Drums, or MIDI note number)
-let noteBlocks = [];       // Array of { dev, pitchKey, startT, endT }
+let activePitchRows = []; // Sorted list of pitch keys (MIDI note or negative drum key)
+let activePitchRowSet = new Set(); // O(1) uniqueness check for addPitchRow
+let activePitchRowsDirty = false;  // Deferred sort flag: sort once per frame, not once per note-on
+let noteBlocks = [];       // Array of { dev, pitchKey, startT, endT, color, devIdx (in row) }
+let noteBlocksReadIdx = 0; // Ring-buffer read pointer – avoids O(n) splice pruning
 const activeNotesMap = new Map(); // Key `${dev}-${pitchKey}` -> block
+
+// Per-pitch tracking of which devices are active (for sub-row layout, set at note-on time)
+const pitchDevices = new Map(); // pitchKey -> Map<dev, devIdx>
 
 function clearNotes() {
   activePitchRows.length = 0;
+  activePitchRowSet.clear();
+  activePitchRowsDirty = false;
   noteBlocks.length = 0;
+  noteBlocksReadIdx = 0;
   activeNotesMap.clear();
+  pitchDevices.clear();
 }
 
 function addPitchRow(pitchKey) {
-  if (!activePitchRows.includes(pitchKey)) {
+  if (!activePitchRowSet.has(pitchKey)) {
+    activePitchRowSet.add(pitchKey);
     activePitchRows.push(pitchKey);
-    // Sort: highest pitch on top, lowest pitch on bottom, Drums (< 0) at bottom
-    activePitchRows.sort((a, b) => b - a);
+    // Mark dirty; renderFrame will sort once before drawing, even if many notes
+    // fire simultaneously (e.g. at a bar boundary).
+    activePitchRowsDirty = true;
   }
+}
+
+function getOrAssignDevIdx(pitchKey, dev) {
+  let devMap = pitchDevices.get(pitchKey);
+  if (!devMap) { devMap = new Map(); pitchDevices.set(pitchKey, devMap); }
+  if (!devMap.has(dev)) { devMap.set(dev, devMap.size); }
+  return devMap.get(dev);
 }
 
 function onNoteOn(dev, note, vel) {
@@ -1302,13 +1365,14 @@ function onNoteOn(dev, note, vel) {
 
   // Drum hits are staccato: fixed short duration (60ms ~ 7-8px wide blips)
   const endT = isDrum ? (now + 60) : null;
-  const block = { dev, pitchKey, isDrum, startT: now, endT };
+  const color = DEVICE_COLORS[(dev - 1) % DEVICE_COLORS.length];
+  const devIdx = getOrAssignDevIdx(pitchKey, dev);
+  const block = { dev, pitchKey, isDrum, startT: now, endT, color, devIdx };
   noteBlocks.push(block);
-  
-  // Cap the array to prevent memory leaks or extreme lag if the browser tab is backgrounded
-  // and requestAnimationFrame stops firing for a long time.
-  if (noteBlocks.length > 3000) {
-    noteBlocks.splice(0, noteBlocks.length - 3000);
+
+  // If the read pointer is too far behind (e.g. tab was backgrounded), reset it to cap memory.
+  if (noteBlocks.length - noteBlocksReadIdx > 3000) {
+    noteBlocksReadIdx = noteBlocks.length - 3000;
   }
 
   if (!isDrum) {
@@ -1346,20 +1410,51 @@ function initScrollCanvas() {
   const canvas = document.getElementById('scrollCanvas');
   if (!canvas) return;
 
+  // Cache the 2D context once — getContext() is cheap but no need to call every frame.
+  const ctx = canvas.getContext('2d');
+
+  // Cache DPR and logical size so we only call getBoundingClientRect on resize.
+  let cachedDpr = window.devicePixelRatio || 1;
+  let cachedW = 0;
+  let cachedH = 0;
+
+  // Resize observer: update canvas backing store only when the element actually resizes.
+  const ro = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      const dpr = window.devicePixelRatio || 1;
+      const w = entry.contentRect.width;
+      const h = entry.contentRect.height;
+      if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+        canvas.width  = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+      }
+      cachedDpr = dpr;
+      cachedW = w;
+      cachedH = h;
+    }
+  });
+  ro.observe(canvas);
+
+  // Build a pitch->rowIndex lookup so inner loops skip the .indexOf() call.
+  const pitchRowIndex = new Map();
+
   function renderFrame(now) {
     scrollAnimationId = requestAnimationFrame(renderFrame);
 
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const w = rect.width;
-    const h = rect.height;
+    const dpr = cachedDpr;
+    const w   = cachedW;
+    const h   = cachedH;
+    if (w === 0 || h === 0) return;
 
-    if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
+    // Sort and rebuild pitchRowIndex only when new rows were added (dirty flag set by
+    // addPitchRow). This way N simultaneous note-ons at a bar boundary pay for one sort.
+    if (activePitchRowsDirty) {
+      activePitchRows.sort((a, b) => b - a);
+      pitchRowIndex.clear();
+      for (let i = 0; i < activePitchRows.length; i++) pitchRowIndex.set(activePitchRows[i], i);
+      activePitchRowsDirty = false;
     }
 
-    const ctx = canvas.getContext('2d');
     ctx.save();
     ctx.scale(dpr, dpr);
 
@@ -1379,13 +1474,20 @@ function initScrollCanvas() {
       }
     }
 
-    // Prune old blocks that are completely off-screen to the right
-    let pruneIndex = 0;
-    while (pruneIndex < noteBlocks.length && noteBlocks[pruneIndex].endT !== null && (playheadX + (now - noteBlocks[pruneIndex].endT) * pxPerMs) > w) {
-      pruneIndex++;
+    // Advance read pointer past blocks that are fully off-screen to the right.
+    // This is O(k) where k = newly scrolled-off blocks — never touches array storage.
+    while (
+      noteBlocksReadIdx < noteBlocks.length &&
+      noteBlocks[noteBlocksReadIdx].endT !== null &&
+      (playheadX + (now - noteBlocks[noteBlocksReadIdx].endT) * pxPerMs) > w
+    ) {
+      noteBlocksReadIdx++;
     }
-    if (pruneIndex > 0) {
-      noteBlocks.splice(0, pruneIndex);
+    // Compact the array occasionally (when many old entries have been read past) to
+    // reclaim memory, but only in a big batch so individual frames never pay O(n).
+    if (noteBlocksReadIdx > 500) {
+      noteBlocks.splice(0, noteBlocksReadIdx);
+      noteBlocksReadIdx = 0;
     }
 
     const rowCount = Math.max(1, activePitchRows.length);
@@ -1425,76 +1527,69 @@ function initScrollCanvas() {
 
     // 3. Playhead line removed per user request
 
-    // 4. Draw note blocks (starting at playheadX and scrolling left-to-right towards w)
-    const blocksByPitch = new Map();
-    for (let i = 0; i < noteBlocks.length; i++) {
-      const b = noteBlocks[i];
-      if (!blocksByPitch.has(b.pitchKey)) blocksByPitch.set(b.pitchKey, []);
-      blocksByPitch.get(b.pitchKey).push(b);
-    }
-
+    // 4. Draw note blocks (starting at playheadX and scrolling left-to-right towards w).
+    //    devIdx and color are pre-computed at note-on time; devCount per row is read from
+    //    pitchDevices.  We iterate blocks once, building per-color Path2D batches.
     const pathByColor = new Map();
     const flashes = [];
 
-    for (let i = 0; i < activePitchRows.length; i++) {
-      const pKey = activePitchRows[i];
-      const rowY = i * rowH;
+    for (let i = noteBlocksReadIdx; i < noteBlocks.length; i++) {
+      const block = noteBlocks[i];
 
-      const rowBlocks = blocksByPitch.get(pKey);
-      if (!rowBlocks) continue;
+      const leadX  = playheadX + (now - block.startT) * pxPerMs;
+      const trailX = (block.endT === null) ? playheadX : (playheadX + (now - block.endT) * pxPerMs);
+      let blockW   = leadX - trailX;
+      if (blockW < 2) blockW = 2;
 
-      const devicesInRow = Array.from(new Set(rowBlocks.map(b => b.dev))).sort((a,b) => a - b);
-      const devCount = Math.max(1, devicesInRow.length);
-      const subH = Math.max(3, (rowH - 2) / devCount);
+      if (trailX > w) continue; // Off screen right
 
-      for (const block of rowBlocks) {
-        const leadX  = playheadX + (now - block.startT) * pxPerMs;
-        const trailX = (block.endT === null) ? playheadX : (playheadX + (now - block.endT) * pxPerMs);
-        let blockW   = leadX - trailX;
-        if (blockW < 2) blockW = 2;
+      const drawX = Math.max(playheadX, trailX);
+      const drawW = Math.min(w - drawX, blockW - (drawX - trailX));
+      if (drawW <= 0) continue;
 
-        if (trailX > w) continue; // Off screen right
+      const rowI = pitchRowIndex.get(block.pitchKey);
+      if (rowI === undefined) continue;
+      const rowY = rowI * rowH;
 
-        const drawX = Math.max(playheadX, trailX);
-        const drawW = Math.min(w - drawX, blockW - (drawX - trailX));
-        if (drawW <= 0) continue;
+      // devCount for this pitch: how many distinct devices ever played it
+      const devMap   = pitchDevices.get(block.pitchKey);
+      const devCount = devMap ? devMap.size : 1;
+      const subH     = Math.max(3, (rowH - 2) / devCount);
+      const y        = rowY + 1 + block.devIdx * subH;
 
-        const devIdx = devicesInRow.indexOf(block.dev);
-        const y = rowY + 1 + (devIdx >= 0 ? devIdx : 0) * subH;
-        const color = DEVICE_COLORS[(block.dev - 1) % DEVICE_COLORS.length];
+      let path = pathByColor.get(block.color);
+      if (!path) { path = new Path2D(); pathByColor.set(block.color, path); }
 
-        let path = pathByColor.get(color);
-        if (!path) { path = new Path2D(); pathByColor.set(color, path); }
+      const r = Math.min(3, subH / 2, drawW / 2);
+      if (path.roundRect) {
+        path.roundRect(drawX, y, drawW, subH - 1, r);
+      } else {
+        path.rect(drawX, y, drawW, subH - 1);
+      }
 
-        const r = Math.min(3, subH / 2, drawW / 2);
-        if (path.roundRect) {
-          path.roundRect(drawX, y, drawW, subH - 1, r);
-        } else {
-          path.rect(drawX, y, drawW, subH - 1);
-        }
-
-        // Collect flash for brand new notes
-        const age = now - block.startT;
-        if (age < 400) {
-          const alpha = 1 - (age / 400);
-          // Animate the thickness as a strong pulse using a sine curve for a pop effect
-          const expand = 4 * Math.sin(alpha * Math.PI / 2); 
-          flashes.push({ x: drawX, y: y - expand, w: drawW, h: subH - 1 + expand * 2, r, alpha });
-        }
+      // Collect flash for brand new notes
+      const age = now - block.startT;
+      if (age < 400) {
+        const alpha = 1 - (age / 400);
+        // Animate the thickness as a strong pulse using a sine curve for a pop effect
+        const expand = 4 * Math.sin(alpha * Math.PI / 2);
+        flashes.push({ x: drawX, y: y - expand, w: drawW, h: subH - 1 + expand * 2, r, alpha });
       }
     }
 
+    // Draw all colored note paths in one pass; set shadow once per color.
+    ctx.shadowBlur = 6;
     for (const [color, path] of pathByColor.entries()) {
       ctx.fillStyle = color;
       ctx.shadowColor = color;
-      ctx.shadowBlur = 6;
       ctx.fill(path);
     }
-    
+    ctx.shadowBlur = 0;
+
     // Draw white flashes over new notes
     for (const f of flashes) {
       // Gamma correction for visually brighter fade curve
-      const brightAlpha = Math.pow(f.alpha, 0.6); 
+      const brightAlpha = Math.pow(f.alpha, 0.6);
       ctx.fillStyle = `rgba(255, 255, 255, ${brightAlpha})`;
       ctx.shadowColor = 'rgba(255, 255, 255, 1)';
       ctx.shadowBlur = 24 * brightAlpha;

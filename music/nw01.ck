@@ -160,7 +160,7 @@ true => verseMelody.useAllNotes;
     "0.3:0.0:0.5"    // occasional hi-hat
 ] @=> string drumProbs[];
 
-[127, 0, 100, 0, 120, 0, 105, 0, 127, 0, 105, 0, 120, 0, 100, 100] @=> int drumVelocities[];
+[127, 0, 120, 0, 120, 0, 125, 0, 127, 0, 125, 0, 120, 0, 120, 120] @=> int drumVelocities[];
 
 [
     DrumMachine.BassDrum(),   // 1
@@ -351,8 +351,8 @@ outroPadVel @=> outroPad.velocities;
 // ============================================================================
 // All parts combined for Song initialization
 // ============================================================================
-[verseArp, verseMelody, preChorusArp, preChorusPad, preChorusMelody, 
- chorusArp, chorusPad, chorusMelody, bridgePad, bridgeMelody, 
+[verseArp, verseMelody, preChorusArp, preChorusPad, preChorusMelody,
+ chorusArp, chorusPad, chorusMelody, bridgePad, bridgeMelody,
  outroArp, outroPad, drums] @=> Part allParts[];
 
 // ============================================================================
@@ -405,4 +405,3 @@ Song song("nw01", BPM, root, verse1, allParts);
 <<< "============================================" >>>;
 
 song.play();
-

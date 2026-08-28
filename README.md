@@ -49,6 +49,18 @@ Features include:
 
 Cadenza is designed to be easily extensible. You can define new MIDI instrument configurations by extending the `Patch` class, add custom scales and chords to the `NoteCollection`, or script entirely new algorithmic generation logic for your performances.
 
+## Testing
+
+Cadenza includes an automated test suite located in the `test/` directory to ensure the stability of the core framework. The test suite uses a mocked environment to run assertions without triggering actual MIDI hardware or real-time audio threads.
+
+To run the entire test suite, execute the following command from the root directory:
+
+```bash
+chuck -s test/run-all.ck
+```
+
+**Note**: The `-s` flag is required. It runs ChucK in silent/non-realtime mode, which is necessary for tests to run headlessly without throwing audio hardware initialization errors.
+
 ## License
 
 MIT
