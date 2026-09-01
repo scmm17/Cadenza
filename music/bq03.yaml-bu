@@ -1,0 +1,42 @@
+song:
+  devices:
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Marimba Octave"
+      uiName: "V3"
+      muted: 0
+      volume: 87
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 12
+      bank: 3
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Upright Jazz Bass velo 96 - 105"
+      uiName: "V3"
+      muted: 0
+      volume: 121
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 67
+      bank: 3
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Classic Organ Tutti 2"
+      uiName: "V3"
+      muted: 0
+      volume: 103
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 42
+      bank: 1
+      programChange: 1
+  bpm: 86.000000
