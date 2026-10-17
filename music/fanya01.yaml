@@ -1,0 +1,146 @@
+song:
+  devices:
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "OBell"
+      uiName: "V3"
+      muted: 0
+      volume: 100
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 68
+      bank: 2
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "FMPluk"
+      uiName: "V3"
+      muted: 0
+      volume: 118
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 43
+      bank: 2
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Bellz"
+      uiName: "V3"
+      muted: 0
+      volume: 90
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 61
+      bank: 2
+      programChange: 1
+    V3-3:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 3
+      patchName: "SquareLead"
+      uiName: "V3"
+      muted: 0
+      volume: 85
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 27
+      bank: 2
+      programChange: 1
+    V3-4:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 4
+      patchName: "Hook"
+      uiName: "V3"
+      muted: 0
+      volume: 95
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 42
+      bank: 2
+      programChange: 1
+    V3-5:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 5
+      patchName: "Xypho"
+      uiName: "V3"
+      muted: 0
+      volume: 90
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 79
+      bank: 2
+      programChange: 1
+    V3-6:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 6
+      patchName: "Polysynth Classic"
+      uiName: "V3"
+      muted: 0
+      volume: 90
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 10
+      bank: 2
+      programChange: 1
+    V3-7:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 7
+      patchName: "Classic Synth Bass"
+      uiName: "V3"
+      muted: 0
+      volume: 94
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 116
+      bank: 2
+      programChange: 1
+    V3-8:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 8
+      patchName: "JBass 1"
+      uiName: "V3"
+      muted: 0
+      volume: 105
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 118
+      bank: 2
+      programChange: 1
+    V3-10:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 10
+      patchName: "Soft Pad"
+      uiName: "V3"
+      muted: 0
+      volume: 85
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 20
+      bank: 2
+      programChange: 1
+    SH-4d-9:
+      deviceName: "SH-4d"
+      midiChannel: 9
+      patchName: "Drums"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 62
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+  bpm: 100.000000
