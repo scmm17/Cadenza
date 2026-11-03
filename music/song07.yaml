@@ -32,7 +32,7 @@ song:
       patchName: "Harpsichord & Octave"
       uiName: "V3"
       muted: 0
-      volume: 116
+      volume: 74
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -45,7 +45,7 @@ song:
       patchName: "Voice Kit (page 43)"
       uiName: "V3"
       muted: 0
-      volume: 79
+      volume: 81
       filterCutoff: -1
       filterResonance: -1
       pan: 64

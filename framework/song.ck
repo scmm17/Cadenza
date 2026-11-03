@@ -222,6 +222,7 @@ public class Song
             
             if (isPaused) {
                 resumeEvent => now;
+                if (restartRequested) break;
                 now + remain => target;
                 target - now => remain;
             }
@@ -240,10 +241,15 @@ public class Song
 
     fun void restart() {
         1 => restartRequested;
+        if (startFragment != null) {
+            startFragment @=> currentFragment;
+            1 => startFragment.currentRepeat;
+        }
         pause();
         for(0 => int i; i < shreds.cap(); i++) { 
             if (shreds[i] != null) shreds[i].exit(); 
         }
+        resumeEvent.broadcast();
     }
 
     fun void loadSongConfig()
@@ -614,12 +620,14 @@ public class Song
     fun void waitIfPaused() {
         while (isPaused) {
             resumeEvent => now;
+            if (restartRequested) return;
         }
     }
 
     fun void playPart(Part part, int maxBars)
     {
         waitIfPaused();
+        if (restartRequested) return;
         for(0 => int i; i < maxBars/part.numberOfMeasures; i++) {
             part.play(this);
         }
@@ -1273,6 +1281,7 @@ public class FragmentTransition
 public class Fragment 
 {
     int repeatCount;
+    int currentRepeat;   // 1-based repeat iteration currently playing (for the GUI)
     FragmentTransition nextFragments[];
     Part @ parts[];
     string name;
@@ -1282,6 +1291,25 @@ public class Fragment
         n => name;
         r => repeatCount;
         p @=> parts;
+    }
+
+    static OscSend @ xmit;
+
+    fun static void initXmit()
+    {
+        if (xmit == null) {
+            new OscSend @=> xmit;
+            xmit.setHost("localhost", 9450);
+        }
+    }
+
+    // Tell the GUI bridge which edge was just chosen.
+    fun void notifyTransition(Fragment next)
+    {
+        if (xmit == null) { initXmit(); }
+        xmit.startMsg("/cadenza/transition", "s s");
+        name => xmit.addString;
+        next.name => xmit.addString;
     }
 
     fun Fragment getNextSongFragment()
@@ -1298,19 +1326,22 @@ public class Fragment
             frag.probability + prob => prob;
             if (r <= prob)
             {
-
+                notifyTransition(frag.nextFragment);
                 return frag.nextFragment;
             }
         }
+        notifyTransition(nextFragments[0].nextFragment);
         return nextFragments[0].nextFragment;
     }
 
     fun Fragment play(Song song)
     {
         for(0 => int i; i < repeatCount; i++) {
+            i + 1 => currentRepeat;
             parts @=> song.currentParts;
             song.launchControl.printDevices();
             song.playPartOnce();
+            if (song.restartRequested) return null;
         }
         getNextSongFragment() @=> Fragment next;
         <<< "Next Fragment:", next.name >>>;
@@ -1694,10 +1725,19 @@ public class LaunchControl
     // ── OSC State Broadcast ───────────────────────────────────────────────────
     // Called at the end of write_markdown_panel() to push the current state
     // as a JSON string to the Node.js GUI bridge on UDP port 9450.
+    static OscSend @ xmit;
+
+    fun static void initXmit()
+    {
+        if (xmit == null) {
+            new OscSend @=> xmit;
+            xmit.setHost("localhost", 9450);
+        }
+    }
+
     fun broadcastState()
     {
-        OscSend xmit;
-        xmit.setHost("localhost", 9450);
+        if (xmit == null) { initXmit(); }
 
         // Find index of currentDevice (0-based)
         0 => int curIdx;
@@ -1742,10 +1782,69 @@ public class LaunchControl
             }
             dNum++;
         }
-        j + "]}" => j;
+        j + "]," =>j;
+
+        j + "\"repeatIndex\":" + song.currentFragment.currentRepeat + "," =>j;
+        j + "\"repeatCount\":" + song.currentFragment.repeatCount =>j;
+        j + "}" =>j;
 
         xmit.startMsg("/cadenza/state", "s");
-        j => xmit.addString;
+        j =>  xmit.addString;
+
+        broadcastGraph();
+    }
+
+    // Fragment graph, sent as one small OSC message per fragment.
+    // (A single OSC packet has a small fixed buffer; big songs overflow it.)
+    // Breadth-first from the start fragment; cycle-safe.
+    fun void broadcastGraph()
+    {
+        if (xmit == null) { initXmit(); }
+        if (song.startFragment == null) {
+            xmit.startMsg("/cadenza/graphNode", "i i s");
+            0 => xmit.addInt;
+            0 => xmit.addInt;
+            "" => xmit.addString;
+            return;
+        }
+
+        Fragment @ queue[0];
+        int seen[0];
+        queue << song.startFragment;
+        1 => seen[song.startFragment.name];
+        0 => int qi;
+        while (qi < queue.size()) {
+            queue[qi] @=> Fragment f;
+            qi++;
+            if (f.nextFragments != null) {
+                for (FragmentTransition t : f.nextFragments) {
+                    if (t == null || t.nextFragment == null) { continue; }
+                    if (!seen.isInMap(t.nextFragment.name)) {
+                        1 => seen[t.nextFragment.name];
+                        queue << t.nextFragment;
+                    }
+                }
+            }
+        }
+
+        for (0 => int i; i < queue.size(); i++) {
+            queue[i] @=> Fragment fr;
+            "{\"name\":\"" + escJson(fr.name) + "\",\"repeat\":" + fr.repeatCount + ",\"edges\":[" => string g;
+            0 => int firstEdge;
+            if (fr.nextFragments != null) {
+                for (FragmentTransition t : fr.nextFragments) {
+                    if (t == null || t.nextFragment == null) { continue; }
+                    if (firstEdge) { g + "," => g; }
+                    1 => firstEdge;
+                    g + "{\"to\":\"" + escJson(t.nextFragment.name) + "\",\"p\":" + t.probability + "}" => g;
+                }
+            }
+            g + "]}" => g;
+            xmit.startMsg("/cadenza/graphNode", "i i s");
+            i => xmit.addInt;
+            queue.size() => xmit.addInt;
+            g => xmit.addString;
+        }
     }
 
     // Escape double-quotes and backslashes so the JSON string is valid.

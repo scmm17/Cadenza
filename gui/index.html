@@ -53,7 +53,7 @@
       min-height: 100vh;
       /* height: auto so the sticky header's containing block spans all content */
       height: auto;
-      padding: 24px 28px 40px;
+      padding: 24px 28px 20px;
     }
 
     /* ─── Header ──────────────────────────────────────────────────────────────── */
@@ -560,6 +560,56 @@
     .knob-disabled .knob-bg       { fill: rgba(100,90,140,.06); stroke: rgba(110,70,240,.1); }
     .knob-disabled .knob-indicator{ display: none; }
     .knob-disabled .knob-track    { stroke: rgba(110,70,240,.07); }
+
+    /* ─── Docked Fragment Graph panel ───────────────────────────────────────────── */
+    #mainRow {
+      display: flex; align-items: stretch;
+      --graph-w: 25vw;
+      box-sizing: border-box;
+    }
+    #mainCol {
+      flex: 1 1 0; min-width: 0;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    #scrollCard {
+      flex: 1 1 auto;
+      display: flex; flex-direction: column; min-height: 250px;
+    }
+    #scrollContainer {
+      flex: 1 1 auto; min-height: 0;
+      position: relative; width: 100%;
+      background: #090614; border: 1px solid var(--border);
+      border-radius: var(--radius-btn); overflow: hidden;
+    }
+    #graphDivider {
+      flex: 0 0 10px; align-self: stretch; cursor: col-resize; touch-action: none;
+      position: relative; margin: 0 2px;
+    }
+    #graphDivider::after {
+      content: ''; position: absolute; top: 0; bottom: 0; left: 4px; width: 2px;
+      background: var(--border); border-radius: 1px; transition: background var(--transition);
+    }
+    #graphDivider:hover::after, #graphDivider.dragging::after { background: var(--accent); }
+    #graphWindow {
+      flex: 0 0 var(--graph-w); width: var(--graph-w); min-width: 0;
+      align-self: stretch; min-height: 200px;
+      display: flex; flex-direction: column; overflow: hidden;
+      background: #0b0818; border: 1px solid var(--border-bright);
+      border-radius: var(--radius-card);
+    }
+    #mainRow.graph-hidden #graphWindow, #mainRow.graph-hidden #graphDivider { display: none; }
+    body.graph-resizing { cursor: col-resize; user-select: none; }
+    #graphTitlebar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; user-select: none;
+      background: rgba(124,58,237,.14); border-bottom: 1px solid var(--border);
+      font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase;
+      color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    #graphBody { position: relative; flex: 1; min-height: 0; background: #090614; }
+    #graphCanvas { position: absolute; inset: 0; }
+    #graphEmpty { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+                  flex-direction: column; color: var(--text-dim); pointer-events: none; }
   </style>
 </head>
 <body>
@@ -592,6 +642,7 @@
         <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="send('editSong')" data-tooltip="Edit current song (e)">✏️</button>
         <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnGolden"  onclick="send('golden')"  data-tooltip="Toggle golden (deterministic) mode (g)">✨</button>
         <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnAllMode" onclick="send('allMode')" data-tooltip="Toggle all-devices mode (a)">🔀</button>
+        <button class="btn-toggle" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnGraph" onclick="toggleGraphWindow()" data-tooltip="Fragment graph (f)">🕸️</button>
         <button id="btnSave" class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="doSave()" data-tooltip="Write config YAML to disk (w)">💾</button>
       </div>
     </div>
@@ -602,7 +653,7 @@
     <div class="ctrl-group">
       <div class="ctrl-label">Playback</div>
       <div class="btn-row">
-        <button class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" onclick="doRestart()" data-tooltip="Restart song">⏮</button>
+        <button class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnReset" onclick="doRestart()" data-tooltip="Reset song (r)">⏮</button>
         <button class="btn-action" style="width: 32px; text-align: center; padding-left: 0; padding-right: 0;" id="btnPlayPause" onclick="togglePlayPause()" data-tooltip="Pause">⏸</button>
       </div>
     </div>
@@ -628,8 +679,9 @@
   </div>
 </header>
 
-<!-- ── Main layout ─────────────────────────────────────────────────────────── -->
-<div class="layout">
+<!-- ── Main row: dashboard + docked fragment graph ─────────────────────────── -->
+<div id="mainRow">
+<div class="layout" id="mainCol">
 
   <!-- Devices table card -->
   <section class="card" aria-label="Device status">
@@ -640,14 +692,29 @@
   </section>
 
   <!-- Song scroll card -->
-  <section class="card" aria-label="Song scroll">
+  <section class="card" id="scrollCard" aria-label="Song scroll">
     <div class="card-title">Song Scroll</div>
-    <div id="scrollContainer" style="position:relative;width:100%;height:500px;background:#090614;border:1px solid var(--border);border-radius:var(--radius-btn);overflow:hidden">
+    <div id="scrollContainer">
       <canvas id="scrollCanvas" style="display:block;width:100%;height:100%"></canvas>
     </div>
   </section>
 
 </div>
+
+<!-- Resize divider + docked Fragment Graph panel -->
+<div id="graphDivider" role="separator" aria-orientation="vertical" aria-label="Resize fragment graph"></div>
+<aside id="graphWindow" aria-label="Fragment graph">
+  <div id="graphTitlebar">
+    <span id="graphTitleText">Fragment Graph</span>
+  </div>
+  <div id="graphBody">
+    <div id="graphCanvas"></div>
+    <div id="graphEmpty"><div class="empty-icon">🕸️</div><div class="empty-text">No fragments in this song</div></div>
+  </div>
+</aside>
+</div>
+
+<script src="/vendor/cytoscape.min.js"></script>
 
 <!-- ── Shutdown Modal ──────────────────────────────────────────────────────── -->
 <div class="modal-overlay" id="shutdownModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -684,6 +751,9 @@ let ws         = null;
 let reconnect  = null;
 let songs      = [];
 let selectedSongIdx = -1;
+let isSongReset = true;
+let initialStateReceived = false;
+let playFromResetTime = 0;
 
 // ─── WebSocket ────────────────────────────────────────────────────────────────
 function connect() {
@@ -698,9 +768,30 @@ function connect() {
     try {
       const msg = JSON.parse(data);
       if (msg.type === 'state') {
+        const songChanged = chuckState && msg.data && chuckState.songName !== msg.data.songName;
         chuckState = msg.data;
+        if (!initialStateReceived) {
+          initialStateReceived = true;
+          if (!chuckState.isPaused) {
+            isSongReset = false;
+          }
+        } else if (songChanged && chuckState.isPaused) {
+          isSongReset = true;
+          lastTransition = null;
+        }
+        if (!isSongReset && performance.now() - playFromResetTime < 150 && chuckGraph && chuckGraph.length > 0) {
+          chuckState.fragmentName = chuckGraph[0].name;
+        }
         drumDeviceCache.clear(); // Device list may have changed — invalidate isDrumDevice cache
         render();
+        updateGraph(false);
+      } else if (msg.type === 'graph') {
+        chuckGraph = msg.fragments || [];
+        updateGraph(false);
+      } else if (msg.type === 'transition') {
+        if (!isSongReset && !(chuckState && chuckState.isPaused) && performance.now() - playFromResetTime >= 150) {
+          flashTransition(msg.from, msg.to);
+        }
       } else if (msg.type === 'noteOn') {
         onNoteOn(msg.dev, msg.note, msg.vel);
       } else if (msg.type === 'noteOff') {
@@ -735,15 +826,48 @@ function send(type, value) {
 function togglePlayPause() {
   if (!chuckState) return;
   if (chuckState.isPaused) {
+    if (isSongReset) {
+      isSongReset = false;
+      lastTransition = null;
+      playFromResetTime = performance.now();
+      if (chuckGraph && chuckGraph.length > 0) {
+        chuckState.fragmentName = chuckGraph[0].name;
+        chuckState.repeatIndex = 1;
+      }
+    }
     send('play');
+    chuckState.isPaused = 0;
+    const btn = document.getElementById('btnPlayPause');
+    if (btn) {
+      btn.innerHTML = '⏸';
+      btn.setAttribute('data-tooltip', 'Pause');
+    }
+    updateGraph(false);
+    syncSongInfo();
   } else {
     send('pause');
+    chuckState.isPaused = 1;
+    const btn = document.getElementById('btnPlayPause');
+    if (btn) {
+      btn.innerHTML = '▶';
+      btn.setAttribute('data-tooltip', 'Play');
+    }
   }
 }
 
 function doRestart() {
+  isSongReset = true;
+  lastTransition = null;
+  if (chuckState) chuckState.isPaused = 1;
   send('restart');
   clearNotes();
+  const btn = document.getElementById('btnPlayPause');
+  if (btn) {
+    btn.innerHTML = '▶';
+    btn.setAttribute('data-tooltip', 'Play');
+  }
+  updateGraph(false);
+  syncSongInfo();
 }
 
 function doSave() {
@@ -1103,7 +1227,9 @@ function syncSongInfo() {
     }
   }
   const fragEl = document.getElementById('fragmentNameDisplay');
-  if (fragEl) fragEl.textContent = s.fragmentName || '—';
+  if (fragEl) {
+    fragEl.textContent = isSongReset ? '—' : (s.fragmentName || '—');
+  }
 }
 
 // Mode toggle button visual state
@@ -1173,8 +1299,12 @@ function confirmOpenSong(explicitSong = null) {
   }
   
   if (songToLoad) {
+    isSongReset = true;
+    lastTransition = null;
     send('loadSong', songToLoad);
     closeSongModal();
+    updateGraph(false);
+    syncSongInfo();
   }
 }
 function renderSongList() {
@@ -1262,12 +1392,14 @@ document.addEventListener('keydown', e => {
   if (k >= '1' && k <= '8') { send('device', parseInt(k, 10)); return; }
 
   switch (k) {
+    case 'r': doRestart(); break;
     case 'g': send('golden');  break;
     case 'a': send('allMode'); break;
     case 'w': doSave(); break;
     case 'q': openShutdown();  break;
     case 'o': openSongModal(); break;
     case 'e': send('editSong'); break;
+    case 'f': toggleGraphWindow(); break;
   }
 });
 
@@ -1316,7 +1448,11 @@ function isDrumDevice(devIdx) {
   const dev = chuckState.devices.find(d => d.index === devIdx);
   let result = false;
   if (dev) {
-    if (dev.channel === 10) result = true;
+    // Special case: "Steel drums" is a pitched instrument, so show it as normal notes.
+    const isSteelDrums = [dev.uiName, dev.patchName]
+      .some(n => n && n.toLowerCase().includes('steel drum'));
+    if (isSteelDrums) result = false;
+    else if (dev.channel === 10) result = true;
     else if (dev.uiName && (dev.uiName.toLowerCase().includes('drum') || dev.uiName.toLowerCase().includes('kit') || dev.uiName.toLowerCase().includes(' kick'))) result = true;
     else if (dev.patchName && (dev.patchName.toLowerCase().includes('drum') || dev.patchName.toLowerCase().includes('kit') || dev.patchName.toLowerCase().includes(' kick'))) result = true;
   }
@@ -1385,6 +1521,10 @@ function onNoteOn(dev, note, vel) {
   // If the read pointer is too far behind (e.g. tab was backgrounded), reset it to cap memory.
   if (noteBlocks.length - noteBlocksReadIdx > 3000) {
     noteBlocksReadIdx = noteBlocks.length - 3000;
+  }
+  if (noteBlocksReadIdx > 1000) {
+    noteBlocks.splice(0, noteBlocksReadIdx);
+    noteBlocksReadIdx = 0;
   }
 
   if (!isDrum) {
@@ -1619,9 +1759,269 @@ function initScrollCanvas() {
   scrollAnimationId = requestAnimationFrame(renderFrame);
 }
 
+// ─── Fragment Graph (docked panel) ────────────────────────────────────────────
+const mainRow    = document.getElementById('mainRow');
+const graphWin   = document.getElementById('graphWindow');
+const graphDiv   = document.getElementById('graphDivider');
+const GRAPH_WIDTH_KEY = 'cadenza.graphWidth';   // px; default is 25vw (CSS)
+let cy = null;
+let chuckGraph = [];   // fragment graph received from the bridge ({name, repeat, edges:[{to,p}]}[])
+let graphSignature = '';
+let lastTransition = null;   // {from, to} of the most recent transition
+
+function graphVisible() { return !mainRow.classList.contains('graph-hidden'); }
+
+function clampGraphWidth(w) {
+  return Math.min(Math.max(w, 180), Math.max(180, window.innerWidth - 420));
+}
+function setGraphWidth(w, persist) {
+  w = clampGraphWidth(w);
+  mainRow.style.setProperty('--graph-w', w + 'px');
+  if (persist) localStorage.setItem(GRAPH_WIDTH_KEY, String(Math.round(w)));
+}
+(function restoreGraphWidth() {
+  const saved = parseInt(localStorage.getItem(GRAPH_WIDTH_KEY), 10);
+  if (saved > 0) setGraphWidth(saved, false);
+})();
+
+// Calculate exact available height for mainRow down to the bottom of the viewport
+function syncMainRowHeight() {
+  const h = document.querySelector('header');
+  if (!h) return;
+  const headerBottom = h.getBoundingClientRect().bottom;
+  // Available height = window height - header bottom edge - 20px header bottom margin - 20px body bottom padding - 4px safety buffer
+  const availHeight = Math.max(300, window.innerHeight - headerBottom - 44);
+  mainRow.style.height = availHeight + 'px';
+}
+syncMainRowHeight();
+window.addEventListener('resize', () => {
+  syncMainRowHeight();
+  if (graphVisible()) {
+    const cur = parseInt(getComputedStyle(graphWin).width, 10);
+    setGraphWidth(cur, false);   // re-clamp if the window got narrower
+  }
+});
+
+function setGraphVisible(on) {
+  mainRow.classList.toggle('graph-hidden', !on);
+  document.getElementById('btnGraph').classList.toggle('active', on);
+  if (on) updateGraph(true);
+}
+function toggleGraphWindow() { setGraphVisible(!graphVisible()); }
+
+// Drag the divider to resize the panel (panel is on the right, so width grows leftward)
+(function () {
+  let dragging = false;
+  graphDiv.addEventListener('pointerdown', e => {
+    dragging = true;
+    graphDiv.setPointerCapture(e.pointerId);
+    graphDiv.classList.add('dragging');
+    document.body.classList.add('graph-resizing');
+    e.preventDefault();
+  });
+  graphDiv.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const rowRight = mainRow.getBoundingClientRect().right;
+    setGraphWidth(rowRight - e.clientX - 7, false);
+  });
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    graphDiv.classList.remove('dragging');
+    document.body.classList.remove('graph-resizing');
+    setGraphWidth(parseInt(getComputedStyle(graphWin).width, 10), true);
+  };
+  graphDiv.addEventListener('pointerup', end);
+  graphDiv.addEventListener('pointercancel', end);
+})();
+
+// Panel size changed → resize canvas and re-layout to fill it
+let relayoutTimer = null;
+new ResizeObserver(() => {
+  if (!graphVisible() || !cy) return;
+  cy.resize();
+  clearTimeout(relayoutTimer);
+  relayoutTimer = setTimeout(() => runGraphLayout(false), 120);
+}).observe(document.getElementById('graphBody'));
+
+// Lay the graph out to fill the current canvas. randomize=false keeps the existing
+// arrangement as the starting point so resizing doesn't reshuffle everything.
+function runGraphLayout(randomize) {
+  if (!cy || cy.nodes().length === 0) return;
+  const w = cy.width(), h = cy.height();
+  cy.layout({ name: 'cose', animate: false, fit: true, padding: 12, randomize,
+              boundingBox: { x1: 0, y1: 0, w, h },
+              nodeRepulsion: () => 8000, idealEdgeLength: () => 80 }).run();
+}
+
+function fmtProb(p) {
+  return Math.round(p * 100) + '%';
+}
+
+function initCy() {
+  if (cy) return;
+  cy = cytoscape({
+    container: document.getElementById('graphCanvas'),
+    wheelSensitivity: 0.3,
+    style: [
+      { selector: 'node', style: {
+          'label': 'data(label)', 'text-wrap': 'wrap', 'text-valign': 'center', 'text-halign': 'center',
+          'color': '#ede9ff', 'font-size': 'data(fs)', 'font-family': 'JetBrains Mono, monospace',
+          'background-color': '#1a1535', 'border-width': 1.5, 'border-color': '#4a4070',
+          'shape': 'round-rectangle', 'width': 'label', 'height': 'label', 'padding': 'data(pad)' } },
+      { selector: 'node.current', style: {
+          'background-color': '#7c3aed', 'border-color': '#c4b5fd', 'border-width': 2.5, 'color': '#fff',
+          'underlay-color': '#a78bfa', 'underlay-opacity': 0.45, 'underlay-padding': 6, 'z-index': 999 } },
+      { selector: 'edge', style: {
+          'curve-style': 'bezier', 'control-point-step-size': 50, 'loop-direction': '-45deg', 'loop-sweep': '40deg',
+          'width': 'data(w)', 'line-color': '#5b4a9a', 'target-arrow-color': '#5b4a9a', 'target-arrow-shape': 'triangle',
+          'arrow-scale': 1.1, 'label': 'data(label)', 'font-size': 'data(fs)', 'color': '#c9bff0', 'min-zoomed-font-size': 5,
+          'font-family': 'JetBrains Mono, monospace', 'text-background-color': '#090614',
+          'text-background-opacity': 0.9, 'text-background-padding': 2 } },
+      { selector: 'edge.taken', style: {
+          'line-color': '#22d3ee', 'target-arrow-color': '#22d3ee', 'width': 6, 'color': '#22d3ee', 'z-index': 10 } },
+    ],
+  });
+}
+
+function nodeLabel(f, isCurrent, s) {
+  if (f.repeat > 1) {
+    return isCurrent && s && s.repeatIndex > 0
+      ? `${f.name}\n${s.repeatIndex}/${f.repeat}`
+      : `${f.name}\n×${f.repeat}`;
+  }
+  return f.name;
+}
+
+function updateGraph(forceLayout) {
+  if (!graphVisible()) return;
+  const s = chuckState;
+  const frags = chuckGraph;
+  const empty = document.getElementById('graphEmpty');
+  empty.style.display = frags.length ? 'none' : 'flex';
+  initCy();
+
+  const cur = isSongReset ? null : (s && s.fragmentName);
+  const sig = JSON.stringify(frags);
+  if (forceLayout || sig !== graphSignature) {
+    graphSignature = sig;
+    cy.elements().remove();
+    // Scale text with graph density: big on sparse graphs, small on dense ones.
+    const fs  = Math.min(14, Math.max(7, 16 - 0.35 * frags.length));
+    const efs = Math.max(6, fs * 0.78);
+    const pad = Math.round(fs * 0.7);
+    const nodeIds = new Set();
+    const nodeEls = [];
+    const edgeEls = [];
+    for (const f of frags) {
+      if (!f || !f.name || nodeIds.has(f.name)) continue;
+      nodeIds.add(f.name);
+      nodeEls.push({
+        group: 'nodes',
+        data: { id: f.name, label: nodeLabel(f, f.name === cur, s), fs, pad }
+      });
+    }
+    for (const f of frags) {
+      if (!f || !f.name || !Array.isArray(f.edges)) continue;
+      f.edges.forEach((e, i) => {
+        if (!e || !e.to) return;
+        if (!nodeIds.has(e.to)) {
+          nodeIds.add(e.to);
+          nodeEls.push({
+            group: 'nodes',
+            data: { id: e.to, label: e.to, fs, pad }
+          });
+        }
+        const p = Number.isFinite(e.p) ? e.p : 0;
+        edgeEls.push({
+          group: 'edges',
+          data: {
+            id: `${f.name}->${e.to}#${i}`, source: f.name, target: e.to,
+            label: fmtProb(p), w: 1.5 + 4 * p, fs: efs
+          }
+        });
+      });
+    }
+    cy.add(nodeEls);
+    try {
+      cy.add(edgeEls);
+    } catch (_) {
+      for (const edge of edgeEls) {
+        try { cy.add(edge); } catch (_) {}
+      }
+    }
+    if (nodeEls.length) {
+      cy.resize();
+      if (cy.width() > 0 && cy.height() > 0) {
+        runGraphLayout(true);
+      } else {
+        requestAnimationFrame(() => {
+          if (cy && graphVisible()) {
+            cy.resize();
+            runGraphLayout(true);
+          }
+        });
+      }
+    }
+    applyTakenEdge();
+  }
+
+  if (isSongReset) {
+    const curNodes = cy.nodes('.current');
+    if (curNodes.length > 0) curNodes.removeClass('current');
+  }
+  for (const f of frags) {
+    if (!f || !f.name) continue;
+    const n = cy.getElementById(f.name);
+    if (!n || n.empty()) continue;
+    const isCur = f.name === cur;
+    if (n.hasClass('current') !== isCur) {
+      n.toggleClass('current', isCur);
+    }
+    const nextLbl = nodeLabel(f, isCur, s);
+    if (n.data('label') !== nextLbl) {
+      n.data('label', nextLbl);
+    }
+  }
+  applyTakenEdge();
+  document.getElementById('graphTitleText').textContent = 'Fragment Graph' + (s && s.songName ? ' — ' + s.songName : '');
+}
+
+// Highlight the most recently taken edge until the next transition replaces it.
+function applyTakenEdge() {
+  if (!cy) return;
+  if (isSongReset || !lastTransition) {
+    const taken = cy.edges('.taken');
+    if (taken.length > 0) taken.removeClass('taken');
+    return;
+  }
+  cy.edges().forEach(e => {
+    const shouldBeTaken = e.data('source') === lastTransition.from && e.data('target') === lastTransition.to;
+    if (e.hasClass('taken') !== shouldBeTaken) {
+      e.toggleClass('taken', shouldBeTaken);
+    }
+  });
+}
+
+function flashTransition(from, to) {
+  lastTransition = { from, to };
+  if (graphVisible()) applyTakenEdge();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    syncMainRowHeight();
+    if (cy && graphVisible()) {
+      cy.resize();
+      cy.forceRender();
+    }
+  }
+});
+
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 connect();
 initScrollCanvas();
+setGraphVisible(true);   // graph panel is on by default
 </script>
 </body>
 </html>

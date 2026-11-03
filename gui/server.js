@@ -21,6 +21,7 @@ const wss    = new WebSocketServer({ server });
 
 // Serve everything in gui/ as static files (index.html lives here)
 app.use(express.static(path.join(__dirname)));
+app.use('/vendor', express.static(path.join(__dirname, 'node_modules', 'cytoscape', 'dist')));
 
 // ─── OSC Client (→ ChucK) ─────────────────────────────────────────────────────
 const chuckClient = new Client(CHUCK_HOST, CHUCK_OSC_IN);
@@ -32,6 +33,8 @@ const oscServer = new OscServer(GUI_OSC_IN, '0.0.0.0', () => {
 
 // Last known state — replayed to new clients on connect.
 let lastState = null;
+let lastGraph = null;   // fragment graph, replayed to new clients
+let graphBuf  = [];     // graph being reassembled from /cadenza/graphNode messages
 let currentChuckProc = null;
 let lastLoadedSong = null;
 
@@ -53,6 +56,37 @@ oscServer.on('message', (msg) => {
     broadcast({ type: 'noteOff', dev: msg[1], note: msg[2] });
   } else if (address === '/cadenza/allNotesOff') {
     broadcast({ type: 'allNotesOff', dev: msg[1] });
+  } else if (address === '/cadenza/transition') {
+    broadcast({ type: 'transition', from: msg[1], to: msg[2] });
+  } else if (address === '/cadenza/graphNode') {
+    // One message per fragment: (index, total, json). Reassemble, then broadcast.
+    const [ , idx, total, json ] = msg;
+    if (idx === 0) graphBuf = [];
+    if (total === 0) {
+      lastGraph = [];
+      graphBuf = [];
+      broadcast({ type: 'graph', fragments: lastGraph });
+    } else if (idx >= 0 && idx < total && json) {
+      try {
+        graphBuf[idx] = JSON.parse(json);
+      } catch (e) {
+        console.error('OSC: bad graphNode JSON:', e.message);
+      }
+      if (idx === total - 1) {
+        let complete = graphBuf.length === total;
+        for (let i = 0; complete && i < total; i++) {
+          if (!graphBuf[i]) complete = false;
+        }
+        if (complete) {
+          lastGraph = graphBuf;
+          graphBuf = [];
+          broadcast({ type: 'graph', fragments: lastGraph });
+        } else {
+          console.warn('OSC: ignoring incomplete graphNode batch');
+          graphBuf = [];
+        }
+      }
+    }
   }
 });
 
@@ -71,6 +105,9 @@ wss.on('connection', (ws, req) => {
   console.log(`Browser connected (${clients.size} total)`);
 
   // Send cached state immediately so the page renders without waiting.
+  if (lastGraph) {
+    ws.send(JSON.stringify({ type: 'graph', fragments: lastGraph }));
+  }
   if (lastState) {
     ws.send(JSON.stringify({ type: 'state', data: lastState }));
   }
