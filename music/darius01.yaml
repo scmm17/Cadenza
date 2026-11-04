@@ -1,0 +1,107 @@
+song:
+  devices:
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "G. Steel Slide (velo. 116-127 Slide)"
+      uiName: "V3"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 28
+      bank: 3
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "G. Steel Slide (velo. 116-127 Slide)"
+      uiName: "V3"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 28
+      bank: 3
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Mandoline Ensemble"
+      uiName: "V3"
+      muted: 0
+      volume: 100
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 32
+      bank: 3
+      programChange: 1
+    V3-3:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 3
+      patchName: "Mandoline Ensemble Tremolo"
+      uiName: "V3"
+      muted: 0
+      volume: 110
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 31
+      bank: 3
+      programChange: 1
+    V3-4:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 4
+      patchName: "Celtic fiddle"
+      uiName: "V3"
+      muted: 0
+      volume: 100
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 26
+      bank: 4
+      programChange: 1
+    V3-5:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 5
+      patchName: "Celtic fiddle (softer attack)"
+      uiName: "V3"
+      muted: 0
+      volume: 111
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 27
+      bank: 4
+      programChange: 1
+    V3-6:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 6
+      patchName: "Upright Bass finger attack"
+      uiName: "V3"
+      muted: 0
+      volume: 115
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 72
+      bank: 3
+      programChange: 1
+    SH-4d-9:
+      deviceName: "SH-4d"
+      midiChannel: 9
+      patchName: "Drums"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 97
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+  bpm: 135.000000
