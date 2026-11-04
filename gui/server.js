@@ -239,6 +239,10 @@ function handleBrowserCommand(cmd, ws) {
       console.log('→ ChucK: /cadenza/restart');
       chuckClient.send('/cadenza/restart', 1);
       break;
+    case 'nextFragment':
+      console.log(`→ ChucK: /cadenza/nextFragment "${cmd.value || ''}"`);
+      chuckClient.send('/cadenza/nextFragment', String(cmd.value || ''));
+      break;
     case 'muteDevice':
       console.log(`→ ChucK: /cadenza/muteDevice ${cmd.value}`);
       chuckClient.send('/cadenza/muteDevice', parseInt(cmd.value, 10));

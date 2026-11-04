@@ -54,5 +54,22 @@ public class FragmentTransitionsTests {
 
         // 0.3 * 1000 = 300. Allow +/- 10% tolerance = 300 +/- 100 (200 to 400)
         Assert.isTrue("testTwoTransitions_sumToOne Frag2 approx 30%", count2 > 200 && count2 < 400);
+
+        // testQueuedFragment_overridesNormalTransitionsOnce
+        f1 @=> song.startFragment;
+        Fragment f4("Frag4", 1, emptyParts);
+        FragmentTransition emptyTrans2[0]; emptyTrans2 @=> f2.nextFragments;
+        FragmentTransition t_2to4(f4, 1.0);
+        f2.nextFragments << t_2to4;
+
+        song.queueFragmentByName("Frag4");
+        Assert.isTrue("testQueuedFragment_setByName", song.queuedFragment == f4);
+
+        f1.resolveNextFragment(song) @=> Fragment nextQueued;
+        Assert.equalString("testQueuedFragment_pickedInsteadOfTransitions", nextQueued.name, "Frag4");
+        Assert.isTrue("testQueuedFragment_clearedAfterUse", song.queuedFragment == null);
+
+        f1.resolveNextFragment(song) @=> Fragment nextNormal;
+        Assert.equalString("testQueuedFragment_resumesNormalTransitions", nextNormal.name, "Frag2");
     }
 }

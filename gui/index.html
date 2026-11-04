@@ -858,7 +858,10 @@ function togglePlayPause() {
 function doRestart() {
   isSongReset = true;
   lastTransition = null;
-  if (chuckState) chuckState.isPaused = 1;
+  if (chuckState) {
+    chuckState.isPaused = 1;
+    chuckState.nextFragmentName = '';
+  }
   send('restart');
   clearNotes();
   const btn = document.getElementById('btnPlayPause');
@@ -1872,6 +1875,9 @@ function initCy() {
       { selector: 'node.current', style: {
           'background-color': '#7c3aed', 'border-color': '#c4b5fd', 'border-width': 2.5, 'color': '#fff',
           'underlay-color': '#a78bfa', 'underlay-opacity': 0.45, 'underlay-padding': 6, 'z-index': 999 } },
+      { selector: 'node.queued', style: {
+          'background-color': '#0e3a47', 'border-color': '#22d3ee', 'border-width': 2.5, 'color': '#ecfeff',
+          'underlay-color': '#06b6d4', 'underlay-opacity': 0.38, 'underlay-padding': 5, 'z-index': 998 } },
       { selector: 'edge', style: {
           'curve-style': 'bezier', 'control-point-step-size': 50, 'loop-direction': '-45deg', 'loop-sweep': '40deg',
           'width': 'data(w)', 'line-color': '#5b4a9a', 'target-arrow-color': '#5b4a9a', 'target-arrow-shape': 'triangle',
@@ -1881,6 +1887,23 @@ function initCy() {
       { selector: 'edge.taken', style: {
           'line-color': '#22d3ee', 'target-arrow-color': '#22d3ee', 'width': 6, 'color': '#22d3ee', 'z-index': 10 } },
     ],
+  });
+  cy.on('tap', 'node', (evt) => {
+    const fragName = evt.target.id();
+    if (!fragName) return;
+    const curQueued = chuckState && chuckState.nextFragmentName;
+    const nextVal = (curQueued === fragName) ? '' : fragName;
+    if (chuckState) chuckState.nextFragmentName = nextVal;
+    send('nextFragment', nextVal);
+    updateGraph(false);
+  });
+  cy.on('mouseover', 'node', () => {
+    const el = document.getElementById('graphCanvas');
+    if (el) el.style.cursor = 'pointer';
+  });
+  cy.on('mouseout', 'node', () => {
+    const el = document.getElementById('graphCanvas');
+    if (el) el.style.cursor = '';
   });
 }
 
@@ -1902,6 +1925,7 @@ function updateGraph(forceLayout) {
   initCy();
 
   const cur = isSongReset ? null : (s && s.fragmentName);
+  const queued = (s && s.nextFragmentName) ? s.nextFragmentName : null;
   const sig = JSON.stringify(frags);
   if (forceLayout || sig !== graphSignature) {
     graphSignature = sig;
@@ -1975,8 +1999,12 @@ function updateGraph(forceLayout) {
     const n = cy.getElementById(f.name);
     if (!n || n.empty()) continue;
     const isCur = f.name === cur;
+    const isQueued = Boolean(queued && f.name === queued);
     if (n.hasClass('current') !== isCur) {
       n.toggleClass('current', isCur);
+    }
+    if (n.hasClass('queued') !== isQueued) {
+      n.toggleClass('queued', isQueued);
     }
     const nextLbl = nodeLabel(f, isCur, s);
     if (n.data('label') !== nextLbl) {

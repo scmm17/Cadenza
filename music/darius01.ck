@@ -10,7 +10,10 @@
 //   B: Old Joe Modal (I - bVII - IV - I)        [Acoustic only]
 //   C: Chorus Drive (IV - I - V7 - I)           [Drums enter]
 //   D: Mountain Minor (vi - IV - I - V7 - ii - V7) [Full band + drums]
-//   E: Salty Dog Turnaround (I - VI7 - II7 - V7 - I - V7) [Full band + drums -> Silence]
+//   E: Salty Dog Turnaround (I - VI7 - II7 - V7 - I - V7) [Full band + drums -> Ending 1]
+//   Ending 1: Slow, quiet acoustic wind-down (IV - I - V7 - I)
+//   Ending 2: Very slow, quiet cadence resolving to a 4-bar held G major chord (IV - V7 - I - I - I - I)
+//   Silence:  4 bars of 0.0 probability to mark the end of the song
 //
 // Instrumentation:
 //   - Guitar (flatpicking lead + boom-chuck rhythm)
@@ -18,15 +21,16 @@
 //   - Fiddle (breakdown lead + long double-stop bow)
 //   - Acoustic upright bass (alternating root-fifth + walking)
 //   - Drums (SH-4d kit: kick/snare patterns, hats, and last-bar fills,
-//            modelled after fanya01.ck; silent in sections A and B)
+//            modelled after fanya01.ck; silent in sections A, B, and Endings)
 //
 // Song structure:
 //   - 5 progressions x 5 texture variants = 25 active fragments,
-//     plus 1 Silence fragment (2 bars of 0.0 probability, like bq03.ck)
-//     to mark the end of the song.
+//     followed by 2 slow/quiet ending fragments (Ending 1 -> Ending 2)
+//     and 1 Silence fragment (4 bars of 0.0 probability, like bq03.ck).
 //   - Fragment transitions are randomised at start-up. Sections A and B
 //     are purely acoustic and route forward into C, D, E where the drums
-//     enter; section E routes to neighbours or to Silence to end the song.
+//     enter; section E routes only to its siblings/neighbours or to
+//     Ending 1 (never directly to Ending 2 or Silence).
 // ============================================================
 
 // Global parameters
@@ -391,17 +395,154 @@ buildSection(4, "E",
     1);
 
 // ------------------------------------------------------------
-// SILENCE: 2 bars of silence (0.0 probability) to mark the end
+// ENDING 1: 4 bars (IV - I - V7 - I) -- Slower, quieter acoustic
+// wind-down. Drums drop out; rhythms shift to gentle quarters and
+// halves at soft velocities.
+// ------------------------------------------------------------
+voicings([5, 0, -5, 0], [Q_maj6, Q_maj, Q_dom7, Q_maj], 1, false)  @=> Chord end1Hi[];
+voicings([5, 0, -5, 0], [Q_maj6, Q_maj, Q_dom7, Q_maj], 0, false)  @=> Chord end1Mid[];
+voicings([5, 0, -5, 0], [Q_maj6, Q_maj, Q_dom7, Q_maj], -1, false) @=> Chord end1Lo[];
+voicings([5, 0, -5, 0], [Q_maj6, Q_maj, Q_dom7, Q_maj], 0, true)   @=> Chord end1BowChords[];
+
+// Slow quarter / half-note guitar rhythm
+[1.0, 0.0, 0.0, 0.0, 0.7, 0.0, 0.0, 0.0,
+ 1.0, 0.0, 0.0, 0.0, 0.6, 0.0, 0.0, 0.0] @=> float end1GtrRhythmProbs[];
+[0, 2, 1, 3, 0, 2, 1, 0] @=> int end1GtrRhythmMel[];
+[4.0, 4.0, 4.0, 4.0] @=> float end1GtrRhythmDurs[];
+[64, 48, 56, 46] @=> int end1GtrRhythmVel[];
+mkMel(guitarRhythmDev, end1Mid, end1GtrRhythmMel, end1GtrRhythmProbs, end1GtrRhythmDurs, end1GtrRhythmVel) @=> ChordProgression end1GtrRhythm;
+
+// Slow, lyrical flatpicking guitar phrase
+[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.85, 0.0,
+ 0.0, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0] @=> float end1GtrLeadProbs[];
+[2, 1, 0, 3, 2, 1, 0] @=> int end1GtrLeadMel[];
+[6.0, 6.0, 4.0] @=> float end1GtrLeadDurs[];
+[68, 54, 60] @=> int end1GtrLeadVel[];
+mkMel(guitarLeadDev, end1Mid, end1GtrLeadMel, end1GtrLeadProbs, end1GtrLeadDurs, end1GtrLeadVel) @=> ChordProgression end1GtrLead;
+
+// Gentle mandolin answer on beats 2 and 3.5
+[0.0, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0,
+ 0.0, 0.0, 0.8, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float end1MandoProbs[];
+[6, 5, 3, 2, 1, 0] @=> int end1MandoMel[];
+[6.0, 6.0] @=> float end1MandoDurs[];
+[60, 50] @=> int end1MandoVel[];
+mkMel(mandolinLeadDev, end1Hi, end1MandoMel, end1MandoProbs, end1MandoDurs, end1MandoVel) @=> ChordProgression end1Mando;
+
+// Long half-note fiddle line + soft bowed double-stops
+[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+ 0.9, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float end1FidProbs[];
+[7, 6, 5, 3, 2, 1, 0] @=> int end1FidMel[];
+[8.0, 8.0] @=> float end1FidDurs[];
+[62, 52] @=> int end1FidVel[];
+mkMel(fiddleLeadDev, end1Hi, end1FidMel, end1FidProbs, end1FidDurs, end1FidVel) @=> ChordProgression end1FidLead;
+
+mkBow(fiddleBowDev, end1BowChords) @=> ChordProgression end1FidBow;
+[58, 50, 46, 42, 38] @=> int end1BowVel[];
+end1BowVel @=> end1FidBow.velocities;
+
+// Half-note upright bass on beats 1 and 3
+[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+ 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float end1BassProbs[];
+[0, 2, 0, 2, 0, 2, 0, 0] @=> int end1BassMel[];
+[7.5, 7.5] @=> float end1BassDurs[];
+[72, 60] @=> int end1BassVel[];
+mkMel(bassDev, end1Lo, end1BassMel, end1BassProbs, end1BassDurs, end1BassVel) @=> ChordProgression end1Bass;
+
+[end1Bass, end1GtrRhythm, end1GtrLead, end1Mando, end1FidLead, end1FidBow] @=> Part ending1Parts[];
+Fragment fEnding1("Ending 1", 1, ending1Parts);
+
+// ------------------------------------------------------------
+// ENDING 2: 6 bars (IV - V7 - I - I - I - I) -- Very slow, quiet
+// final cadence in bars 1-2 resolving to a 4-bar held G major
+// chord across bars 3-6.
+// ------------------------------------------------------------
+voicings([5, -5, 0, 0, 0, 0], [Q_maj, Q_dom7, Q_maj, Q_maj, Q_maj, Q_maj], 1, false)  @=> Chord end2Hi[];
+voicings([5, -5, 0, 0, 0, 0], [Q_maj, Q_dom7, Q_maj, Q_maj, Q_maj, Q_maj], 0, false)  @=> Chord end2Mid[];
+voicings([5, -5, 0, 0, 0, 0], [Q_maj, Q_dom7, Q_maj, Q_maj, Q_maj, Q_maj], -1, false) @=> Chord end2Lo[];
+
+// 96 sixteenth-note steps (6 bars):
+//   Bars 1-2 (0..31): slow half-note cadence on beats 1 and 3
+//   Bars 3-6 (32..95): rolled G major chord at steps 32..35 held
+//                      for the full 4 bars (durations 64, 63, 62, 61)
+float end2RollProbs[96];
+float end2RollDurs[96];
+float end2LeadProbs[96];
+float end2LeadDurs[96];
+float end2BassProbs[96];
+float end2BassDurs[96];
+for (0 => int i; i < 96; i++)
+{
+    0.0 => end2RollProbs[i];
+    0.0 => end2RollDurs[i];
+    0.0 => end2LeadProbs[i];
+    0.0 => end2LeadDurs[i];
+    0.0 => end2BassProbs[i];
+    0.0 => end2BassDurs[i];
+}
+
+// Bars 1 & 2: half-note cadence on steps 0, 8, 16, 24
+1.0 => end2RollProbs[0];  8.0 => end2RollDurs[0];
+1.0 => end2RollProbs[8];  8.0 => end2RollDurs[8];
+1.0 => end2RollProbs[16]; 8.0 => end2RollDurs[16];
+1.0 => end2RollProbs[24]; 8.0 => end2RollDurs[24];
+
+1.0 => end2LeadProbs[0];  8.0 => end2LeadDurs[0];
+1.0 => end2LeadProbs[8];  8.0 => end2LeadDurs[8];
+1.0 => end2LeadProbs[16]; 8.0 => end2LeadDurs[16];
+1.0 => end2LeadProbs[24]; 8.0 => end2LeadDurs[24];
+
+1.0 => end2BassProbs[0];  8.0 => end2BassDurs[0];
+1.0 => end2BassProbs[8];  8.0 => end2BassDurs[8];
+1.0 => end2BassProbs[16]; 8.0 => end2BassDurs[16];
+1.0 => end2BassProbs[24]; 8.0 => end2BassDurs[24];
+
+// Bars 3-6: four-bar held G major chord (R, 3, 5, 8ve sustained through bar 6)
+1.0 => end2RollProbs[32]; 64.0 => end2RollDurs[32];
+1.0 => end2RollProbs[33]; 63.0 => end2RollDurs[33];
+1.0 => end2RollProbs[34]; 62.0 => end2RollDurs[34];
+1.0 => end2RollProbs[35]; 61.0 => end2RollDurs[35];
+
+// Leads & fiddle sustain harmonic triad tones for the full 4 bars
+1.0 => end2LeadProbs[32]; 64.0 => end2LeadDurs[32];
+1.0 => end2LeadProbs[33]; 63.0 => end2LeadDurs[33];
+1.0 => end2LeadProbs[34]; 62.0 => end2LeadDurs[34];
+
+// Bass holds low G root for the full 4 bars
+1.0 => end2BassProbs[32]; 64.0 => end2BassDurs[32];
+
+// Melody index pools for Ending 2:
+// First 4 notes are for bars 1-2; remaining notes are the held G major triad (0=G, 1=B, 2=D, 3=G)
+[0, 2, 0, 1, 0, 1, 2, 3] @=> int end2ChordMel[];
+[2, 1, 2, 1, 0, 1, 2]    @=> int end2GtrMel[];
+[6, 5, 6, 4, 5, 6, 7]    @=> int end2HiTriadMel[];
+[0, 2, 0, 2, 0]          @=> int end2BassMel[];
+
+[52, 44, 50, 42] @=> int end2SoftVel[];
+[56, 48, 52, 46] @=> int end2LeadVel[];
+[64, 54, 60, 52] @=> int end2BassVel[];
+
+mkMel(guitarRhythmDev, end2Mid, end2ChordMel,   end2RollProbs, end2RollDurs, end2SoftVel) @=> ChordProgression end2GtrRhythm;
+mkMel(guitarLeadDev,   end2Mid, end2GtrMel,     end2LeadProbs, end2LeadDurs, end2LeadVel) @=> ChordProgression end2GtrLead;
+mkMel(mandolinLeadDev, end2Hi,  end2HiTriadMel, end2LeadProbs, end2LeadDurs, end2SoftVel) @=> ChordProgression end2Mando;
+mkMel(fiddleLeadDev,   end2Hi,  end2HiTriadMel, end2LeadProbs, end2LeadDurs, end2LeadVel) @=> ChordProgression end2FidLead;
+mkMel(fiddleBowDev,    end2Mid, end2ChordMel,   end2RollProbs, end2RollDurs, end2SoftVel) @=> ChordProgression end2FidBow;
+mkMel(bassDev,         end2Lo,  end2BassMel,    end2BassProbs, end2BassDurs, end2BassVel) @=> ChordProgression end2Bass;
+
+[end2Bass, end2GtrRhythm, end2GtrLead, end2Mando, end2FidLead, end2FidBow] @=> Part ending2Parts[];
+Fragment fEnding2("Ending 2", 1, ending2Parts);
+
+// ------------------------------------------------------------
+// SILENCE: 4 bars of silence (0.0 probability) to mark the end
 // of the song, like in bq03.ck
 // ------------------------------------------------------------
 ["0.0"] @=> string silenceProbs[];
-voicings([0, 0], [Q_maj, Q_maj], 0, false) @=> Chord silenceChords[];
-[0, 0] @=> int silenceOffsets[];
+voicings([0, 0, 0, 0], [Q_maj, Q_maj, Q_maj, Q_maj], 0, false) @=> Chord silenceChords[];
+[0, 0, 0, 0] @=> int silenceOffsets[];
 [0] @=> int silenceVel[];
 
 fun ChordProgression mkSilentPart(Patch p)
 {
-    ChordProgression cp(p, silenceChords, silenceOffsets, true, 4, 2, silenceProbs);
+    ChordProgression cp(p, silenceChords, silenceOffsets, true, 4, 4, silenceProbs);
     false => cp.random;
     0.0 => cp.mutateProbabilityRange;
     silenceVel @=> cp.velocities;
@@ -419,7 +560,7 @@ mkSilentPart(bassDev)         @=> ChordProgression silBass;
 
 [0, 0, 0, 0, 0, 0, 0, 0] @=> int silDrumNotes[];
 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float silDrumProbs[];
-mkDrums(silDrumNotes, silDrumProbs, silenceVel, 2) @=> DrumMachine silDrums;
+mkDrums(silDrumNotes, silDrumProbs, silenceVel, 4) @=> DrumMachine silDrums;
 
 [silGtrLead, silGtrRhythm, silMandoLead, silMandoChop,
  silFidLead, silFidBow, silBass, silDrums] @=> Part silenceParts[];
@@ -427,13 +568,16 @@ Fragment fSilence("Silence", 1, silenceParts);
 
 // ------------------------------------------------------------
 // Random transition graph (fanya01.ck style, staged for delayed
-// drums and ending on Silence)
+// drums and routing through Ending 1 -> Ending 2 -> Silence)
 //
 // - Group 0 (A, acoustic): siblings in A or forward to B (also acoustic)
 // - Group 1 (B, acoustic): siblings in B or forward into drum groups C, D
 // - Groups 2 & 3 (C, D, with drums): siblings or neighbouring drum groups C, D, E
-// - Group 4 (E, with drums): siblings, drum neighbours C & D, or Silence
-// - Silence: end of song (0.0 probability transition, like bq03.ck)
+// - Group 4 (E, with drums): siblings, drum neighbours C & D, or Ending 1
+//   (never transitions directly to Ending 2 or Silence)
+// - Ending 1 -> Ending 2 (100%)
+// - Ending 2 -> Silence  (100%)
+// - Silence  -> end of song (0.0 probability transition, like bq03.ck)
 // ------------------------------------------------------------
 fun void link(Fragment from, Fragment tos[], float w[])
 {
@@ -455,17 +599,17 @@ fun void link(Fragment from, Fragment tos[], float w[])
 //   B (1) -> [2, 3]    (crosses into drum-backed sections C and D)
 //   C (2) -> [3, 4]    (stays in drum-backed sections)
 //   D (3) -> [4, 2]    (stays in drum-backed sections)
-//   E (4) -> [2, 3]    (plus Silence to end the song)
+//   E (4) -> [2, 3]    (plus Ending 1 to begin the ending sequence)
 [[1], [2, 3], [3, 4], [4, 2], [2, 3]] @=> int neighbours[][];
 
 for (0 => int g; g < NUM_GROUPS; g++)
 {
     neighbours[g].cap() => int numNeigh;
-    (g == 4 ? 1 : 0) => int hasSilence;
+    (g == 4 ? 1 : 0) => int hasEnding;
     for (0 => int v; v < NUM_VARIANTS; v++)
     {
         g * NUM_VARIANTS + v => int idx;
-        (NUM_VARIANTS - 1) + numNeigh * NUM_VARIANTS + hasSilence => int totalEdges;
+        (NUM_VARIANTS - 1) + numNeigh * NUM_VARIANTS + hasEnding => int totalEdges;
         Fragment @ tos[totalEdges];
         float w[totalEdges];
         0 => int k;
@@ -477,16 +621,16 @@ for (0 => int g; g < NUM_GROUPS; g++)
             Math.random2f(1.5, 3.5) => w[k];
             k++;
         }
-        else if (hasSilence)
+        else if (hasEnding)
         {
-            fSilence @=> tos[k];
+            fEnding1 @=> tos[k];
             Math.random2f(2.5, 4.5) => w[k];
             k++;
         }
 
         // Neighbouring progressions (put first when at the last variant of A..D
-        // so golden mode steps cleanly A -> B -> C -> D -> E -> Silence)
-        if (v == NUM_VARIANTS - 1 && !hasSilence)
+        // so golden mode steps cleanly A -> B -> C -> D -> E -> Ending 1)
+        if (v == NUM_VARIANTS - 1 && !hasEnding)
         {
             for (0 => int ni; ni < numNeigh; ni++)
             {
@@ -510,7 +654,7 @@ for (0 => int g; g < NUM_GROUPS; g++)
         }
 
         // Neighbouring progressions (for all other cases)
-        if (v < NUM_VARIANTS - 1 || hasSilence)
+        if (v < NUM_VARIANTS - 1 || hasEnding)
         {
             for (0 => int ni; ni < numNeigh; ni++)
             {
@@ -524,10 +668,10 @@ for (0 => int g; g < NUM_GROUPS; g++)
             }
         }
 
-        // Group E non-last variants can also transition to Silence
-        if (hasSilence && v < NUM_VARIANTS - 1)
+        // Group E non-last variants can also transition only to Ending 1
+        if (hasEnding && v < NUM_VARIANTS - 1)
         {
-            fSilence @=> tos[k];
+            fEnding1 @=> tos[k];
             Math.random2f(1.8, 3.5) => w[k];
             k++;
         }
@@ -536,7 +680,13 @@ for (0 => int g; g < NUM_GROUPS; g++)
     }
 }
 
-// Silence -> end (0.0 probability, like bq03.ck)
+// Ending 1 -> Ending 2 -> Silence -> end (0.0 probability, like bq03.ck)
+FragmentTransition ft_toEnding2(fEnding2, 1.0);
+[ft_toEnding2] @=> fEnding1.nextFragments;
+
+FragmentTransition ft_toSilence(fSilence, 1.0);
+[ft_toSilence] @=> fEnding2.nextFragments;
+
 FragmentTransition ft_end(frags[0], 0.0);
 [ft_end] @=> fSilence.nextFragments;
 

@@ -46,6 +46,7 @@ public class Song
     // All the Fragments. A song can have Parts or Fragments, but not both
     Fragment @ startFragment;
     Fragment @ currentFragment;
+    Fragment @ queuedFragment;
 
     int forever;
 
@@ -75,6 +76,7 @@ public class Song
         allParts @=> parts;
         startFrag @=> startFragment;
         startFrag @=> currentFragment;
+        null @=> queuedFragment;
         false => debug;
         false => shuttingDown;
         false => golden;
@@ -241,6 +243,7 @@ public class Song
 
     fun void restart() {
         1 => restartRequested;
+        null @=> queuedFragment;
         if (startFragment != null) {
             startFragment @=> currentFragment;
             1 => startFragment.currentRepeat;
@@ -250,6 +253,42 @@ public class Song
             if (shreds[i] != null) shreds[i].exit(); 
         }
         resumeEvent.broadcast();
+    }
+
+    fun Fragment findFragmentByName(string fragName)
+    {
+        if (startFragment == null || fragName == "") return null;
+        Fragment @ queue[0];
+        int seen[0];
+        queue << startFragment;
+        1 => seen[startFragment.name];
+        0 => int qi;
+        while (qi < queue.size()) {
+            queue[qi] @=> Fragment f;
+            qi++;
+            if (f.name == fragName) {
+                return f;
+            }
+            if (f.nextFragments != null) {
+                for (FragmentTransition t : f.nextFragments) {
+                    if (t == null || t.nextFragment == null) { continue; }
+                    if (!seen.isInMap(t.nextFragment.name)) {
+                        1 => seen[t.nextFragment.name];
+                        queue << t.nextFragment;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    fun void queueFragmentByName(string fragName)
+    {
+        if (fragName == "" || (queuedFragment != null && queuedFragment.name == fragName)) {
+            null @=> queuedFragment;
+        } else {
+            findFragmentByName(fragName) @=> queuedFragment;
+        }
     }
 
     fun void loadSongConfig()
@@ -701,6 +740,7 @@ public class Song
         recv.event("/cadenza/play, i") @=> OscEvent playEvent;
         recv.event("/cadenza/pause, i") @=> OscEvent pauseOscEvent;
         recv.event("/cadenza/restart, i") @=> OscEvent restartEvent;
+        recv.event("/cadenza/nextFragment, s") @=> OscEvent nextFragEvent;
 
         spork ~ handleOscDevice(devEvent);
         spork ~ handleOscGolden(goldenEvent);
@@ -721,6 +761,7 @@ public class Song
         spork ~ handleOscPlay(playEvent);
         spork ~ handleOscPause(pauseOscEvent);
         spork ~ handleOscRestart(restartEvent);
+        spork ~ handleOscNextFragment(nextFragEvent);
 
         // Keep this shred alive
         while (true) { 1::second => now; }
@@ -763,6 +804,17 @@ public class Song
         while (true) {
             e => now;
             while (e.nextMsg()) { restart(); }
+        }
+    }
+
+    fun handleOscNextFragment(OscEvent e) {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getString() => string fragName;
+                queueFragmentByName(fragName);
+                if (launchControl != null) launchControl.printDevices();
+            }
         }
     }
 
@@ -1334,6 +1386,17 @@ public class Fragment
         return nextFragments[0].nextFragment;
     }
 
+    fun Fragment resolveNextFragment(Song song)
+    {
+        if (song != null && song.queuedFragment != null) {
+            song.queuedFragment @=> Fragment next;
+            null @=> song.queuedFragment;
+            notifyTransition(next);
+            return next;
+        }
+        return getNextSongFragment();
+    }
+
     fun Fragment play(Song song)
     {
         for(0 => int i; i < repeatCount; i++) {
@@ -1343,7 +1406,7 @@ public class Fragment
             song.playPartOnce();
             if (song.restartRequested) return null;
         }
-        getNextSongFragment() @=> Fragment next;
+        resolveNextFragment(song) @=> Fragment next;
         <<< "Next Fragment:", next.name >>>;
         return next;
     }
@@ -1748,9 +1811,14 @@ public class LaunchControl
         }
 
         // Build JSON string
+        "" => string nextFragName;
+        if (song.queuedFragment != null) {
+            song.queuedFragment.name => nextFragName;
+        }
         "{" => string j;
-        j + "\"songName\":\""     + escJson(song.name)                   + "\"," => j;
-        j + "\"fragmentName\":\"" + escJson(song.currentFragment.name)   + "\"," => j;
+        j + "\"songName\":\""         + escJson(song.name)                   + "\"," => j;
+        j + "\"fragmentName\":\""     + escJson(song.currentFragment.name)   + "\"," => j;
+        j + "\"nextFragmentName\":\"" + escJson(nextFragName)                + "\"," => j;
         j + "\"bpm\":"            + song.BPM                             + ","   => j;
         j + "\"muteMode\":"       + song.muteMode                        + ","   => j;
         j + "\"soloMode\":"       + song.soloMode                        + ","   => j;
