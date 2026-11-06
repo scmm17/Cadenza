@@ -71,5 +71,23 @@ public class FragmentTransitionsTests {
 
         f1.resolveNextFragment(song) @=> Fragment nextNormal;
         Assert.equalString("testQueuedFragment_resumesNormalTransitions", nextNormal.name, "Frag2");
+
+        // testLoopFragment_repeatsUntilToggledOff
+        song.loopFragmentByName("Frag4");
+        Assert.isTrue("testLoopFragment_setByName", song.loopFragment == f4);
+
+        f1.resolveNextFragment(song) @=> Fragment nextLoop1;
+        Assert.equalString("testLoopFragment_firstIteration", nextLoop1.name, "Frag4");
+        Assert.isTrue("testLoopFragment_persistsAfterUse", song.loopFragment == f4);
+
+        f4.resolveNextFragment(song) @=> Fragment nextLoop2;
+        Assert.equalString("testLoopFragment_secondIteration", nextLoop2.name, "Frag4");
+
+        // Toggling the same fragment again clears loopFragment
+        song.loopFragmentByName("Frag4");
+        Assert.isTrue("testLoopFragment_toggledOff", song.loopFragment == null);
+
+        f1.resolveNextFragment(song) @=> Fragment nextAfterLoop;
+        Assert.equalString("testLoopFragment_resumesNormalAfterToggleOff", nextAfterLoop.name, "Frag2");
     }
 }

@@ -47,6 +47,7 @@ public class Song
     Fragment @ startFragment;
     Fragment @ currentFragment;
     Fragment @ queuedFragment;
+    Fragment @ loopFragment;
 
     int forever;
 
@@ -77,6 +78,7 @@ public class Song
         startFrag @=> startFragment;
         startFrag @=> currentFragment;
         null @=> queuedFragment;
+        null @=> loopFragment;
         false => debug;
         false => shuttingDown;
         false => golden;
@@ -244,6 +246,7 @@ public class Song
     fun void restart() {
         1 => restartRequested;
         null @=> queuedFragment;
+        null @=> loopFragment;
         if (startFragment != null) {
             startFragment @=> currentFragment;
             1 => startFragment.currentRepeat;
@@ -288,6 +291,18 @@ public class Song
             null @=> queuedFragment;
         } else {
             findFragmentByName(fragName) @=> queuedFragment;
+        }
+    }
+
+    fun void loopFragmentByName(string fragName)
+    {
+        if (fragName == "" || (loopFragment != null && loopFragment.name == fragName)) {
+            null @=> loopFragment;
+        } else {
+            findFragmentByName(fragName) @=> loopFragment;
+            if (loopFragment != null) {
+                null @=> queuedFragment;
+            }
         }
     }
 
@@ -741,6 +756,7 @@ public class Song
         recv.event("/cadenza/pause, i") @=> OscEvent pauseOscEvent;
         recv.event("/cadenza/restart, i") @=> OscEvent restartEvent;
         recv.event("/cadenza/nextFragment, s") @=> OscEvent nextFragEvent;
+        recv.event("/cadenza/loopFragment, s") @=> OscEvent loopFragEvent;
 
         spork ~ handleOscDevice(devEvent);
         spork ~ handleOscGolden(goldenEvent);
@@ -762,6 +778,7 @@ public class Song
         spork ~ handleOscPause(pauseOscEvent);
         spork ~ handleOscRestart(restartEvent);
         spork ~ handleOscNextFragment(nextFragEvent);
+        spork ~ handleOscLoopFragment(loopFragEvent);
 
         // Keep this shred alive
         while (true) { 1::second => now; }
@@ -813,6 +830,17 @@ public class Song
             while (e.nextMsg()) {
                 e.getString() => string fragName;
                 queueFragmentByName(fragName);
+                if (launchControl != null) launchControl.printDevices();
+            }
+        }
+    }
+
+    fun handleOscLoopFragment(OscEvent e) {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getString() => string fragName;
+                loopFragmentByName(fragName);
                 if (launchControl != null) launchControl.printDevices();
             }
         }
@@ -1394,6 +1422,10 @@ public class Fragment
             notifyTransition(next);
             return next;
         }
+        if (song != null && song.loopFragment != null) {
+            notifyTransition(song.loopFragment);
+            return song.loopFragment;
+        }
         return getNextSongFragment();
     }
 
@@ -1815,10 +1847,15 @@ public class LaunchControl
         if (song.queuedFragment != null) {
             song.queuedFragment.name => nextFragName;
         }
+        "" => string loopFragName;
+        if (song.loopFragment != null) {
+            song.loopFragment.name => loopFragName;
+        }
         "{" => string j;
         j + "\"songName\":\""         + escJson(song.name)                   + "\"," => j;
         j + "\"fragmentName\":\""     + escJson(song.currentFragment.name)   + "\"," => j;
         j + "\"nextFragmentName\":\"" + escJson(nextFragName)                + "\"," => j;
+        j + "\"loopFragmentName\":\"" + escJson(loopFragName)                + "\"," => j;
         j + "\"bpm\":"            + song.BPM                             + ","   => j;
         j + "\"muteMode\":"       + song.muteMode                        + ","   => j;
         j + "\"soloMode\":"       + song.soloMode                        + ","   => j;

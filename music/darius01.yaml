@@ -55,27 +55,27 @@ song:
     V3-4:
       deviceName: "U2MIDI Pro"
       midiChannel: 4
-      patchName: "Celtic fiddle"
+      patchName: "Disco Strings Slide velo. 116-127 Slide"
       uiName: "V3"
       muted: 0
       volume: 100
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 26
+      program: 19
       bank: 4
       programChange: 1
     V3-5:
       deviceName: "U2MIDI Pro"
       midiChannel: 5
-      patchName: "Celtic fiddle (softer attack)"
+      patchName: "Disco Strings Slide velo. 116-127 Slide"
       uiName: "V3"
       muted: 0
       volume: 111
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 27
+      program: 19
       bank: 4
       programChange: 1
     V3-6:
