@@ -123,6 +123,7 @@ public class Song
                 if (patch.deviceName == devices[j].deviceName &&
                     patch.midiChannel == devices[j].midiChannel) 
                     {
+                        devices[j] @=> part.patch;
                         (j + 1) => patch.devIndex;
                         break;
                     }
@@ -131,6 +132,14 @@ public class Song
         for(0 => int i; i < devices.cap(); i++) {
             if (devices[i] != null) {
                 (i + 1) => devices[i].devIndex;
+                if (devices[i].uiName == "V3") {
+                    presets.setPresetState(devices[i].patchName);
+                } else if (devices[i].uiName == "Hydrasynth") {
+                    hydraPresets.setPresetState(devices[i].patchName);
+                } else if (devices[i].uiName == "SH-4d") {
+                    devices[i] $ RolandSH4d @=> RolandSH4d @ sh;
+                    sh4dPresets.setPresetState(sh.patchName, sh.toneBank, sh.toneProgram);
+                }
             }
         }
     }
@@ -149,6 +158,8 @@ public class Song
         } else {
             f.close();
             new YamlNode("song") @=> config;
+            YamlNode emptyRoot[0];
+            config.SetMap(emptyRoot);
             saveSongConfig();
             saveDeviceConfigs();
             config.WriteFile(configFile);
@@ -163,13 +174,190 @@ public class Song
         config.WriteFile(configFile);
     }
 
+    fun Patch createEmptyPatchForSynth(string synthUiName)
+    {
+        if (synthUiName == "V3") {
+            return new V3GrandPiano();
+        } else if (synthUiName == "Hydrasynth") {
+            return new Hydrasynth();
+        } else if (synthUiName == "SH-4d") {
+            return new RolandSH4d();
+        } else if (synthUiName == "S-1") {
+            return new RolandS1();
+        } else if (synthUiName == "Moog") {
+            return new MoogMessenger();
+        } else if (synthUiName == "RD-6") {
+            return new BehringerRD6();
+        }
+        return null;
+    }
+
+    fun Patch createDefaultPatchForSynth(string synthUiName, int midiChan, int vol)
+    {
+        midiChan + 1 => int ch1Based;
+        if (ch1Based < 1) { 1 => ch1Based; }
+        if (ch1Based > 16) { 16 => ch1Based; }
+        if (synthUiName == "V3") {
+            return new V3GrandPiano(ch1Based, "Grand Piano Vienna", vol);
+        } else if (synthUiName == "Hydrasynth") {
+            return new Hydrasynth(ch1Based, "A001", vol);
+        } else if (synthUiName == "SH-4d") {
+            return new RolandSH4d(ch1Based, vol);
+        } else if (synthUiName == "S-1") {
+            return new RolandS1(ch1Based, 1, 1, vol);
+        } else if (synthUiName == "Moog") {
+            return new MoogMessenger(ch1Based, 1, 1, vol);
+        } else if (synthUiName == "RD-6") {
+            return new BehringerRD6(ch1Based, vol);
+        }
+        return null;
+    }
+
+    fun void replaceDevice(int idx, Patch @ newPatch)
+    {
+        if (idx < 0 || idx >= devices.cap() || newPatch == null) return;
+        devices[idx] @=> Patch @ oldPatch;
+        (idx + 1) => newPatch.devIndex;
+        newPatch @=> devices[idx];
+
+        if (currentDevice == oldPatch) {
+            newPatch @=> currentDevice;
+            if (hydraEvents != null) {
+                newPatch.midiChannel => hydraEvents.outputChannel;
+            }
+        }
+        if (soloPatch == oldPatch) {
+            newPatch @=> soloPatch;
+        }
+        if (mutedPatches != null) {
+            for (0 => int m; m < mutedPatches.cap(); m++) {
+                if (mutedPatches[m] == oldPatch) {
+                    newPatch @=> mutedPatches[m];
+                }
+            }
+        }
+        if (parts != null) {
+            for (Part part : parts) {
+                if (part != null && (part.patch == oldPatch || (part.patch != null && part.patch.devIndex == idx + 1))) {
+                    newPatch @=> part.patch;
+                }
+            }
+        }
+        if (currentParts != null) {
+            for (Part part : currentParts) {
+                if (part != null && (part.patch == oldPatch || (part.patch != null && part.patch.devIndex == idx + 1))) {
+                    newPatch @=> part.patch;
+                }
+            }
+        }
+        if (startFragment != null) {
+            Fragment @ queue[0];
+            int seen[0];
+            queue << startFragment;
+            1 => seen[startFragment.name];
+            0 => int qi;
+            while (qi < queue.size()) {
+                queue[qi] @=> Fragment f;
+                qi++;
+                if (f.parts != null) {
+                    for (Part part : f.parts) {
+                        if (part != null && (part.patch == oldPatch || (part.patch != null && part.patch.devIndex == idx + 1))) {
+                            newPatch @=> part.patch;
+                        }
+                    }
+                }
+                if (f.nextFragments != null) {
+                    for (FragmentTransition t : f.nextFragments) {
+                        if (t == null || t.nextFragment == null) { continue; }
+                        if (!seen.isInMap(t.nextFragment.name)) {
+                            1 => seen[t.nextFragment.name];
+                            queue << t.nextFragment;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun void setDeviceSynth(int devIdx, string synthUiName)
+    {
+        devIdx - 1 => int idx;
+        if (idx < 0 || idx >= devices.cap() || devices[idx] == null) return;
+        devices[idx] @=> Patch @ oldPatch;
+        if (oldPatch.uiName == synthUiName) {
+            oldPatch @=> currentDevice;
+            if (hydraEvents != null) {
+                oldPatch.midiChannel => hydraEvents.outputChannel;
+            }
+            if (launchControl != null) launchControl.printDevices();
+            return;
+        }
+        oldPatch.sendAllNotesOff();
+        createDefaultPatchForSynth(synthUiName, oldPatch.midiChannel, oldPatch.volume) @=> Patch @ newPatch;
+        if (newPatch == null) return;
+        oldPatch.midiChannel => newPatch.midiChannel;
+        oldPatch.volume => newPatch.volume;
+        oldPatch.filterCutoff => newPatch.filterCutoff;
+        oldPatch.filterResonance => newPatch.filterResonance;
+        oldPatch.pan => newPatch.pan;
+        oldPatch.userMuted => newPatch.userMuted;
+        oldPatch.muted => newPatch.muted;
+        replaceDevice(idx, newPatch);
+        newPatch @=> currentDevice;
+        if (hydraEvents != null) {
+            newPatch.midiChannel => hydraEvents.outputChannel;
+        }
+        if (newPatch.uiName == "V3") {
+            presets.setPresetState(newPatch.patchName);
+        } else if (newPatch.uiName == "Hydrasynth") {
+            hydraPresets.setPresetState(newPatch.patchName);
+        } else if (newPatch.uiName == "SH-4d") {
+            newPatch $ RolandSH4d @=> RolandSH4d @ sh;
+            sh4dPresets.setPresetState(sh.patchName, sh.toneBank, sh.toneProgram);
+        }
+        newPatch.updateControllers();
+        if (launchControl != null) launchControl.printDevices();
+    }
+
+    fun void setDeviceChannel(int devIdx, int channel)
+    {
+        devIdx - 1 => int idx;
+        if (idx < 0 || idx >= devices.cap() || devices[idx] == null) return;
+        if (channel < 1) { 1 => channel; }
+        if (channel > 16) { 16 => channel; }
+        channel - 1 => int newMidiChannel;
+        devices[idx] @=> Patch @ p;
+        p.sendAllNotesOff();
+        newMidiChannel => p.midiChannel;
+        if (p.uiName == "SH-4d") {
+            p $ RolandSH4d @=> RolandSH4d @ sh;
+            if (sh.presetType == "channel" && p.patchName.find("Channel ") == 0) {
+                "Channel " + Std.itoa(channel) => p.patchName;
+            }
+        }
+        p @=> currentDevice;
+        if (hydraEvents != null) {
+            p.midiChannel => hydraEvents.outputChannel;
+        }
+        p.updateControllers();
+        if (launchControl != null) launchControl.printDevices();
+    }
+
     fun void saveDeviceConfigs()
     {
         config.SetMap("devices") @=> YamlNode deviceSettings;
-        for(Patch p : devices) {
+        YamlNode empty[0];
+        deviceSettings.SetMap(empty);
+        for (0 => int i; i < devices.cap(); i++) {
+            devices[i] @=> Patch p;
             if (p != null) {
                 p.uiName + "-" + Std.itoa(p.midiChannel) => string propName;
+                if (deviceSettings.findChild(propName) >= 0) {
+                    propName + "-dev" + Std.itoa(i + 1) => propName;
+                }
                 deviceSettings.SetMap(propName) @=> YamlNode patchConfig;
+                YamlNode emptyPatch[0];
+                patchConfig.SetMap(emptyPatch);
                 p.saveConfig(patchConfig);
             }
         }
@@ -179,17 +367,69 @@ public class Song
     {
         config.GetMap("devices") @=> YamlNode deviceSettings;
         if (deviceSettings != null) {
-            for(Patch p : devices) {
-                if (p != null) {    
-                    p.uiName + "-" + Std.itoa(p.midiChannel) => string propName;
-                    deviceSettings.GetMap(propName) @=> YamlNode @ patchConfig;
-                    if (patchConfig != null) {
-                        p.loadConfig(patchConfig);
+            0 => int numDevices;
+            for (0 => int i; i < devices.cap(); i++) {
+                if (devices[i] != null) {
+                    numDevices++;
+                }
+            }
+            deviceSettings.arrayValue.cap() => int numSaved;
+            int claimed[numSaved];
+            for (0 => int k; k < numSaved; k++) { 0 => claimed[k]; }
+
+            for (0 => int i; i < devices.cap(); i++) {
+                devices[i] @=> Patch p;
+                if (p != null) {
+                    null @=> YamlNode @ patchConfig;
+                    if (numSaved == numDevices && i < numSaved) {
+                        deviceSettings.arrayValue[i] @=> patchConfig;
+                        1 => claimed[i];
                     } else {
+                        p.uiName + "-" + Std.itoa(p.midiChannel) => string propName;
+                        deviceSettings.findChild(propName) => int childIdx;
+                        if (childIdx >= 0 && !claimed[childIdx]) {
+                            deviceSettings.arrayValue[childIdx] @=> patchConfig;
+                            1 => claimed[childIdx];
+                        } else if (i < numSaved && !claimed[i]) {
+                            deviceSettings.arrayValue[i] @=> patchConfig;
+                            1 => claimed[i];
+                        }
+                    }
+                    if (patchConfig != null) {
+                        "" => string targetUiName;
+                        if (patchConfig.findChild("uiName") >= 0) {
+                            patchConfig.GetString("uiName") => targetUiName;
+                        }
+                        if (targetUiName != "" && targetUiName != p.uiName) {
+                            createEmptyPatchForSynth(targetUiName) @=> Patch @ newPatch;
+                            if (newPatch != null) {
+                                replaceDevice(i, newPatch);
+                                newPatch @=> p;
+                            }
+                        }
+                        p.loadConfig(patchConfig);
+                        if (currentDevice == p && hydraEvents != null) {
+                            p.midiChannel => hydraEvents.outputChannel;
+                        }
+                    } else {
+                        p.uiName + "-" + Std.itoa(p.midiChannel) => string propName;
                         <<< "Warning: Config for patch ", propName, " not found in YAML." >>>;
                     }
                     if (p.uiName == "V3") {
                         presets.setPresetState(p.patchName);
+                    } else if (p.uiName == "Hydrasynth") {
+                        hydraPresets.setPresetState(p.patchName);
+                    } else if (p.uiName == "SH-4d") {
+                        p $ RolandSH4d @=> RolandSH4d @ sh;
+                        sh4dPresets.setPresetState(sh.patchName, sh.toneBank, sh.toneProgram);
+                    }
+                }
+            }
+            for(Patch p : devices) {
+                if (p != null && p.uiName == "SH-4d") {
+                    p $ RolandSH4d @=> RolandSH4d @ sh;
+                    if (sh.presetType == "tone" && sh.toneBank >= 0 && sh.toneProgram >= 0) {
+                        sh.programChangeSH4dChannel(sh.toneProgram, sh.toneBank);
                     }
                 }
             }
@@ -315,48 +555,153 @@ public class Song
     }
 
     V3PresetCollection presets;
+    HydraPresetCollection hydraPresets;
+    SH4dPresetCollection sh4dPresets;
 
     fun string getPresetDeclaration(V3Preset preset)
     {
-        return "V3GrandPiano instrument(" + Std.itoa(hydraEvents.outputChannel+1) + ", \"" + preset.name + "\");";
+        return "V3GrandPiano instrument(" + Std.itoa(currentDevice.midiChannel+1) + ", \"" + preset.name + "\");";
+    }
+
+    fun string getHydraPresetDeclaration(HydraPreset preset)
+    {
+        return "Hydrasynth hydrasynth(\"" + preset.name + "\", " + Std.itoa(currentDevice.volume) + ");";
+    }
+
+    fun string getSH4dPresetDeclaration(SH4dPreset preset)
+    {
+        return "RolandSH4d sh4d(" + Std.itoa(currentDevice.midiChannel+1) + ", \"" + preset.name + "\", " + Std.itoa(currentDevice.volume) + ");";
     }
 
     fun void applyPreset(V3Preset preset, int volume)
     {
-        V3GrandPiano v3(hydraEvents.outputChannel+1, volume);
-        v3.programChangeV3GrandPiano(preset.program, preset.bank);
+        currentDevice.programChangeV3GrandPiano(preset.program, preset.bank);
+        if (volume != -1) {
+            currentDevice.sendControllerChange(7, volume);
+        }
         preset.name => currentDevice.patchName;
         preset.program => currentDevice.program;
         preset.bank => currentDevice.bank;
+        if (currentDevice.uiName == "V3") {
+            currentDevice $ V3GrandPiano @=> V3GrandPiano @ v3;
+            true => v3.programChange;
+        }
         <<< getPresetDeclaration(preset), "" >>>;
+    }
+
+    fun void applyHydraPreset(HydraPreset preset, int volume)
+    {
+        currentDevice.programChangeHydra(preset.program, preset.bank);
+        if (volume != -1) {
+            currentDevice.sendControllerChange(7, volume);
+        }
+        preset.name => currentDevice.patchName;
+        preset.program => currentDevice.program;
+        preset.bank => currentDevice.bank;
+        if (currentDevice.uiName == "Hydrasynth") {
+            currentDevice $ Hydrasynth @=> Hydrasynth @ h;
+            preset.code => h.presetName;
+        }
+        <<< getHydraPresetDeclaration(preset), "" >>>;
+    }
+
+    fun void applySH4dPreset(SH4dPreset preset, int volume)
+    {
+        currentDevice.programChangeSH4dChannel(preset.program, preset.bank);
+        if (volume != -1) {
+            currentDevice.sendControllerChange(7, volume);
+        }
+        preset.name => currentDevice.patchName;
+        if (currentDevice.uiName == "SH-4d") {
+            currentDevice $ RolandSH4d @=> RolandSH4d @ sh;
+            preset.program => sh.toneProgram;
+            preset.bank => sh.toneBank;
+            "tone" => sh.presetType;
+        }
+        <<< getSH4dPresetDeclaration(preset), "" >>>;
     }
 
     fun setNextPreset(int volume) 
     {
-        if (currentDevice.uiName != "V3") { return; }
-        applyPreset(presets.getNextPreset(), volume);
+        if (currentDevice.uiName == "V3") {
+            applyPreset(presets.getNextPreset(), volume);
+        } else if (currentDevice.uiName == "Hydrasynth") {
+            applyHydraPreset(hydraPresets.getNextPreset(), volume);
+        } else if (currentDevice.uiName == "SH-4d") {
+            applySH4dPreset(sh4dPresets.getNextPreset(), volume);
+        }
     }
 
     fun setNextPresetCategory(int volume) 
     {
-        if (currentDevice.uiName != "V3") { return; }
-        presets.getNextCategory() @=> V3Preset preset;
-        <<< "Category:", preset.category >>>;
-        applyPreset(preset, volume);
+        if (currentDevice.uiName == "V3") {
+            presets.getNextCategory() @=> V3Preset preset;
+            <<< "Category:", preset.category >>>;
+            applyPreset(preset, volume);
+        } else if (currentDevice.uiName == "Hydrasynth") {
+            hydraPresets.getNextCategory() @=> HydraPreset preset;
+            <<< "Category:", preset.category >>>;
+            applyHydraPreset(preset, volume);
+        } else if (currentDevice.uiName == "SH-4d") {
+            sh4dPresets.getNextCategory() @=> SH4dPreset preset;
+            <<< "Category:", preset.category >>>;
+            applySH4dPreset(preset, volume);
+        }
     }
 
     fun setPreviousPreset(int volume) 
     {
-        if (currentDevice.uiName != "V3") { return; }
-        applyPreset(presets.getPreviousPreset(), volume);
+        if (currentDevice.uiName == "V3") {
+            applyPreset(presets.getPreviousPreset(), volume);
+        } else if (currentDevice.uiName == "Hydrasynth") {
+            applyHydraPreset(hydraPresets.getPreviousPreset(), volume);
+        } else if (currentDevice.uiName == "SH-4d") {
+            applySH4dPreset(sh4dPresets.getPreviousPreset(), volume);
+        }
     }
 
     fun setPreviousPresetCategory(int volume) 
     {
-        if (currentDevice.uiName != "V3") { return; }
-        presets.getPreviousCategory() @=> V3Preset preset;
-        <<< "Category:", preset.category >>>;
-        applyPreset(preset, volume);
+        if (currentDevice.uiName == "V3") {
+            presets.getPreviousCategory() @=> V3Preset preset;
+            <<< "Category:", preset.category >>>;
+            applyPreset(preset, volume);
+        } else if (currentDevice.uiName == "Hydrasynth") {
+            hydraPresets.getPreviousCategory() @=> HydraPreset preset;
+            <<< "Category:", preset.category >>>;
+            applyHydraPreset(preset, volume);
+        } else if (currentDevice.uiName == "SH-4d") {
+            sh4dPresets.getPreviousCategory() @=> SH4dPreset preset;
+            <<< "Category:", preset.category >>>;
+            applySH4dPreset(preset, volume);
+        }
+    }
+
+    fun void setPresetByName(string presetName, int volume)
+    {
+        if (currentDevice.uiName == "V3") {
+            presets.setPresetState(presetName);
+            applyPreset(presets.getPreset(presetName), volume);
+        } else if (currentDevice.uiName == "Hydrasynth") {
+            hydraPresets.setPresetState(presetName);
+            applyHydraPreset(hydraPresets.getPreset(presetName), volume);
+        } else if (currentDevice.uiName == "SH-4d") {
+            if (sh4dPresets.hasPreset(presetName)) {
+                sh4dPresets.setPresetState(presetName);
+                applySH4dPreset(sh4dPresets.getPreset(presetName), volume);
+            } else {
+                currentDevice $ RolandSH4d @=> RolandSH4d @ sh;
+                sh.resolvePreset(presetName);
+                for (Patch p : devices) {
+                    if (p != null && p.uiName == "SH-4d") {
+                        p $ RolandSH4d @=> RolandSH4d @ otherSh;
+                        if (otherSh.programChange) {
+                            otherSh.setPreset();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     Patch @ currentDevice;
@@ -365,8 +710,12 @@ public class Song
     {
         KBHit kb;
 
-        devices[0] @=> currentDevice;
-        devices[0].midiChannel => hydraEvents.outputChannel;
+        if (currentDevice == null && devices[0] != null) {
+            devices[0] @=> currentDevice;
+        }
+        if (currentDevice != null && hydraEvents != null) {
+            currentDevice.midiChannel => hydraEvents.outputChannel;
+        }
         // time-loop
         while( true )
         {
@@ -386,6 +735,14 @@ public class Song
                     if (i >= 0 && i < devices.cap() && devices[i] != null) {
                         devices[i] @=> currentDevice;
                         devices[i].midiChannel => hydraEvents.outputChannel;
+                        if (currentDevice.uiName == "V3") {
+                            presets.setPresetState(currentDevice.patchName);
+                        } else if (currentDevice.uiName == "Hydrasynth") {
+                            hydraPresets.setPresetState(currentDevice.patchName);
+                        } else if (currentDevice.uiName == "SH-4d") {
+                            currentDevice $ RolandSH4d @=> RolandSH4d @ sh;
+                            sh4dPresets.setPresetState(sh.patchName, sh.toneBank, sh.toneProgram);
+                        }
                         launchControl.printDevices();
                     }
                 }
@@ -752,6 +1109,9 @@ public class Song
         recv.event("/cadenza/nextPreset, i")  @=> OscEvent nextPresetEvent;
         recv.event("/cadenza/prevPresetCat, i") @=> OscEvent prevPresetCatEvent;
         recv.event("/cadenza/nextPresetCat, i") @=> OscEvent nextPresetCatEvent;
+        recv.event("/cadenza/setPreset, is") @=> OscEvent setPresetEvent;
+        recv.event("/cadenza/setSynth, is") @=> OscEvent setSynthEvent;
+        recv.event("/cadenza/setChannel, ii") @=> OscEvent setChannelEvent;
         recv.event("/cadenza/play, i") @=> OscEvent playEvent;
         recv.event("/cadenza/pause, i") @=> OscEvent pauseOscEvent;
         recv.event("/cadenza/restart, i") @=> OscEvent restartEvent;
@@ -774,6 +1134,9 @@ public class Song
         spork ~ handleOscNextPreset(nextPresetEvent);
         spork ~ handleOscPrevPresetCat(prevPresetCatEvent);
         spork ~ handleOscNextPresetCat(nextPresetCatEvent);
+        spork ~ handleOscSetPreset(setPresetEvent);
+        spork ~ handleOscSetSynth(setSynthEvent);
+        spork ~ handleOscSetChannel(setChannelEvent);
         spork ~ handleOscPlay(playEvent);
         spork ~ handleOscPause(pauseOscEvent);
         spork ~ handleOscRestart(restartEvent);
@@ -796,6 +1159,11 @@ public class Song
                     devices[idx].midiChannel => hydraEvents.outputChannel;
                     if (currentDevice.uiName == "V3") {
                         presets.setPresetState(currentDevice.patchName);
+                    } else if (currentDevice.uiName == "Hydrasynth") {
+                        hydraPresets.setPresetState(currentDevice.patchName);
+                    } else if (currentDevice.uiName == "SH-4d") {
+                        currentDevice $ RolandSH4d @=> RolandSH4d @ sh;
+                        sh4dPresets.setPresetState(sh.patchName, sh.toneBank, sh.toneProgram);
                     }
                     launchControl.printDevices();
                 }
@@ -829,6 +1197,42 @@ public class Song
             e => now;
             while (e.nextMsg()) {
                 e.getString() => string fragName;
+                if (fragName.find("__cmd__:setSynth:") == 0) {
+                    fragName.substring(17) => string rest;
+                    rest.find(":") => int colonPos;
+                    if (colonPos > 0) {
+                        Std.atoi(rest.substring(0, colonPos)) => int devIdx;
+                        rest.substring(colonPos + 1) => string synthName;
+                        setDeviceSynth(devIdx, synthName);
+                    }
+                    continue;
+                }
+                if (fragName.find("__cmd__:setChannel:") == 0) {
+                    fragName.substring(19) => string rest;
+                    rest.find(":") => int colonPos;
+                    if (colonPos > 0) {
+                        Std.atoi(rest.substring(0, colonPos)) => int devIdx;
+                        Std.atoi(rest.substring(colonPos + 1)) => int ch;
+                        setDeviceChannel(devIdx, ch);
+                    }
+                    continue;
+                }
+                if (fragName.find("__cmd__:setPreset:") == 0) {
+                    fragName.substring(18) => string rest;
+                    rest.find(":") => int colonPos;
+                    if (colonPos > 0) {
+                        Std.atoi(rest.substring(0, colonPos)) => int devIdx;
+                        rest.substring(colonPos + 1) => string presetName;
+                        devIdx - 1 => int idx;
+                        if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
+                            devices[idx] @=> currentDevice;
+                            devices[idx].midiChannel => hydraEvents.outputChannel;
+                            setPresetByName(presetName, currentDevice.volume);
+                            if (launchControl != null) launchControl.printDevices();
+                        }
+                    }
+                    continue;
+                }
                 queueFragmentByName(fragName);
                 if (launchControl != null) launchControl.printDevices();
             }
@@ -1048,6 +1452,56 @@ public class Song
                 e.getInt() => int dummy;
                 setNextPresetCategory(currentDevice.volume);
                 launchControl.printDevices();
+            }
+        }
+    }
+
+    fun handleOscSetPreset(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int devIdx;
+                e.getString() => string presetName;
+                devIdx - 1 => int idx;
+                if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
+                    devices[idx] @=> currentDevice;
+                    devices[idx].midiChannel => hydraEvents.outputChannel;
+                    if (currentDevice.uiName == "V3") {
+                        presets.setPresetState(currentDevice.patchName);
+                    } else if (currentDevice.uiName == "Hydrasynth") {
+                        hydraPresets.setPresetState(currentDevice.patchName);
+                    } else if (currentDevice.uiName == "SH-4d") {
+                        currentDevice $ RolandSH4d @=> RolandSH4d @ sh;
+                        sh4dPresets.setPresetState(sh.patchName, sh.toneBank, sh.toneProgram);
+                    }
+                    setPresetByName(presetName, currentDevice.volume);
+                    launchControl.printDevices();
+                }
+            }
+        }
+    }
+
+    fun handleOscSetSynth(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int devIdx;
+                e.getString() => string synthName;
+                setDeviceSynth(devIdx, synthName);
+            }
+        }
+    }
+
+    fun handleOscSetChannel(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getInt() => int devIdx;
+                e.getInt() => int ch;
+                setDeviceChannel(devIdx, ch);
             }
         }
     }
@@ -1747,6 +2201,14 @@ public class LaunchControl
             if (i >= 0 && i < song.devices.cap() && song.devices[i] != null) {
                 song.devices[i] @=> song.currentDevice;
                 song.devices[i].midiChannel => song.hydraEvents.outputChannel;
+                if (song.currentDevice.uiName == "V3") {
+                    song.presets.setPresetState(song.currentDevice.patchName);
+                } else if (song.currentDevice.uiName == "Hydrasynth") {
+                    song.hydraPresets.setPresetState(song.currentDevice.patchName);
+                } else if (song.currentDevice.uiName == "SH-4d") {
+                    song.currentDevice $ RolandSH4d @=> RolandSH4d @ sh;
+                    song.sh4dPresets.setPresetState(sh.patchName, sh.toneBank, sh.toneProgram);
+                }
                 setActiveSelectionLED(channel, 41, note, 0x3c);
                 song.launchControl.printDevices();
                 return true;
@@ -1870,11 +2332,25 @@ public class LaunchControl
         for (Patch p : song.devices) {
             if (p != null) {
                 if (first) { j + "," => j; }
+                p.bank => int outBank;
+                p.program => int outProgram;
+                if (p.uiName == "SH-4d") {
+                    p $ RolandSH4d @=> RolandSH4d @ sh;
+                    if (sh.presetType == "tone") {
+                        sh.toneBank => outBank;
+                        sh.toneProgram => outProgram;
+                    } else {
+                        -1 => outBank;
+                        -1 => outProgram;
+                    }
+                }
                 j + "{" => j;
                 j + "\"index\":"          + (dNum + 1)                     + "," => j;
                 j + "\"uiName\":\""       + escJson(p.uiName)              + "\"," => j;
                 j + "\"channel\":"        + (p.midiChannel + 1)            + "," => j;
                 j + "\"patchName\":\""    + escJson(p.patchName)           + "\"," => j;
+                j + "\"bank\":"           + outBank                        + "," => j;
+                j + "\"program\":"        + outProgram                     + "," => j;
                 j + "\"volume\":"         + p.volume                       + "," => j;
                 j + "\"filterCutoff\":"   + p.filterCutoff                 + "," => j;
                 j + "\"filterResonance\":" + p.filterResonance             + "," => j;

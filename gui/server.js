@@ -90,6 +90,54 @@ oscServer.on('message', (msg) => {
   }
 });
 
+// ─── Preset Catalog (parsed from framework/patch.ck) ─────────────────────────
+function loadPresetCatalog() {
+  const patchPath = path.join(__dirname, '..', 'framework', 'patch.ck');
+  const v3 = [];
+  const hydrasynth = [];
+  const sh4d = [];
+  try {
+    const content = fs.readFileSync(patchPath, 'utf8');
+    const v3Regex = /new\s+V3Preset\(\s*(\d+)\s*,\s*(\d+)\s*,\s*"((?:[^"\\]|\\.)*)"\s*,\s*"((?:[^"\\]|\\.)*)"\s*\)/g;
+    let m;
+    while ((m = v3Regex.exec(content)) !== null) {
+      v3.push({
+        program: parseInt(m[1], 10),
+        bank: parseInt(m[2], 10),
+        name: m[3].replace(/\\"/g, '"').replace(/\\\\/g, '\\'),
+        category: m[4].replace(/\\"/g, '"').replace(/\\\\/g, '\\'),
+      });
+    }
+    const hydraRegex = /new\s+HydraPreset\(\s*(\d+)\s*,\s*(\d+)\s*,\s*"((?:[^"\\]|\\.)*)"\s*,\s*"((?:[^"\\]|\\.)*)"\s*,\s*"((?:[^"\\]|\\.)*)"\s*\)/g;
+    while ((m = hydraRegex.exec(content)) !== null) {
+      hydrasynth.push({
+        program: parseInt(m[1], 10),
+        bank: parseInt(m[2], 10),
+        code: m[3],
+        name: m[4].replace(/\\"/g, '"').replace(/\\\\/g, '\\'),
+        category: m[5].replace(/\\"/g, '"').replace(/\\\\/g, '\\'),
+      });
+    }
+    const sh4dRegex = /new\s+SH4dPreset\(\s*(\d+)\s*,\s*(\d+)\s*,\s*"((?:[^"\\]|\\.)*)"\s*,\s*"((?:[^"\\]|\\.)*)"\s*\)/g;
+    while ((m = sh4dRegex.exec(content)) !== null) {
+      sh4d.push({
+        program: parseInt(m[1], 10),
+        bank: parseInt(m[2], 10),
+        name: m[3].replace(/\\"/g, '"').replace(/\\\\/g, '\\'),
+        category: m[4].replace(/\\"/g, '"').replace(/\\\\/g, '\\'),
+      });
+    }
+  } catch (err) {
+    console.error('Failed to parse preset catalog from patch.ck:', err.message);
+  }
+  return {
+    V3: v3,
+    Hydrasynth: hydrasynth,
+    'SH-4d': sh4d,
+    synths: ['V3', 'Hydrasynth', 'SH-4d', 'S-1', 'Moog', 'RD-6'],
+  };
+}
+
 // ─── WebSocket ────────────────────────────────────────────────────────────────
 const clients = new Set();
 
@@ -104,7 +152,8 @@ wss.on('connection', (ws, req) => {
   clients.add(ws);
   console.log(`Browser connected (${clients.size} total)`);
 
-  // Send cached state immediately so the page renders without waiting.
+  // Send preset catalog and cached state immediately so the page renders without waiting.
+  ws.send(JSON.stringify({ type: 'presets', data: loadPresetCatalog() }));
   if (lastGraph) {
     ws.send(JSON.stringify({ type: 'graph', fragments: lastGraph }));
   }
@@ -271,6 +320,33 @@ function handleBrowserCommand(cmd, ws) {
       console.log('→ ChucK: /cadenza/nextPresetCat');
       chuckClient.send('/cadenza/nextPresetCat', 1);
       break;
+    case 'getPresets':
+      ws.send(JSON.stringify({ type: 'presets', data: loadPresetCatalog() }));
+      break;
+    case 'setPreset': {
+      const { devIdx, presetName } = cmd.value || {};
+      if (devIdx != null && presetName) {
+        console.log(`→ ChucK: /cadenza/setPreset dev=${devIdx} preset="${presetName}"`);
+        chuckClient.send('/cadenza/setPreset', parseInt(devIdx, 10), String(presetName));
+      }
+      break;
+    }
+    case 'setSynth': {
+      const { devIdx, synthName } = cmd.value || cmd || {};
+      if (devIdx != null && synthName) {
+        console.log(`→ ChucK: /cadenza/setSynth dev=${devIdx} synth="${synthName}"`);
+        chuckClient.send('/cadenza/setSynth', parseInt(devIdx, 10), String(synthName));
+      }
+      break;
+    }
+    case 'setChannel': {
+      const { devIdx, channel } = cmd.value || cmd || {};
+      if (devIdx != null && channel != null) {
+        console.log(`→ ChucK: /cadenza/setChannel dev=${devIdx} channel=${channel}`);
+        chuckClient.send('/cadenza/setChannel', parseInt(devIdx, 10), parseInt(channel, 10));
+      }
+      break;
+    }
     case 'setTempo':
       console.log(`→ ChucK: /cadenza/tempo ${cmd.value}`);
       chuckClient.send('/cadenza/tempo', parseInt(cmd.value, 10));

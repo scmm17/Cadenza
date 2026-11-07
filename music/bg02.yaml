@@ -1,54 +1,62 @@
 song:
   devices:
-    V3-3:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 3
-      patchName: "Upright Jazz Bass Random"
-      uiName: "V3"
-      muted: 0
-      volume: 125
-      filterCutoff: -1
-      filterResonance: -1
-      pan: 64
-      program: 65
-      bank: 3
-      programChange: 1
-    V3-1:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 1
-      patchName: "Disco Strings Slide velo. 116-127 Slide"
-      uiName: "V3"
-      muted: 0
-      volume: 69
-      filterCutoff: -1
-      filterResonance: -1
-      pan: 64
-      program: 19
-      bank: 4
-      programChange: 1
-    V3-2:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 2
-      patchName: "Cello"
-      uiName: "V3"
-      muted: 0
-      volume: 90
-      filterCutoff: -1
-      filterResonance: -1
-      pan: 64
-      program: 24
-      bank: 4
-      programChange: 1
-    V3-0:
-      deviceName: "U2MIDI Pro"
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
       midiChannel: 0
-      patchName: "Fantasia"
-      uiName: "V3"
+      patchName: "Venus Pluck ET"
+      uiName: "Hydrasynth"
       muted: 0
-      volume: 125
+      volume: 73
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 18
-      bank: 2
-      programChange: 1
+      presetName: "A003"
+    SH-4d-1:
+      deviceName: "SH-4d"
+      midiChannel: 1
+      patchName: "Black Hole Pluck"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 82
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 45
+      toneBank: 64
+    SH-4d-2:
+      deviceName: "SH-4d"
+      midiChannel: 2
+      patchName: "Drawing Sine Ld"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 115
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 8
+      toneBank: 76
+    SH-4d-0:
+      deviceName: "SH-4d"
+      midiChannel: 0
+      patchName: "SH Bass Gate"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 99
+      filterCutoff: 64
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 2
+      toneBank: 70
+  bpm: 150.000000
