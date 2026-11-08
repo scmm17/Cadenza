@@ -30,6 +30,8 @@ public class Patch
     int program;
     int bank;
 
+    int activeNotes[128];
+
     MidiOut gma;
     string openedDeviceName;
 
@@ -162,6 +164,11 @@ public class Patch
 
     fun void sendAllNotesOff() 
     {
+        for (0 => int n; n < 128; n++) {
+            while (activeNotes[n] > 0) {
+                noteOff(n);
+            }
+        }
         if (noteXmit == null) { initNoteXmit(); }
         if (devIndex > 0) {
             noteXmit.startMsg("/cadenza/allNotesOff", "i");
@@ -272,6 +279,9 @@ public class Patch
         if (muted) {
             return;
         }
+        if (note >= 0 && note < 128) {
+            activeNotes[note]++;
+        }
         if (noteXmit == null) { initNoteXmit(); }
         if (devIndex > 0) {
             noteXmit.startMsg("/cadenza/noteOn", "i i i");
@@ -291,6 +301,11 @@ public class Patch
         
     fun void noteOff(int note)
     {
+        if (note >= 0 && note < 128) {
+            if (activeNotes[note] > 0) {
+                activeNotes[note]--;
+            }
+        }
         if (noteXmit == null) { initNoteXmit(); }
         if (devIndex > 0) {
             noteXmit.startMsg("/cadenza/noteOff", "i i");
@@ -300,6 +315,7 @@ public class Patch
         MidiMsg msg;
         0x80 | midiChannel => msg.data1;
         note => msg.data2;
+        0 => msg.data3;
         gma.send(msg);
     }
 

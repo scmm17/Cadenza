@@ -416,7 +416,8 @@ mkMel(guitarRhythmDev, end1Mid, end1GtrRhythmMel, end1GtrRhythmProbs, end1GtrRhy
 [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.85, 0.0,
  0.0, 0.0, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0] @=> float end1GtrLeadProbs[];
 [2, 1, 0, 3, 2, 1, 0] @=> int end1GtrLeadMel[];
-[6.0, 6.0, 4.0] @=> float end1GtrLeadDurs[];
+[6.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.0, 0.0,
+ 0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0] @=> float end1GtrLeadDurs[];
 [68, 54, 60] @=> int end1GtrLeadVel[];
 mkMel(guitarLeadDev, end1Mid, end1GtrLeadMel, end1GtrLeadProbs, end1GtrLeadDurs, end1GtrLeadVel) @=> ChordProgression end1GtrLead;
 

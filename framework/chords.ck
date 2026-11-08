@@ -109,7 +109,7 @@ public class ChordProgression extends Part
                 for(0 => int i; i < chord.numNotes(); i++)
                 {
                     chord.getMidiNote(song, i, offsets[chordIndex] + chord.octave * 12) => int note;
-                    patch.noteOn(note, velocities[i % velocities.cap()], song.whole());
+                    patch.noteOn(note, velocities[i % velocities.cap()], noteDuration);
                 }
                 song.advance(noteDuration);
                 chordIndex++;

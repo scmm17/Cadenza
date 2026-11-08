@@ -1095,6 +1095,7 @@ public class Song
             }
             if (!restartRequested) break;
         }
+        pause();
     }
 
     fun void playPartOnce() 
@@ -1813,6 +1814,10 @@ public class Part
                         durationFactor * song.whole()/notesPerMeasure => duration;
                     }
                 }
+                (notesToPlay.cap() - i) * (song.whole() / notesPerMeasure) => dur remainInPart;
+                if (duration > remainInPart) {
+                    remainInPart => duration;
+                }
                 patch.noteOn(note, velocitiesToPlay[i], duration);
             }
             song.advance(song.whole()/notesPerMeasure);
@@ -1822,7 +1827,7 @@ public class Part
     fun mutateProbabilities() 
     {
         // Mutate if either mutateProbabilityRange is nonzero or probability strings array exists
-        if (mutateProbabilityRange == 0.0 && rhythmProbabilityStrings.cap() == 0) {
+        if (mutateProbabilityRange == 0.0 && (rhythmProbabilityStrings == null || rhythmProbabilityStrings.cap() == 0)) {
             return;
         }
         <<< "probabilities: ", arrayToString(rhythmProbabilities) >>>;
@@ -2034,15 +2039,29 @@ public class Fragment
 
     fun Fragment getNextSongFragment()
     {
+        if (nextFragments == null || nextFragments.cap() == 0) {
+            return null;
+        }
+
+        0.0 => float totalProb;
+        for (FragmentTransition frag : nextFragments) {
+            if (frag != null) {
+                frag.probability +=> totalProb;
+            }
+        }
+        if (totalProb <= 0.0) {
+            return null;
+        }
+
         Math.random2f(0.0, 1.0) => float r;
         if (Song.golden) {
             0.0 => r;
         }
         0 => float prob;
 
-
         for(FragmentTransition frag : nextFragments)
         {
+            if (frag == null || frag.probability <= 0.0) continue;
             frag.probability + prob => prob;
             if (r <= prob)
             {

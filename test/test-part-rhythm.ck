@@ -5,7 +5,7 @@
 public class DummyPart extends Part {
     fun DummyPart() {
         MockPatch patch;
-        patch @=> this.patch;
+        initPart(patch);
     }
 }
 
@@ -111,5 +111,40 @@ public class PartRhythmTests {
             p.mutateProbabilities();
         }
         Assert.equalFloat("testMutate_zeroRange_perSlot", p.rhythmProbabilities[0], 0.5, 1e-6);
+
+        // testPlayProbabilityRhythm_clampsDurationToRemainingInPart
+        MockSong mSong;
+        DummyPart pClamp;
+        MockPatch mPatch;
+        mPatch @=> pClamp.patch;
+        1 => pClamp.numberOfMeasures;
+        16 => pClamp.notesPerMeasure;
+        float probsToPlay[16];
+        float dursToPlay[16];
+        int velsToPlay[1];
+        100 => velsToPlay[0];
+        velsToPlay @=> pClamp.velocities;
+        for (0 => int i; i < 16; i++) {
+            0.0 => probsToPlay[i];
+            0.0 => dursToPlay[i];
+        }
+        1.0 => probsToPlay[12];
+        10.0 => dursToPlay[12]; // Exceeds remaining 4 steps
+        probsToPlay @=> pClamp.rhythmProbabilities;
+        dursToPlay @=> pClamp.durations;
+
+        pClamp.playProbabilityRhythm(mSong);
+        mSong.whole() / 16 * 4 => dur expectedMaxDur;
+        Assert.equalFloat("testPlayProbabilityRhythm_clampsDuration", mPatch.lastDurationPlayed / 1::ms, expectedMaxDur / 1::ms, 0.001);
+
+        // testPatch_activeNotesTrackedAndCleared
+        Patch testPatch;
+        testPatch.noteOn(60, 100, 100::ms);
+        testPatch.noteOn(64, 100, 100::ms);
+        Assert.equalInt("testPatch_activeNotesTracked 60", testPatch.activeNotes[60], 1);
+        Assert.equalInt("testPatch_activeNotesTracked 64", testPatch.activeNotes[64], 1);
+        testPatch.sendAllNotesOff();
+        Assert.equalInt("testPatch_activeNotesCleared 60", testPatch.activeNotes[60], 0);
+        Assert.equalInt("testPatch_activeNotesCleared 64", testPatch.activeNotes[64], 0);
     }
 }

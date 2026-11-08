@@ -89,5 +89,15 @@ public class FragmentTransitionsTests {
 
         f1.resolveNextFragment(song) @=> Fragment nextAfterLoop;
         Assert.equalString("testLoopFragment_resumesNormalAfterToggleOff", nextAfterLoop.name, "Frag2");
+
+        // testZeroProbabilityTransitions_returnsNull
+        Fragment f_terminal("FragTerminal", 4, emptyParts);
+        FragmentTransition emptyTransT[0]; emptyTransT @=> f_terminal.nextFragments;
+        FragmentTransition t_zero1(f2, 0.0);
+        FragmentTransition t_zero2(f3, 0.0);
+        f_terminal.nextFragments << t_zero1;
+        f_terminal.nextFragments << t_zero2;
+        f_terminal.getNextSongFragment() @=> Fragment nextZero;
+        Assert.isTrue("testZeroProbabilityTransitions_returnsNull", nextZero == null);
     }
 }
