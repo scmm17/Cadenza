@@ -90,14 +90,20 @@ public class FragmentTransitionsTests {
         f1.resolveNextFragment(song) @=> Fragment nextAfterLoop;
         Assert.equalString("testLoopFragment_resumesNormalAfterToggleOff", nextAfterLoop.name, "Frag2");
 
-        // testZeroProbabilityTransitions_returnsNull
-        Fragment f_terminal("FragTerminal", 4, emptyParts);
-        FragmentTransition emptyTransT[0]; emptyTransT @=> f_terminal.nextFragments;
+        // testZeroProbabilityTransitions_fallsBackToFirstTransition
+        Fragment f_zero("FragZero", 4, emptyParts);
+        FragmentTransition emptyTransZ[0]; emptyTransZ @=> f_zero.nextFragments;
         FragmentTransition t_zero1(f2, 0.0);
         FragmentTransition t_zero2(f3, 0.0);
-        f_terminal.nextFragments << t_zero1;
-        f_terminal.nextFragments << t_zero2;
-        f_terminal.getNextSongFragment() @=> Fragment nextZero;
-        Assert.isTrue("testZeroProbabilityTransitions_returnsNull", nextZero == null);
+        f_zero.nextFragments << t_zero1;
+        f_zero.nextFragments << t_zero2;
+        f_zero.getNextSongFragment() @=> Fragment nextFallback;
+        Assert.equalString("testZeroProbabilityTransitions_fallsBackToFirst", nextFallback.name, "Frag2");
+
+        // testEmptyTransitions_returnsNull
+        Fragment f_empty("FragEmpty", 4, emptyParts);
+        FragmentTransition emptyTransE[0]; emptyTransE @=> f_empty.nextFragments;
+        f_empty.getNextSongFragment() @=> Fragment nextEmpty;
+        Assert.isTrue("testEmptyTransitions_returnsNull", nextEmpty == null);
     }
 }

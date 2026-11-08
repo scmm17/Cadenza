@@ -2043,16 +2043,6 @@ public class Fragment
             return null;
         }
 
-        0.0 => float totalProb;
-        for (FragmentTransition frag : nextFragments) {
-            if (frag != null) {
-                frag.probability +=> totalProb;
-            }
-        }
-        if (totalProb <= 0.0) {
-            return null;
-        }
-
         Math.random2f(0.0, 1.0) => float r;
         if (Song.golden) {
             0.0 => r;
@@ -2093,7 +2083,9 @@ public class Fragment
         for(0 => int i; i < repeatCount; i++) {
             i + 1 => currentRepeat;
             parts @=> song.currentParts;
-            song.launchControl.printDevices();
+            if (song.launchControl != null) {
+                song.launchControl.printDevices();
+            }
             song.playPartOnce();
             if (song.restartRequested) return null;
         }

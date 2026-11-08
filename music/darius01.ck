@@ -578,7 +578,7 @@ Fragment fSilence("Silence", 1, silenceParts);
 //   (never transitions directly to Ending 2 or Silence)
 // - Ending 1 -> Ending 2 (100%)
 // - Ending 2 -> Silence  (100%)
-// - Silence  -> end of song (0.0 probability transition, like bq03.ck)
+// - Silence  -> repeat song from beginning (100%)
 // ------------------------------------------------------------
 fun void link(Fragment from, Fragment tos[], float w[])
 {
@@ -681,14 +681,14 @@ for (0 => int g; g < NUM_GROUPS; g++)
     }
 }
 
-// Ending 1 -> Ending 2 -> Silence -> end (0.0 probability, like bq03.ck)
+// Ending 1 -> Ending 2 -> Silence -> repeat from start
 FragmentTransition ft_toEnding2(fEnding2, 1.0);
 [ft_toEnding2] @=> fEnding1.nextFragments;
 
 FragmentTransition ft_toSilence(fSilence, 1.0);
 [ft_toSilence] @=> fEnding2.nextFragments;
 
-FragmentTransition ft_end(frags[0], 0.0);
+FragmentTransition ft_end(frags[0], 1.0);
 [ft_end] @=> fSilence.nextFragments;
 
 Song song("darius01", BPM, root, frags[0], allP);
