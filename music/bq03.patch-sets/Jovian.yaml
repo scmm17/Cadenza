@@ -1,0 +1,46 @@
+song:
+  devices:
+    SH-4d-0:
+      deviceName: "SH-4d"
+      midiChannel: 0
+      patchName: "Epic Pluck"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 111
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 28
+      toneBank: 65
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "Venus Pluck ET"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 64
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "A003"
+    SH-4d-2:
+      deviceName: "SH-4d"
+      midiChannel: 2
+      patchName: "SHoly Pad"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 109
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 1
+      toneBank: 70
+  bpm: 85.000000
