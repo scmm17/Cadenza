@@ -2300,13 +2300,14 @@ function isDrumDevice(devIdx) {
   const dev = chuckState.devices.find(d => d.index === devIdx);
   let result = false;
   if (dev) {
+    const isV3 = Boolean(dev.uiName && dev.uiName.toLowerCase() === 'v3');
     // Special case: "Steel drums" is a pitched instrument, so show it as normal notes.
     const isSteelDrums = [dev.uiName, dev.patchName]
       .some(n => n && n.toLowerCase().includes('steel drum'));
     if (isSteelDrums) result = false;
     else if (dev.channel === 10) result = true;
     else if (dev.uiName && (dev.uiName.toLowerCase().includes('drum') || dev.uiName.toLowerCase().includes('kit') || dev.uiName.toLowerCase().includes(' kick'))) result = true;
-    else if (dev.patchName && (dev.patchName.toLowerCase().includes('drum') || dev.patchName.toLowerCase().includes('kit') || dev.patchName.toLowerCase().includes(' kick'))) result = true;
+    else if (isV3 && dev.patchName && (dev.patchName.toLowerCase().includes('drum') || dev.patchName.toLowerCase().includes('kit') || dev.patchName.toLowerCase().includes(' kick'))) result = true;
   }
   drumDeviceCache.set(devIdx, result);
   return result;
