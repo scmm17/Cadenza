@@ -8,6 +8,7 @@
 @import "test-part-rhythm.ck"
 @import "test-fragment-transitions.ck"
 @import "test-drum-machine.ck"
+@import "test-song-tempo.ck"
 
 // Explicitly call the runner functions from each module
 // since @import does not execute top-level statements.
@@ -16,6 +17,7 @@ LSystemTests.run();
 PartRhythmTests.run();
 FragmentTransitionsTests.run();
 DrumMachineTests.run();
+SongTempoTests.run();
 
 // Print final summary
 <<< "===========================" >>>;

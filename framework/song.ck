@@ -94,6 +94,10 @@ public class Song
 
         Patch empty[0];
         empty @=> mutedPatches;
+        Shred emptyShreds[0];
+        emptyShreds @=> shreds;
+        Shred emptyOldShreds[0];
+        emptyOldShreds @=> oldShreds;
         initDevicesFromParts();
         startFrag.parts @=> currentParts;
         new MidiMapper("HYDRASYNTH EXPLORER", "U2MIDI Pro", 1) @=> hydraEvents;
@@ -605,8 +609,15 @@ public class Song
             1 => startFragment.currentRepeat;
         }
         pause();
-        for(0 => int i; i < shreds.cap(); i++) { 
-            if (shreds[i] != null) shreds[i].exit(); 
+        if (shreds != null) {
+            for(0 => int i; i < shreds.cap(); i++) { 
+                if (shreds[i] != null) shreds[i].exit(); 
+            }
+        }
+        if (oldShreds != null) {
+            for(0 => int i; i < oldShreds.cap(); i++) { 
+                if (oldShreds[i] != null) oldShreds[i].exit(); 
+            }
         }
         resumeEvent.broadcast();
     }
@@ -903,9 +914,17 @@ public class Song
         if (debug) {
             <<< "Stopping shreds" >>>;
         }
-        for(Shred shred : shreds) 
-        {
-            shred.exit();
+        if (shreds != null) {
+            for(Shred shred : shreds) 
+            {
+                if (shred != null) shred.exit();
+            }
+        }
+        if (oldShreds != null) {
+            for(Shred shred : oldShreds) 
+            {
+                if (shred != null) shred.exit();
+            }
         }        
         true => shuttingDown;
         me.exit();
@@ -1050,16 +1069,29 @@ public class Song
     fun void play()
     {
         while(true) {
+            while (isPaused) {
+                resumeEvent => now;
+            }
             0 => restartRequested;
             if (startFragment != null) {
                 for( startFragment @=>  Fragment frag; 
                      frag != null; 
                      playFragment(frag) @=> frag) {
-                        frag @=> currentFragment;
+                        while (isPaused) {
+                            resumeEvent => now;
+                            if (restartRequested) break;
+                        }
                         if (restartRequested) break;
+                        frag @=> currentFragment;
                      }
             } else if (parts != null) {
-                playParts();
+                while (isPaused) {
+                    resumeEvent => now;
+                    if (restartRequested) break;
+                }
+                if (!restartRequested) {
+                    playParts();
+                }
             }
             if (!restartRequested) break;
         }
