@@ -1,25 +1,28 @@
 song:
   devices:
-    V3-0:
-      deviceName: "U2MIDI Pro"
+    SH-4d-0:
+      deviceName: "SH-4d"
       midiChannel: 0
-      patchName: "G. Steel Slide (velo. 116-127 Slide)"
-      uiName: "V3"
+      patchName: "Doggie Lead"
+      uiName: "SH-4d"
       muted: 0
-      volume: 127
+      volume: 93
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 28
-      bank: 3
-      programChange: 1
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 6
+      toneBank: 69
     V3-1:
       deviceName: "U2MIDI Pro"
       midiChannel: 1
       patchName: "G. Steel Slide (velo. 116-127 Slide)"
       uiName: "V3"
       muted: 0
-      volume: 127
+      volume: 60
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -32,59 +35,68 @@ song:
       patchName: "Mandoline Ensemble"
       uiName: "V3"
       muted: 0
-      volume: 100
+      volume: 28
       filterCutoff: -1
       filterResonance: -1
       pan: 64
       program: 32
       bank: 3
       programChange: 1
-    V3-3:
-      deviceName: "U2MIDI Pro"
+    SH-4d-3:
+      deviceName: "SH-4d"
       midiChannel: 3
-      patchName: "Mandoline Ensemble Tremolo"
-      uiName: "V3"
+      patchName: "Drawing Guitar"
+      uiName: "SH-4d"
       muted: 0
       volume: 110
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 31
-      bank: 3
-      programChange: 1
-    V3-4:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 4
-      patchName: "Disco Strings Slide velo. 116-127 Slide"
-      uiName: "V3"
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 3
+      toneBank: 76
+    SH-4d-2:
+      deviceName: "SH-4d"
+      midiChannel: 2
+      patchName: "SH Bass Gate"
+      uiName: "SH-4d"
       muted: 0
-      volume: 100
+      volume: 127
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 19
-      bank: 4
-      programChange: 1
-    V3-5:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 5
-      patchName: "Disco Strings Slide velo. 116-127 Slide"
-      uiName: "V3"
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 2
+      toneBank: 70
+    SH-4d-3-dev6:
+      deviceName: "SH-4d"
+      midiChannel: 3
+      patchName: "Synth PolyKey 15"
+      uiName: "SH-4d"
       muted: 0
-      volume: 111
+      volume: 127
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 19
-      bank: 4
-      programChange: 1
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 98
+      toneBank: 65
     V3-6:
       deviceName: "U2MIDI Pro"
       midiChannel: 6
       patchName: "Upright Bass finger attack"
       uiName: "V3"
       muted: 0
-      volume: 115
+      volume: 73
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -104,4 +116,5 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
   bpm: 135.000000

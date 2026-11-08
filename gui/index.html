@@ -371,6 +371,108 @@
       margin-right: 8px;
     }
 
+    /* Patch Sets dialog styles */
+    .patchset-top-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .patchset-name-input {
+      flex: 1;
+      height: 36px;
+      padding: 0 12px;
+      box-sizing: border-box;
+      background: rgba(14, 12, 28, 0.85);
+      color: var(--text-primary);
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .patchset-name-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+    .btn-patchset-add {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.35), rgba(6, 182, 212, 0.25));
+      border: 1px solid var(--border-bright);
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+    }
+    .btn-patchset-add:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan-glow);
+      transform: translateY(-1px);
+    }
+    .patchset-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .patchset-item-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .patchset-item-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .patchset-action-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      border: 1px solid transparent;
+      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+      transition: color var(--transition), background var(--transition), border-color var(--transition), text-shadow var(--transition);
+    }
+    .patchset-check-btn {
+      color: rgba(167, 139, 250, 0.28);
+    }
+    .patchset-check-btn:hover {
+      color: #4ade80;
+      background: rgba(34, 197, 94, 0.14);
+      border-color: rgba(34, 197, 94, 0.4);
+    }
+    .patchset-check-btn.is-default {
+      color: #22c55e;
+      text-shadow: 0 0 8px rgba(34, 197, 94, 0.55);
+    }
+    .patchset-delete-btn {
+      color: rgba(167, 139, 250, 0.28);
+    }
+    .patchset-delete-btn:hover {
+      color: #f87171;
+      background: rgba(239, 68, 68, 0.16);
+      border-color: rgba(239, 68, 68, 0.45);
+    }
+
     /* Preset navigation buttons */
     .preset-nav { display: flex; gap: 3px; margin-top: 2px; }
     .btn-preset {
@@ -780,6 +882,13 @@
                oninput="onTempoSlider(event)">
       </div>
     </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Patch Set</div>
+      <div class="btn-row">
+        <button class="btn-action" id="btnPatchSet" onclick="openPatchSetModal()" style="min-width: 96px; padding: 0 14px; height: 36px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px;" data-tooltip="Manage &amp; switch patch sets">Default</button>
+      </div>
+    </div>
   </div>
 
   <div class="header-right" style="gap: 12px; align-items: center;">
@@ -874,6 +983,34 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="patchSetModal" role="dialog" aria-modal="true" aria-labelledby="patchSetModalTitle" onclick="if(event.target===this)closePatchSetModal()">
+  <div class="modal" style="max-width: 420px;">
+    <h3 id="patchSetModalTitle" style="color: var(--accent-lite); margin-bottom: 12px;">🎛️ Patch Sets</h3>
+    <div class="patchset-top-row">
+      <input type="text" id="patchSetNameInput" class="patchset-name-input" placeholder="Patch set name..." title="Edit current patch set name"
+             onkeydown="onPatchSetNameKeydown(event)" onblur="commitRenamePatchSet()">
+      <button type="button" id="btnAddPatchSet" class="btn-patchset-add" onclick="createNewPatchSet()" title="Create new patch set from current settings">+</button>
+    </div>
+    <div class="song-list" id="patchSetListContainer" style="margin: 8px 0 16px;">
+      <!-- Populated via JS -->
+    </div>
+    <div class="modal-btns">
+      <button type="button" class="btn-action" style="padding: 8px 18px; border-radius: 9px;" onclick="closePatchSetModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deletePatchSetModal" role="dialog" aria-modal="true" aria-labelledby="deletePatchSetModalTitle" onclick="if(event.target===this)closeDeletePatchSetModal()">
+  <div class="modal" style="max-width: 380px;">
+    <h3 id="deletePatchSetModalTitle">🗑️ Delete Patch Set?</h3>
+    <p>Are you sure you want to delete patch set <strong id="deletePatchSetTargetName" style="color: var(--cyan);"></strong>? This cannot be undone.</p>
+    <div class="modal-btns">
+      <button type="button" class="btn-cancel" onclick="closeDeletePatchSetModal()">Cancel</button>
+      <button type="button" class="btn-confirm" onclick="confirmDeletePatchSet()">Delete</button>
+    </div>
+  </div>
+</div>
+
 <script>
 'use strict';
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -887,6 +1024,9 @@ const REGISTERED_SYNTHS = ['V3', 'Hydrasynth', 'SH-4d', 'S-1', 'Moog', 'RD-6'];
 let serverSupportsSetPreset = false;
 let serverSupportsSynthChannel = false;
 let presetModalState = null; // { devIdx, uiName, category, presets, currentPresetName, selectedIdx }
+let patchSetsState = { songName: '', patchSets: ['Default'], defaultPatchSet: 'Default' };
+let activePatchSetName = 'Default';
+let pendingDeletePatchSetName = null;
 let isSongReset = true;
 let initialStateReceived = false;
 let playFromResetTime = 0;
@@ -918,9 +1058,38 @@ function connect() {
         if (!isSongReset && performance.now() - playFromResetTime < 150 && chuckGraph && chuckGraph.length > 0) {
           chuckState.fragmentName = chuckGraph[0].name;
         }
+        if (chuckState.patchSetName) {
+          activePatchSetName = chuckState.patchSetName;
+        }
+        if (chuckState.defaultPatchSetName) {
+          patchSetsState.defaultPatchSet = chuckState.defaultPatchSetName;
+        }
+        if (songChanged) {
+          send('getPatchSets', { songName: chuckState.songName });
+        }
         drumDeviceCache.clear(); // Device list may have changed — invalidate isDrumDevice cache
         render();
         updateGraph(false);
+        if (document.getElementById('patchSetModal').classList.contains('open')) {
+          renderPatchSetList();
+        }
+      } else if (msg.type === 'patchSets') {
+        if (msg.data) {
+          patchSetsState = {
+            songName: msg.data.songName || '',
+            patchSets: Array.isArray(msg.data.patchSets) ? msg.data.patchSets : [],
+            defaultPatchSet: msg.data.defaultPatchSet || 'Default',
+          };
+          if (!activePatchSetName || (patchSetsState.patchSets.length > 0 && !patchSetsState.patchSets.includes(activePatchSetName))) {
+            activePatchSetName = (chuckState && chuckState.patchSetName && patchSetsState.patchSets.includes(chuckState.patchSetName))
+              ? chuckState.patchSetName
+              : (patchSetsState.defaultPatchSet || patchSetsState.patchSets[0] || 'Default');
+          }
+          syncPatchSetButton();
+          if (document.getElementById('patchSetModal').classList.contains('open')) {
+            renderPatchSetList(true);
+          }
+        }
       } else if (msg.type === 'graph') {
         chuckGraph = msg.fragments || [];
         updateGraph(false);
@@ -1461,6 +1630,14 @@ function syncSongInfo() {
   }
 }
 
+function syncPatchSetButton() {
+  const btn = document.getElementById('btnPatchSet');
+  if (!btn) return;
+  const name = (chuckState && chuckState.patchSetName) || activePatchSetName || patchSetsState.defaultPatchSet || 'Default';
+  activePatchSetName = name;
+  btn.textContent = name;
+}
+
 // Mode toggle button visual state
 function syncModeButtons() {
   const s = chuckState;
@@ -1469,6 +1646,7 @@ function syncModeButtons() {
   document.getElementById('btnAllMode').classList.toggle('active', !!s.allMode);
   syncTempoSlider(s.bpm);
   syncSongInfo();
+  syncPatchSetButton();
 
   const btn = document.getElementById('btnPlayPause');
   if (btn) {
@@ -1667,6 +1845,173 @@ function closePresetModal() {
   document.body.focus();
 }
 
+// ─── Patch Sets Modal ─────────────────────────────────────────────────────────
+function openPatchSetModal() {
+  send('getPatchSets', { songName: chuckState ? chuckState.songName : '' });
+  document.getElementById('patchSetModal').classList.add('open');
+  renderPatchSetList(true);
+}
+
+function closePatchSetModal() {
+  commitRenamePatchSet();
+  document.getElementById('patchSetModal').classList.remove('open');
+  const input = document.getElementById('patchSetNameInput');
+  if (input) input.blur();
+  document.body.focus();
+}
+
+function renderPatchSetList(syncInput = false) {
+  const container = document.getElementById('patchSetListContainer');
+  if (!container) return;
+
+  const list = (patchSetsState.patchSets && patchSetsState.patchSets.length > 0)
+    ? patchSetsState.patchSets.slice().sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+    : [activePatchSetName || 'Default'];
+  const defaultName = patchSetsState.defaultPatchSet || list[0] || 'Default';
+  const currentName = activePatchSetName || defaultName;
+
+  const input = document.getElementById('patchSetNameInput');
+  if (input && (syncInput || document.activeElement !== input)) {
+    input.value = currentName;
+  }
+
+  container.innerHTML = '';
+  list.forEach((setName) => {
+    const isSelected = setName === currentName;
+    const isDefault = setName === defaultName;
+
+    const row = document.createElement('div');
+    row.className = 'song-item patchset-item' + (isSelected ? ' selected' : '');
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'patchset-item-name';
+    nameSpan.textContent = setName;
+
+    const actions = document.createElement('div');
+    actions.className = 'patchset-item-actions';
+
+    const checkBtn = document.createElement('button');
+    checkBtn.type = 'button';
+    checkBtn.className = 'patchset-action-btn patchset-check-btn' + (isDefault ? ' is-default' : '');
+    checkBtn.title = isDefault ? 'Default patch set' : 'Set as default patch set';
+    checkBtn.textContent = '✓';
+    checkBtn.onclick = (e) => {
+      e.stopPropagation();
+      setDefaultPatchSet(setName);
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'patchset-action-btn patchset-delete-btn';
+    delBtn.title = 'Delete patch set';
+    delBtn.textContent = '✕';
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      promptDeletePatchSet(setName);
+    };
+
+    actions.appendChild(checkBtn);
+    actions.appendChild(delBtn);
+
+    row.appendChild(nameSpan);
+    row.appendChild(actions);
+
+    row.onclick = () => {
+      selectPatchSet(setName);
+    };
+    row.ondblclick = () => {
+      selectPatchSet(setName);
+      closePatchSetModal();
+    };
+
+    container.appendChild(row);
+  });
+}
+
+function selectPatchSet(name) {
+  if (!name) return;
+  activePatchSetName = name;
+  if (chuckState) chuckState.patchSetName = name;
+  const input = document.getElementById('patchSetNameInput');
+  if (input) input.value = name;
+  syncPatchSetButton();
+  renderPatchSetList(true);
+  send('selectPatchSet', { name });
+}
+
+function createNewPatchSet() {
+  commitRenamePatchSet();
+  send('createPatchSet', {});
+}
+
+function onPatchSetNameKeydown(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    e.stopPropagation();
+    commitRenamePatchSet();
+    e.target.blur();
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    e.stopPropagation();
+    e.target.value = activePatchSetName || 'Default';
+    e.target.blur();
+  }
+}
+
+function commitRenamePatchSet() {
+  const input = document.getElementById('patchSetNameInput');
+  if (!input) return;
+  const newName = input.value.trim().replace(/[\/\\:*?"<>|]/g, '');
+  const oldName = activePatchSetName;
+  if (!newName || !oldName || newName === oldName) {
+    input.value = oldName || 'Default';
+    return;
+  }
+  const existing = patchSetsState.patchSets || [];
+  if (existing.some(s => s.toLowerCase() === newName.toLowerCase() && s !== oldName)) {
+    input.value = oldName;
+    return;
+  }
+  activePatchSetName = newName;
+  if (chuckState) chuckState.patchSetName = newName;
+  const idx = existing.indexOf(oldName);
+  if (idx >= 0) existing[idx] = newName;
+  if (patchSetsState.defaultPatchSet === oldName) {
+    patchSetsState.defaultPatchSet = newName;
+  }
+  syncPatchSetButton();
+  renderPatchSetList(true);
+  send('renamePatchSet', { oldName, newName });
+}
+
+function setDefaultPatchSet(name) {
+  if (!name) return;
+  patchSetsState.defaultPatchSet = name;
+  if (chuckState) chuckState.defaultPatchSetName = name;
+  renderPatchSetList(false);
+  send('setDefaultPatchSet', { name });
+}
+
+function promptDeletePatchSet(name) {
+  if (!name) return;
+  pendingDeletePatchSetName = name;
+  const targetEl = document.getElementById('deletePatchSetTargetName');
+  if (targetEl) targetEl.textContent = '"' + name + '"';
+  document.getElementById('deletePatchSetModal').classList.add('open');
+}
+
+function closeDeletePatchSetModal() {
+  pendingDeletePatchSetName = null;
+  document.getElementById('deletePatchSetModal').classList.remove('open');
+}
+
+function confirmDeletePatchSet() {
+  const name = pendingDeletePatchSetName;
+  closeDeletePatchSetModal();
+  if (!name) return;
+  send('deletePatchSet', { name });
+}
+
 function cancelPresetModal() {
   if (presetModalState) {
     if (presetModalState.initialPreset) {
@@ -1816,6 +2161,20 @@ document.addEventListener('keydown', e => {
   const isShutdownOpen = document.getElementById('shutdownModal').classList.contains('open');
   const isOpenModalOpen  = document.getElementById('openModal').classList.contains('open');
   const isPresetModalOpen = document.getElementById('presetModal').classList.contains('open');
+  const isPatchSetModalOpen = document.getElementById('patchSetModal').classList.contains('open');
+  const isDeletePatchSetModalOpen = document.getElementById('deletePatchSetModal').classList.contains('open');
+
+  if (isDeletePatchSetModalOpen) {
+    if (k === 'Enter') { e.preventDefault(); confirmDeletePatchSet(); return; }
+    if (k === 'Escape') { e.preventDefault(); closeDeletePatchSetModal(); return; }
+    return;
+  }
+
+  if (isPatchSetModalOpen) {
+    if (isInput) return;
+    if (k === 'Escape') { e.preventDefault(); closePatchSetModal(); return; }
+    return;
+  }
 
   if (isShutdownOpen) {
     if (k === 'Enter') { e.preventDefault(); confirmShutdown(); return; }

@@ -68,10 +68,14 @@ public class Song
     MidiMapper @ hydraEvents;
 
     YamlNode @ config;
+    string currentPatchSet;
+    string defaultPatchSet;
 
     fun Song(string name, float bpm, int root, Fragment startFrag, Part allParts[])
     {
         name => this.name;
+        "Default" => currentPatchSet;
+        "Default" => defaultPatchSet;
         setBPM(bpm);
         root => rootNote;
         allParts @=> parts;
@@ -144,34 +148,143 @@ public class Song
         }
     }
 
+    fun string getPatchSetDir()
+    {
+        return "music/" + name + ".patch-sets";
+    }
+
+    fun string getPatchSetFile(string setName)
+    {
+        return getPatchSetDir() + "/" + setName + ".yaml";
+    }
+
+    fun void readDefaultPatchSetMeta()
+    {
+        getPatchSetDir() + "/.default" => string defaultMetaFile;
+        FileIO df;
+        df.open(defaultMetaFile, FileIO.READ);
+        if (df.good()) {
+            while (df.more()) {
+                YamlNode.trimLeft(YamlNode.trimRight(df.readLine())) => string line;
+                if (line != "") {
+                    line => defaultPatchSet;
+                    break;
+                }
+            }
+            df.close();
+        } else {
+            df.close();
+            if (defaultPatchSet == "") {
+                "Default" => defaultPatchSet;
+            }
+        }
+    }
+
     fun void loadConfig()
     {
-        "music/" + name + ".yaml" => string configFile;
+        readDefaultPatchSetMeta();
+        defaultPatchSet => currentPatchSet;
+        getPatchSetFile(currentPatchSet) => string patchSetFile;
+        "music/" + name + ".yaml" => string legacyFile;
+
         FileIO f;
-        f.open(configFile, FileIO.READ);
-        <<< "configFile:", configFile >>>;
+        f.open(patchSetFile, FileIO.READ);
         if (f.good()) {
             f.close();
-            YamlNode.ParseFile(configFile) @=> config;
+            <<< "configFile:", patchSetFile >>>;
+            YamlNode.ParseFile(patchSetFile) @=> config;
             loadSongConfig();
             loadDeviceConfigs();
-        } else {
-            f.close();
-            new YamlNode("song") @=> config;
-            YamlNode emptyRoot[0];
-            config.SetMap(emptyRoot);
-            saveSongConfig();
-            saveDeviceConfigs();
-            config.WriteFile(configFile);
+            return;
         }
+        f.close();
+
+        f.open(legacyFile, FileIO.READ);
+        if (f.good()) {
+            f.close();
+            <<< "configFile (legacy):", legacyFile >>>;
+            YamlNode.ParseFile(legacyFile) @=> config;
+            loadSongConfig();
+            loadDeviceConfigs();
+            saveConfig();
+            return;
+        }
+        f.close();
+
+        new YamlNode("song") @=> config;
+        YamlNode emptyRoot[0];
+        config.SetMap(emptyRoot);
+        saveSongConfig();
+        saveDeviceConfigs();
+        saveConfig();
     }
 
     fun void saveConfig()
     {
-        "music/" + name + ".yaml" => string configFile;
-        saveSongConfig();
+        if (currentPatchSet == "") { "Default" => currentPatchSet; }
+        getPatchSetFile(currentPatchSet) => string patchSetFile;
+        new YamlNode("song") @=> config;
+        YamlNode emptyRoot[0];
+        config.SetMap(emptyRoot);
         saveDeviceConfigs();
-        config.WriteFile(configFile);
+        saveSongConfig();
+        FileIO testWrite;
+        testWrite.open(patchSetFile, FileIO.WRITE);
+        if (testWrite.good()) {
+            testWrite.close();
+            config.WriteFile(patchSetFile);
+        } else {
+            testWrite.close();
+            "music/" + name + ".yaml" => string legacyFile;
+            config.WriteFile(legacyFile);
+        }
+    }
+
+    fun void createAndSavePatchSet(string newName, string defName)
+    {
+        if (newName != "") { newName => currentPatchSet; }
+        if (defName != "") { defName => defaultPatchSet; }
+        saveConfig();
+        if (launchControl != null) {
+            launchControl.printDevices();
+        }
+    }
+
+    fun void loadPatchSet(string setName)
+    {
+        if (setName == "") return;
+        readDefaultPatchSetMeta();
+        getPatchSetFile(setName) => string patchSetFile;
+        FileIO f;
+        f.open(patchSetFile, FileIO.READ);
+        if (!f.good()) {
+            f.close();
+            <<< "Patch set file not found:", patchSetFile >>>;
+            return;
+        }
+        f.close();
+        for (0 => int i; i < devices.cap(); i++) {
+            if (devices[i] != null) {
+                devices[i].sendAllNotesOff();
+            }
+        }
+        setName => currentPatchSet;
+        YamlNode.ParseFile(patchSetFile) @=> config;
+        loadSongConfig();
+        loadDeviceConfigs();
+        updateEffectiveMuteStates();
+        if (launchControl != null) {
+            launchControl.printDevices();
+        }
+    }
+
+    fun void setPatchSetMetadata(string curName, string defName)
+    {
+        if (curName != "") { curName => currentPatchSet; }
+        if (defName != "") { defName => defaultPatchSet; }
+        if (launchControl != null) {
+            launchControl.printDevices();
+        }
     }
 
     fun Patch createEmptyPatchForSynth(string synthUiName)
@@ -1112,6 +1225,9 @@ public class Song
         recv.event("/cadenza/setPreset, is") @=> OscEvent setPresetEvent;
         recv.event("/cadenza/setSynth, is") @=> OscEvent setSynthEvent;
         recv.event("/cadenza/setChannel, ii") @=> OscEvent setChannelEvent;
+        recv.event("/cadenza/loadPatchSet, s") @=> OscEvent loadPatchSetEvent;
+        recv.event("/cadenza/setPatchSetName, ss") @=> OscEvent setPatchSetNameEvent;
+        recv.event("/cadenza/createPatchSet, ss") @=> OscEvent createPatchSetEvent;
         recv.event("/cadenza/play, i") @=> OscEvent playEvent;
         recv.event("/cadenza/pause, i") @=> OscEvent pauseOscEvent;
         recv.event("/cadenza/restart, i") @=> OscEvent restartEvent;
@@ -1137,6 +1253,9 @@ public class Song
         spork ~ handleOscSetPreset(setPresetEvent);
         spork ~ handleOscSetSynth(setSynthEvent);
         spork ~ handleOscSetChannel(setChannelEvent);
+        spork ~ handleOscLoadPatchSet(loadPatchSetEvent);
+        spork ~ handleOscSetPatchSetName(setPatchSetNameEvent);
+        spork ~ handleOscCreatePatchSet(createPatchSetEvent);
         spork ~ handleOscPlay(playEvent);
         spork ~ handleOscPause(pauseOscEvent);
         spork ~ handleOscRestart(restartEvent);
@@ -1502,6 +1621,41 @@ public class Song
                 e.getInt() => int devIdx;
                 e.getInt() => int ch;
                 setDeviceChannel(devIdx, ch);
+            }
+        }
+    }
+
+    fun handleOscLoadPatchSet(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getString() => string setName;
+                loadPatchSet(setName);
+            }
+        }
+    }
+
+    fun handleOscSetPatchSetName(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getString() => string curName;
+                e.getString() => string defName;
+                setPatchSetMetadata(curName, defName);
+            }
+        }
+    }
+
+    fun handleOscCreatePatchSet(OscEvent e)
+    {
+        while (true) {
+            e => now;
+            while (e.nextMsg()) {
+                e.getString() => string newName;
+                e.getString() => string defName;
+                createAndSavePatchSet(newName, defName);
             }
         }
     }
@@ -2315,6 +2469,8 @@ public class LaunchControl
         }
         "{" => string j;
         j + "\"songName\":\""         + escJson(song.name)                   + "\"," => j;
+        j + "\"patchSetName\":\""     + escJson(song.currentPatchSet)        + "\"," => j;
+        j + "\"defaultPatchSetName\":\"" + escJson(song.defaultPatchSet)     + "\"," => j;
         j + "\"fragmentName\":\""     + escJson(song.currentFragment.name)   + "\"," => j;
         j + "\"nextFragmentName\":\"" + escJson(nextFragName)                + "\"," => j;
         j + "\"loopFragmentName\":\"" + escJson(loopFragName)                + "\"," => j;

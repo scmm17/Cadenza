@@ -1,0 +1,55 @@
+song:
+  devices:
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Cello"
+      uiName: "V3"
+      muted: 0
+      volume: 73
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 24
+      bank: 4
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Violin"
+      uiName: "V3"
+      muted: 0
+      volume: 82
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 22
+      bank: 4
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Viola"
+      uiName: "V3"
+      muted: 0
+      volume: 115
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 23
+      bank: 4
+      programChange: 1
+    V3-3:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 3
+      patchName: "Celtic fiddle (softer attack)"
+      uiName: "V3"
+      muted: 0
+      volume: 99
+      filterCutoff: 64
+      filterResonance: -1
+      pan: 64
+      program: 27
+      bank: 4
+      programChange: 1
+  bpm: 85.000000

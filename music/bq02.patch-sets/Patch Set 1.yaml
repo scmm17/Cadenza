@@ -1,0 +1,29 @@
+song:
+  devices:
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Harpsichord & Octave"
+      uiName: "V3"
+      muted: 0
+      volume: 90
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 48
+      bank: 3
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Organ 776555678 slow 4"
+      uiName: "V3"
+      muted: 0
+      volume: 75
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 58
+      bank: 0
+      programChange: 1
+  bpm: 82.000000

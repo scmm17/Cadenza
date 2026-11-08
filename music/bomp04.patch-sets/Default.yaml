@@ -3,29 +3,35 @@ song:
     SH-4d-0:
       deviceName: "SH-4d"
       midiChannel: 0
-      patchName: "Bank: 3 Program: 1"
+      patchName: "Space Clav"
       uiName: "SH-4d"
       muted: 0
-      volume: 94
+      volume: 106
       filterCutoff: -1
       filterResonance: -1
       pan: 64
       program: 1
       bank: 3
       programChange: 1
+      presetType: "tone"
+      toneProgram: 49
+      toneBank: 69
     SH-4d-1:
       deviceName: "SH-4d"
       midiChannel: 1
-      patchName: "Channel 2"
+      patchName: "Dripper EP"
       uiName: "SH-4d"
       muted: 0
-      volume: 85
+      volume: 97
       filterCutoff: -1
       filterResonance: -1
       pan: 64
       program: 0
       bank: 0
       programChange: 0
+      presetType: "tone"
+      toneProgram: 9
+      toneBank: 72
     S-1-2:
       deviceName: "S-1 MIDI IN"
       midiChannel: 2
@@ -41,7 +47,7 @@ song:
     SH-4d-2:
       deviceName: "SH-4d"
       midiChannel: 2
-      patchName: "Channel 3"
+      patchName: "Space Clav"
       uiName: "SH-4d"
       muted: 0
       volume: 120
@@ -51,6 +57,9 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "tone"
+      toneProgram: 49
+      toneBank: 69
     SH-4d-3:
       deviceName: "SH-4d"
       midiChannel: 3
@@ -64,6 +73,7 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
     SH-4d-9:
       deviceName: "SH-4d"
       midiChannel: 9
@@ -77,3 +87,16 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "FundaMental SCD"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "A039"
+  bpm: 60.000000

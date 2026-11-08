@@ -481,6 +481,7 @@ public class YamlNode
         FileIO fout;
         fout.open(filename, FileIO.WRITE);
         writeNode(fout, this, 0);
+        fout.close();
     }
 
     // ---------------- Minimal YAML reader (static) ----------------
