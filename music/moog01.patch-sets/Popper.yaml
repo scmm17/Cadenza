@@ -17,7 +17,7 @@ song:
     Moog-0:
       deviceName: "Moog Messenger"
       midiChannel: 0
-      patchName: "Bank: 11 Program: 2"
+      patchName: "Mallets and Metal: 2"
       uiName: "Moog"
       muted: 0
       volume: 127

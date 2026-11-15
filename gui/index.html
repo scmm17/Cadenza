@@ -998,6 +998,16 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="warningModal" role="dialog" aria-modal="true" aria-labelledby="warningModalTitle" onclick="if(event.target===this)closeWarningModal()">
+  <div class="modal" style="max-width: 380px;">
+    <h3 id="warningModalTitle" style="color: var(--amber);">⚠️ Warning</h3>
+    <p id="warningModalMessage"></p>
+    <div class="modal-btns">
+      <button type="button" class="btn-action" id="btnWarningOk" style="padding: 8px 18px; border-radius: 9px;" onclick="closeWarningModal()">OK</button>
+    </div>
+  </div>
+</div>
+
 <script>
 'use strict';
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -1006,19 +1016,27 @@ let ws         = null;
 let reconnect  = null;
 let songs      = [];
 let selectedSongIdx = -1;
+const MOOG_CATEGORIES = [
+  'Messenger', 'Classic Bass', 'Modern Bass', 'Sub Bass',
+  'Hard Lead', 'Soft Lead', 'Arps', 'Orchestral',
+  'Keys', 'Pads', 'Mallets and Metal', 'Sweeps',
+  'Drones', 'Percussion', 'FX', 'User',
+];
+function normalizeMoogDevicePatchName(dev) {
+  if (!dev || dev.uiName !== 'Moog') return;
+  if (dev.bank != null && dev.program != null && dev.bank >= 0 && dev.bank < 16 && dev.program >= 0 && dev.program < 16) {
+    dev.patchName = MOOG_CATEGORIES[dev.bank] + ': ' + (dev.program + 1);
+  } else if (dev.patchName) {
+    dev.patchName = String(dev.patchName).replace(/\s+Program:\s*/g, ': ');
+  }
+}
 if (!window.PRESET_CATALOG) window.PRESET_CATALOG = { V3: [], Hydrasynth: [], 'SH-4d': [] };
 if (!Array.isArray(window.PRESET_CATALOG.Moog) || window.PRESET_CATALOG.Moog.length === 0) {
-  const moogCategories = [
-    'Messenger', 'Classic Bass', 'Modern Bass', 'Sub Bass',
-    'Hard Lead', 'Soft Lead', 'Arps', 'Orchestral',
-    'Keys', 'Pads', 'Mallets and Metal', 'Sweeps',
-    'Drones', 'Percussion', 'FX', 'User',
-  ];
   const moogPresets = [];
   for (let b = 0; b < 16; b++) {
-    const category = moogCategories[b];
+    const category = MOOG_CATEGORIES[b];
     for (let p = 0; p < 16; p++) {
-      moogPresets.push({ program: p, bank: b, name: category + ' Program: ' + (p + 1), category });
+      moogPresets.push({ program: p, bank: b, name: category + ': ' + (p + 1), category });
     }
   }
   window.PRESET_CATALOG.Moog = moogPresets;
@@ -1050,6 +1068,9 @@ function connect() {
       if (msg.type === 'state') {
         const songChanged = chuckState && msg.data && chuckState.songName !== msg.data.songName;
         chuckState = msg.data;
+        if (chuckState && Array.isArray(chuckState.devices)) {
+          chuckState.devices.forEach(normalizeMoogDevicePatchName);
+        }
         if (!initialStateReceived) {
           initialStateReceived = true;
           if (!chuckState.isPaused) {
@@ -1124,6 +1145,13 @@ function connect() {
       } else if (msg.type === 'presets') {
         if (msg.data) {
           presetCatalog = Object.assign({}, window.PRESET_CATALOG || {}, msg.data);
+          if (Array.isArray(presetCatalog.Moog)) {
+            presetCatalog.Moog = presetCatalog.Moog.map(p => (
+              p && p.name
+                ? Object.assign({}, p, { name: String(p.name).replace(/\s+Program:\s*/g, ': ') })
+                : p
+            ));
+          }
           if (Array.isArray(msg.data.synths)) {
             serverSupportsSynthChannel = true;
           }
@@ -1295,6 +1323,7 @@ function renderDevicesTable() {
   if (!s.devices || s.devices.length === 0) return;
 
   const rows = s.devices.map(dev => {
+    normalizeMoogDevicePatchName(dev);
     const icons = dev.playing === 1 ? '&#x2611;&#xFE0F;' : '';
 
     const cls = [
@@ -1378,44 +1407,97 @@ function renderDevicesTable() {
     + '</table>';
 }
 
-// Update a knob indicator and value label without re-rendering the table.
+function findFirstUnusedChannelForSynth(devIdx, targetKey, maxChannels) {
+  const devices = (chuckState && Array.isArray(chuckState.devices)) ? chuckState.devices : [];
+  const usedChannels = new Set(
+    devices
+      .filter(d => d && d.index !== devIdx && d.uiName && d.uiName.toLowerCase() === targetKey)
+      .map(d => d.channel)
+  );
+  for (let ch = 1; ch <= maxChannels; ch++) {
+    if (!usedChannels.has(ch)) {
+      return { channel: ch, internalChannel: ch - 1, error: null };
+    }
+  }
+  return null;
+}
+
+function resolveChannelForSynthChange(devIdx, synthName) {
+  const key = synthName ? synthName.toLowerCase() : '';
+  if (key === 'moog' || key === 'hydrasynth') {
+    return { channel: 1, internalChannel: 0, error: null };
+  }
+  if (key === 's-1') {
+    return { channel: 3, internalChannel: 2, error: null };
+  }
+  const multiChannelLimits = {
+    'sh-4d': { max: 4, label: 'SH-4d' },
+    'v3': { max: 16, label: 'V3' },
+  };
+  if (multiChannelLimits[key]) {
+    const { max, label } = multiChannelLimits[key];
+    const found = findFirstUnusedChannelForSynth(devIdx, key, max);
+    if (found) return found;
+    return {
+      channel: null,
+      internalChannel: null,
+      error: `All MIDI channels for ${label} (channels 1–${max}) are already in use.`,
+    };
+  }
+  const devices = (chuckState && Array.isArray(chuckState.devices)) ? chuckState.devices : [];
+  const dev = devices.find(d => d && d.index === devIdx);
+  const currentChannel = (dev && dev.channel >= 1 && dev.channel <= 16) ? dev.channel : 1;
+  return { channel: currentChannel, internalChannel: currentChannel - 1, error: null };
+}
+
 function onSynthChange(selectEl, devIdx) {
   const synthName = selectEl.value;
   selectEl.blur();
-  if (chuckState && chuckState.devices) {
-    const dev = chuckState.devices.find(d => d.index === devIdx);
-    if (dev && dev.uiName !== synthName) {
-      dev.uiName = synthName;
-      if (synthName === 'V3') {
-        dev.patchName = 'Grand Piano Vienna';
-        dev.bank = 0;
-        dev.program = 0;
-      } else if (synthName === 'Hydrasynth') {
-        dev.patchName = 'Sawpressive GD';
-        dev.bank = 0;
-        dev.program = 0;
-      } else if (synthName === 'SH-4d') {
-        dev.patchName = 'Channel ' + dev.channel;
-        dev.bank = -1;
-        dev.program = -1;
-      } else if (synthName === 'S-1') {
-        dev.patchName = 'Bank: 1 Program: 1';
-        dev.bank = 0;
-        dev.program = 0;
-      } else if (synthName === 'Moog') {
-        dev.patchName = 'Messenger Program: 1';
-        dev.bank = 0;
-        dev.program = 0;
-      } else if (synthName === 'RD-6') {
-        dev.patchName = 'RHYTHM DESIGNER RD-6';
-      }
-      drumDeviceCache.clear();
-    }
+  if (!chuckState || !chuckState.devices) return;
+  const dev = chuckState.devices.find(d => d.index === devIdx);
+  if (!dev || dev.uiName === synthName) return;
+
+  const res = resolveChannelForSynthChange(devIdx, synthName);
+  if (res.error) {
+    selectEl.value = dev.uiName;
+    renderDevicesTable();
+    openWarningModal(res.error);
+    return;
   }
+
+  dev.channel = res.channel;
+  dev.uiName = synthName;
+  if (synthName === 'V3') {
+    dev.patchName = 'Grand Piano Vienna';
+    dev.bank = 0;
+    dev.program = 0;
+  } else if (synthName === 'Hydrasynth') {
+    dev.patchName = 'Sawpressive GD';
+    dev.bank = 0;
+    dev.program = 0;
+  } else if (synthName === 'SH-4d') {
+    dev.patchName = 'Channel ' + dev.channel;
+    dev.bank = -1;
+    dev.program = -1;
+  } else if (synthName === 'S-1') {
+    dev.patchName = 'Bank: 1 Program: 1';
+    dev.bank = 0;
+    dev.program = 0;
+  } else if (synthName === 'Moog') {
+    dev.patchName = 'Messenger: 1';
+    dev.bank = 0;
+    dev.program = 0;
+  } else if (synthName === 'RD-6') {
+    dev.patchName = 'RHYTHM DESIGNER RD-6';
+  }
+  drumDeviceCache.clear();
+
   if (serverSupportsSynthChannel) {
     send('setSynth', { devIdx, synthName });
+    send('setChannel', { devIdx, channel: res.channel });
   } else {
     send('nextFragment', '__cmd__:setSynth:' + devIdx + ':' + synthName);
+    send('nextFragment', '__cmd__:setChannel:' + devIdx + ':' + res.channel);
   }
   renderDevicesTable();
 }
@@ -1679,6 +1761,21 @@ function esc(s) {
 function openShutdown()    { document.getElementById('shutdownModal').classList.add('open'); }
 function closeShutdown()   { document.getElementById('shutdownModal').classList.remove('open'); }
 function confirmShutdown() { closeShutdown(); send('shutdown'); }
+
+// ─── Warning Modal ────────────────────────────────────────────────────────────
+function openWarningModal(message) {
+  const msgEl = document.getElementById('warningModalMessage');
+  if (msgEl) msgEl.textContent = message || '';
+  const modal = document.getElementById('warningModal');
+  if (modal) modal.classList.add('open');
+  const okBtn = document.getElementById('btnWarningOk');
+  if (okBtn) setTimeout(() => okBtn.focus(), 20);
+}
+function closeWarningModal() {
+  const modal = document.getElementById('warningModal');
+  if (modal) modal.classList.remove('open');
+  document.body.focus();
+}
 
 // ─── Open Modal ───────────────────────────────────────────────────────────────
 function openSongModal() {
@@ -2109,7 +2206,10 @@ function applyPresetSelection(targetPreset) {
   const { devIdx, uiName, currentPreset } = presetModalState;
   if (currentPreset === targetPreset) return;
 
-  send('setPreset', { devIdx, presetName: targetPreset.name });
+  const wirePresetName = (uiName === 'Moog')
+    ? (targetPreset.category + ' Program: ' + (targetPreset.program + 1))
+    : targetPreset.name;
+  send('setPreset', { devIdx, presetName: wirePresetName });
 
   presetModalState.currentPreset = targetPreset;
   if (chuckState && chuckState.devices) {
@@ -2153,11 +2253,20 @@ document.addEventListener('keydown', e => {
   const isInput = e.target.matches('input,textarea,select');
   const k = e.key;
 
+  const isWarningModalOpen = document.getElementById('warningModal').classList.contains('open');
   const isShutdownOpen = document.getElementById('shutdownModal').classList.contains('open');
   const isOpenModalOpen  = document.getElementById('openModal').classList.contains('open');
   const isPresetModalOpen = document.getElementById('presetModal').classList.contains('open');
   const isPatchSetModalOpen = document.getElementById('patchSetModal').classList.contains('open');
   const isDeletePatchSetModalOpen = document.getElementById('deletePatchSetModal').classList.contains('open');
+
+  if (isWarningModalOpen) {
+    if (k === 'Enter' || k === 'Escape' || k === ' ') {
+      e.preventDefault();
+      closeWarningModal();
+    }
+    return;
+  }
 
   if (isDeletePatchSetModalOpen) {
     if (k === 'Enter') { e.preventDefault(); confirmDeletePatchSet(); return; }

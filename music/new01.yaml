@@ -3,7 +3,7 @@ song:
     Moog-2:
       deviceName: "Moog Messenger"
       midiChannel: 2
-      patchName: "Bank: 1 Program: 1"
+      patchName: "Messenger: 1"
       uiName: "Moog"
       muted: 0
       volume: 110

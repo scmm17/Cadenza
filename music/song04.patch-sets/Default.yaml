@@ -22,7 +22,7 @@ song:
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      presetName: "Ulrich's"
+      presetName: "D025"
     SH-4d-0:
       deviceName: "SH-4d"
       midiChannel: 0
@@ -39,22 +39,18 @@ song:
       presetType: "tone"
       toneProgram: 20
       toneBank: 64
-    SH-4d-1:
-      deviceName: "SH-4d"
-      midiChannel: 1
-      patchName: "Ju-Funk Bass"
-      uiName: "SH-4d"
+    Moog-0:
+      deviceName: "Moog Messenger"
+      midiChannel: 0
+      patchName: "Percussion: 15"
+      uiName: "Moog"
       muted: 0
       volume: 127
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 0
-      bank: 0
-      programChange: 0
-      presetType: "tone"
-      toneProgram: 2
-      toneBank: 71
+      program: 14
+      bank: 13
     SH-4d-9:
       deviceName: "SH-4d"
       midiChannel: 9

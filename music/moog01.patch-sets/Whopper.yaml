@@ -17,15 +17,15 @@ song:
     Moog-0:
       deviceName: "Moog Messenger"
       midiChannel: 0
-      patchName: "Keys Program: 4"
+      patchName: "Hard Lead: 12"
       uiName: "Moog"
       muted: 0
       volume: 127
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 3
-      bank: 8
+      program: 11
+      bank: 4
     SH-4d-0:
       deviceName: "SH-4d"
       midiChannel: 0

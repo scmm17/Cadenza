@@ -396,6 +396,41 @@ public class Song
         }
     }
 
+    fun int findFirstUnusedMidiChannel(int excludeIdx, string synthUiName, int maxChannels)
+    {
+        for (0 => int ch; ch < maxChannels; ch++) {
+            false => int used;
+            for (0 => int i; i < devices.cap(); i++) {
+                if (i != excludeIdx && devices[i] != null && devices[i].uiName == synthUiName && devices[i].midiChannel == ch) {
+                    true => used;
+                    break;
+                }
+            }
+            if (!used) return ch;
+        }
+        return -1;
+    }
+
+    fun int resolveMidiChannelForSynth(int idx, string synthUiName)
+    {
+        if (synthUiName == "Moog" || synthUiName == "Hydrasynth") {
+            return 0;
+        }
+        if (synthUiName == "S-1") {
+            return 2;
+        }
+        if (synthUiName == "SH-4d") {
+            return findFirstUnusedMidiChannel(idx, "SH-4d", 4);
+        }
+        if (synthUiName == "V3") {
+            return findFirstUnusedMidiChannel(idx, "V3", 16);
+        }
+        if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
+            return devices[idx].midiChannel;
+        }
+        return 0;
+    }
+
     fun void setDeviceSynth(int devIdx, string synthUiName)
     {
         devIdx - 1 => int idx;
@@ -409,10 +444,15 @@ public class Song
             if (launchControl != null) launchControl.printDevices();
             return;
         }
+        resolveMidiChannelForSynth(idx, synthUiName) => int targetMidiChannel;
+        if (targetMidiChannel < 0) {
+            if (launchControl != null) launchControl.printDevices();
+            return;
+        }
         oldPatch.sendAllNotesOff();
-        createDefaultPatchForSynth(synthUiName, oldPatch.midiChannel, oldPatch.volume) @=> Patch @ newPatch;
+        createDefaultPatchForSynth(synthUiName, targetMidiChannel, oldPatch.volume) @=> Patch @ newPatch;
         if (newPatch == null) return;
-        oldPatch.midiChannel => newPatch.midiChannel;
+        targetMidiChannel => newPatch.midiChannel;
         oldPatch.volume => newPatch.volume;
         oldPatch.filterCutoff => newPatch.filterCutoff;
         oldPatch.filterResonance => newPatch.filterResonance;
@@ -444,6 +484,14 @@ public class Song
         if (channel > 16) { 16 => channel; }
         channel - 1 => int newMidiChannel;
         devices[idx] @=> Patch @ p;
+        if (p.midiChannel == newMidiChannel) {
+            p @=> currentDevice;
+            if (hydraEvents != null) {
+                p.midiChannel => hydraEvents.outputChannel;
+            }
+            if (launchControl != null) launchControl.printDevices();
+            return;
+        }
         p.sendAllNotesOff();
         newMidiChannel => p.midiChannel;
         if (p.uiName == "SH-4d") {
@@ -869,10 +917,20 @@ public class Song
                 }
             }
         } else if (currentDevice.uiName == "Moog") {
+            "" => string bankPart;
+            -1 => int p;
             presetName.find("Program:") => int pPos;
             if (pPos > 0) {
-                YamlNode.trimLeft(YamlNode.trimRight(presetName.substring(0, pPos))) => string bankPart;
-                Std.atoi(YamlNode.trimLeft(YamlNode.trimRight(presetName.substring(pPos + 8)))) - 1 => int p;
+                YamlNode.trimLeft(YamlNode.trimRight(presetName.substring(0, pPos))) => bankPart;
+                Std.atoi(YamlNode.trimLeft(YamlNode.trimRight(presetName.substring(pPos + 8)))) - 1 => p;
+            } else {
+                presetName.find(":") => int cPos;
+                if (cPos > 0) {
+                    YamlNode.trimLeft(YamlNode.trimRight(presetName.substring(0, cPos))) => bankPart;
+                    Std.atoi(YamlNode.trimLeft(YamlNode.trimRight(presetName.substring(cPos + 1)))) - 1 => p;
+                }
+            }
+            if (bankPart != "" && p >= 0) {
                 MoogMessenger.findBankByName(bankPart) => int b;
                 if (b < 0 && bankPart.find("Bank:") == 0) {
                     Std.atoi(YamlNode.trimLeft(YamlNode.trimRight(bankPart.substring(5)))) - 1 => b;

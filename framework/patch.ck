@@ -1282,7 +1282,7 @@ public class MoogMessenger extends Patch
 
     fun static string formatPatchName(int b, int p)
     {
-        return bankName(b) + " Program: " + Std.itoa(clampSlot(p) + 1);
+        return bankName(b) + ": " + Std.itoa(clampSlot(p) + 1);
     }
 
     fun static int findBankByName(string name)

@@ -265,7 +265,7 @@ function loadPresetCatalog() {
       moog.push({
         program: p,
         bank: b,
-        name: `${category} Program: ${p + 1}`,
+        name: `${category}: ${p + 1}`,
         category,
       });
     }
