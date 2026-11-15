@@ -745,6 +745,41 @@ public class Song
         <<< getSH4dPresetDeclaration(preset), "" >>>;
     }
 
+    fun void applyMoogPreset(int b, int p, int volume)
+    {
+        if (currentDevice.uiName != "Moog") return;
+        if (b < 0) { 0 => b; }
+        if (b > 15) { 15 => b; }
+        if (p < 0) { 0 => p; }
+        if (p > 15) { 15 => p; }
+        b => currentDevice.bank;
+        p => currentDevice.program;
+        "Bank: " + Std.itoa(b + 1) + " Program: " + Std.itoa(p + 1) => currentDevice.patchName;
+        currentDevice.setPreset();
+        if (volume != -1) {
+            currentDevice.sendControllerChange(7, volume);
+        }
+        <<< "MoogMessenger(" + Std.itoa(currentDevice.midiChannel + 1) + ", " + Std.itoa(b + 1) + ", " + Std.itoa(p + 1) + ", " + Std.itoa(volume) + ");", "" >>>;
+    }
+
+    fun void stepMoogPreset(int delta, int volume)
+    {
+        currentDevice.bank => int curBank;
+        currentDevice.program => int curProg;
+        if (curBank < 0 || curBank > 15) { 0 => curBank; }
+        if (curProg < 0 || curProg > 15) { 0 => curProg; }
+        (curBank * 16 + curProg + delta + 256) % 256 => int idx;
+        applyMoogPreset(idx / 16, idx % 16, volume);
+    }
+
+    fun void stepMoogBank(int delta, int volume)
+    {
+        currentDevice.bank => int curBank;
+        if (curBank < 0 || curBank > 15) { 0 => curBank; }
+        (curBank + delta + 16) % 16 => int nextBank;
+        applyMoogPreset(nextBank, currentDevice.program, volume);
+    }
+
     fun setNextPreset(int volume) 
     {
         if (currentDevice.uiName == "V3") {
@@ -753,6 +788,8 @@ public class Song
             applyHydraPreset(hydraPresets.getNextPreset(), volume);
         } else if (currentDevice.uiName == "SH-4d") {
             applySH4dPreset(sh4dPresets.getNextPreset(), volume);
+        } else if (currentDevice.uiName == "Moog") {
+            stepMoogPreset(1, volume);
         }
     }
 
@@ -770,6 +807,8 @@ public class Song
             sh4dPresets.getNextCategory() @=> SH4dPreset preset;
             <<< "Category:", preset.category >>>;
             applySH4dPreset(preset, volume);
+        } else if (currentDevice.uiName == "Moog") {
+            stepMoogBank(1, volume);
         }
     }
 
@@ -781,6 +820,8 @@ public class Song
             applyHydraPreset(hydraPresets.getPreviousPreset(), volume);
         } else if (currentDevice.uiName == "SH-4d") {
             applySH4dPreset(sh4dPresets.getPreviousPreset(), volume);
+        } else if (currentDevice.uiName == "Moog") {
+            stepMoogPreset(-1, volume);
         }
     }
 
@@ -798,6 +839,8 @@ public class Song
             sh4dPresets.getPreviousCategory() @=> SH4dPreset preset;
             <<< "Category:", preset.category >>>;
             applySH4dPreset(preset, volume);
+        } else if (currentDevice.uiName == "Moog") {
+            stepMoogBank(-1, volume);
         }
     }
 
@@ -824,6 +867,14 @@ public class Song
                         }
                     }
                 }
+            }
+        } else if (currentDevice.uiName == "Moog") {
+            presetName.find("Bank:") => int bPos;
+            presetName.find("Program:") => int pPos;
+            if (bPos >= 0 && pPos > bPos) {
+                Std.atoi(YamlNode.trimLeft(YamlNode.trimRight(presetName.substring(bPos + 5, pPos - (bPos + 5))))) - 1 => int b;
+                Std.atoi(YamlNode.trimLeft(YamlNode.trimRight(presetName.substring(pPos + 8)))) - 1 => int p;
+                applyMoogPreset(b, p, volume);
             }
         }
     }
@@ -1471,8 +1522,7 @@ public class Song
                 e.getInt() => int val;
                 devIdx - 1 => int idx;
                 if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
-                    val => devices[idx].filterCutoff;
-                    devices[idx].sendControllerChange(74, val);
+                    devices[idx].setCutoff(val);
                     launchControl.printDevices();
                 }
             }
@@ -1488,8 +1538,7 @@ public class Song
                 e.getInt() => int val;
                 devIdx - 1 => int idx;
                 if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
-                    val => devices[idx].filterResonance;
-                    devices[idx].sendControllerChange(71, val);
+                    devices[idx].setResonance(val);
                     launchControl.printDevices();
                 }
             }
@@ -1507,8 +1556,7 @@ public class Song
                 devIdx - 1 => int idx;
                 if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {
                     val + 64 => int midiPan;   // 0-127, 64 = center
-                    midiPan => devices[idx].pan;
-                    devices[idx].sendControllerChange(10, midiPan);
+                    devices[idx].setPan(midiPan);
                     launchControl.printDevices();
                 }
             }
@@ -2323,15 +2371,17 @@ public class LaunchControl
                     baseControlNumber - cc.minController => int channel;
                     song.devices[channel] @=> Patch patch;
                     if (patch != null) {
-                        patch.sendControllerChange(cc.mapToController, value);
                         if (cc.mapToController == 7) {
                             value => patch.volume;
+                            patch.sendControllerChange(7, value);
                         } else if (cc.mapToController == 74) {
-                            value => patch.filterCutoff;
+                            patch.setCutoff(value);
                         } else if (cc.mapToController == 71) {
-                            value => patch.filterResonance;
+                            patch.setResonance(value);
                         } else if (cc.mapToController == 10) {
-                            value => patch.pan;
+                            patch.setPan(value);
+                        } else {
+                            patch.sendControllerChange(cc.mapToController, value);
                         }
                         spork ~ printDevices();
                         return true;

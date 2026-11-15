@@ -970,7 +970,7 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="patchSetModal" role="dialog" aria-modal="true" aria-labelledby="patchSetModalTitle" onclick="if(event.target===this)closePatchSetModal()">
+<div class="modal-overlay" id="patchSetModal" role="dialog" aria-modal="true" aria-labelledby="patchSetModalTitle" onmousedown="if(event.target===this)closePatchSetModal()">
   <div class="modal" style="max-width: 420px;">
     <h3 id="patchSetModalTitle" style="color: var(--accent-lite); margin-bottom: 12px;">🎛️ Patch Sets</h3>
     <div class="patchset-top-row">
@@ -1006,13 +1006,25 @@ let ws         = null;
 let reconnect  = null;
 let songs      = [];
 let selectedSongIdx = -1;
-let presetCatalog = window.PRESET_CATALOG || { V3: [], Hydrasynth: [], 'SH-4d': [] };
+if (!window.PRESET_CATALOG) window.PRESET_CATALOG = { V3: [], Hydrasynth: [], 'SH-4d': [] };
+if (!Array.isArray(window.PRESET_CATALOG.Moog) || window.PRESET_CATALOG.Moog.length === 0) {
+  const moogPresets = [];
+  for (let b = 0; b < 16; b++) {
+    const category = 'Bank ' + (b + 1);
+    for (let p = 0; p < 16; p++) {
+      moogPresets.push({ program: p, bank: b, name: 'Bank: ' + (b + 1) + ' Program: ' + (p + 1), category });
+    }
+  }
+  window.PRESET_CATALOG.Moog = moogPresets;
+}
+let presetCatalog = window.PRESET_CATALOG;
 const REGISTERED_SYNTHS = ['V3', 'Hydrasynth', 'SH-4d', 'S-1', 'Moog', 'RD-6'];
 let serverSupportsSynthChannel = false;
 let presetModalState = null; // { devIdx, uiName, category, presets, currentPresetName, selectedIdx }
 let patchSetsState = { songName: '', patchSets: ['Default'], defaultPatchSet: 'Default' };
 let activePatchSetName = 'Default';
 let pendingDeletePatchSetName = null;
+let pendingFocusNewPatchSet = false;
 let isSongReset = true;
 let initialStateReceived = false;
 let playFromResetTime = 0;
@@ -1073,7 +1085,18 @@ function connect() {
           }
           syncPatchSetButton();
           if (document.getElementById('patchSetModal').classList.contains('open')) {
-            renderPatchSetList(true);
+            const shouldFocusNew = pendingFocusNewPatchSet;
+            pendingFocusNewPatchSet = false;
+            renderPatchSetList(shouldFocusNew);
+            if (shouldFocusNew) {
+              const input = document.getElementById('patchSetNameInput');
+              if (input) {
+                input.focus();
+                input.select();
+              }
+            }
+          } else {
+            pendingFocusNewPatchSet = false;
           }
         }
       } else if (msg.type === 'graph') {
@@ -1290,7 +1313,7 @@ function renderDevicesTable() {
       + dev.index
       + '</button></td>';
 
-    const hasPresets = (dev.uiName === 'V3' || dev.uiName === 'Hydrasynth' || dev.uiName === 'SH-4d');
+    const hasPresets = (dev.uiName === 'V3' || dev.uiName === 'Hydrasynth' || dev.uiName === 'SH-4d' || dev.uiName === 'Moog');
     const patchTitleHtml = hasPresets
       ? '<div class="patch-title patch-title-clickable" title="Click to choose preset (' + esc(dev.patchName) + ')" onclick="openPresetModal(event, ' + dev.index + ')">' + esc(dev.patchName) + '</div>'
       : '<div class="patch-title" title="' + esc(dev.patchName) + '">' + esc(dev.patchName) + '</div>';
@@ -1916,18 +1939,18 @@ function selectPatchSet(name) {
 
 function createNewPatchSet() {
   commitRenamePatchSet();
+  pendingFocusNewPatchSet = true;
   send('createPatchSet', {});
 }
 
 function onPatchSetNameKeydown(e) {
+  e.stopPropagation();
   if (e.key === 'Enter') {
     e.preventDefault();
-    e.stopPropagation();
     commitRenamePatchSet();
     e.target.blur();
   } else if (e.key === 'Escape') {
     e.preventDefault();
-    e.stopPropagation();
     e.target.value = activePatchSetName || 'Default';
     e.target.blur();
   }
@@ -2090,6 +2113,16 @@ function applyPresetSelection(targetPreset) {
   }
 }
 
+function movePresetSelection(delta) {
+  if (!presetModalState) return;
+  const filtered = getFilteredCategoryPresets();
+  if (filtered.length === 0) return;
+  const nextIdx = Math.max(0, Math.min(filtered.length - 1, presetModalState.selectedIdx + delta));
+  presetModalState.selectedIdx = nextIdx;
+  applyPresetSelection(filtered[nextIdx]);
+  renderPresetList();
+}
+
 function confirmPresetModal(explicitPreset = null) {
   if (!presetModalState) return;
   let targetPreset = explicitPreset;
@@ -2140,19 +2173,12 @@ document.addEventListener('keydown', e => {
     if (k === 'Escape') { e.preventDefault(); cancelPresetModal(); return; }
     if (k === 'ArrowDown') {
       e.preventDefault();
-      const filteredLength = document.getElementById('presetListContainer').children.length;
-      if (presetModalState && filteredLength > 0) {
-        presetModalState.selectedIdx = Math.min(filteredLength - 1, presetModalState.selectedIdx + 1);
-        renderPresetList();
-      }
+      movePresetSelection(1);
       return;
     }
     if (k === 'ArrowUp') {
       e.preventDefault();
-      if (presetModalState) {
-        presetModalState.selectedIdx = Math.max(0, presetModalState.selectedIdx - 1);
-        renderPresetList();
-      }
+      movePresetSelection(-1);
       return;
     }
     if (isInput) return;
@@ -2278,7 +2304,7 @@ const pitchDevices = new Map(); // pitchKey -> Map<dev, devIdx>
 function clearNotes() {
   activePitchRows.length = 0;
   activePitchRowSet.clear();
-  activePitchRowsDirty = false;
+  activePitchRowsDirty = true;
   noteBlocks.length = 0;
   noteBlocksReadIdx = 0;
   activeNotesMap.clear();
@@ -2367,8 +2393,18 @@ function initScrollCanvas() {
   const canvas = document.getElementById('scrollCanvas');
   if (!canvas) return;
 
-  // Cache the 2D context once — getContext() is cheap but no need to call every frame.
-  const ctx = canvas.getContext('2d');
+  // Cache the 2D context once with alpha: false since the canvas is opaque.
+  const ctx = canvas.getContext('2d', { alpha: false });
+
+  // Offscreen static layer for background, pitch grid lines, gutter, and labels.
+  const bgCanvas = document.createElement('canvas');
+  const bgCtx = bgCanvas.getContext('2d', { alpha: false });
+  let bgDirty = true;
+  let lastRowCount = -1;
+
+  const gutterW = 96;                   // Left column width for pitch labels
+  const playheadX = gutterW;            // Notes start exactly at the divider
+  const pxPerMs = 0.12;                 // Scroll speed: 120px per second
 
   // Cache DPR and logical size so we only call getBoundingClientRect on resize.
   let cachedDpr = window.devicePixelRatio || 1;
@@ -2381,9 +2417,14 @@ function initScrollCanvas() {
       const dpr = window.devicePixelRatio || 1;
       const w = entry.contentRect.width;
       const h = entry.contentRect.height;
-      if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
-        canvas.width  = Math.floor(w * dpr);
-        canvas.height = Math.floor(h * dpr);
+      const targetW = Math.floor(w * dpr);
+      const targetH = Math.floor(h * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width  = targetW;
+        canvas.height = targetH;
+      }
+      if (cachedDpr !== dpr || cachedW !== w || cachedH !== h) {
+        bgDirty = true;
       }
       cachedDpr = dpr;
       cachedW = w;
@@ -2391,6 +2432,61 @@ function initScrollCanvas() {
     }
   });
   ro.observe(canvas);
+
+  function renderStaticBg(w, h, dpr) {
+    const targetW = Math.floor(w * dpr);
+    const targetH = Math.floor(h * dpr);
+    if (bgCanvas.width !== targetW || bgCanvas.height !== targetH) {
+      bgCanvas.width = targetW;
+      bgCanvas.height = targetH;
+    }
+
+    bgCtx.save();
+    bgCtx.scale(dpr, dpr);
+
+    // Clear background
+    bgCtx.fillStyle = '#080512';
+    bgCtx.fillRect(0, 0, w, h);
+
+    const rowCount = Math.max(1, activePitchRows.length);
+    const rowH = h / rowCount;
+
+    // 1. Draw horizontal pitch row grid lines
+    bgCtx.strokeStyle = 'rgba(110, 70, 240, 0.22)';
+    bgCtx.lineWidth = 1;
+    bgCtx.beginPath();
+    for (let i = 0; i < activePitchRows.length; i++) {
+      const y = i * rowH;
+      bgCtx.moveTo(gutterW, y + rowH);
+      bgCtx.lineTo(w, y + rowH);
+    }
+    bgCtx.stroke();
+
+    // 2. Left gutter background & separator line
+    bgCtx.fillStyle = '#0a0718';
+    bgCtx.fillRect(0, 0, gutterW, h);
+    bgCtx.strokeStyle = 'rgba(110, 70, 240, 0.3)';
+    bgCtx.lineWidth = 1;
+    bgCtx.beginPath();
+    bgCtx.moveTo(gutterW, 0);
+    bgCtx.lineTo(gutterW, h);
+    bgCtx.stroke();
+
+    // Gutter text labels (aligned right inside left gutter)
+    bgCtx.textAlign = 'right';
+    bgCtx.textBaseline = 'middle';
+    bgCtx.font = '600 11px "JetBrains Mono", monospace';
+    for (let i = 0; i < activePitchRows.length; i++) {
+      const pKey = activePitchRows[i];
+      const y = i * rowH;
+      bgCtx.fillStyle = (pKey < 0) ? '#fbbf24' : '#a78bfa';
+      bgCtx.fillText(getNoteLabel(pKey), gutterW - 10, y + rowH / 2);
+    }
+
+    bgCtx.restore();
+    lastRowCount = activePitchRows.length;
+    bgDirty = false;
+  }
 
   // Build a pitch->rowIndex lookup so inner loops skip the .indexOf() call.
   const pitchRowIndex = new Map();
@@ -2410,18 +2506,21 @@ function initScrollCanvas() {
       pitchRowIndex.clear();
       for (let i = 0; i < activePitchRows.length; i++) pitchRowIndex.set(activePitchRows[i], i);
       activePitchRowsDirty = false;
+      bgDirty = true;
+    }
+    if (activePitchRows.length !== lastRowCount) {
+      bgDirty = true;
+    }
+
+    if (bgDirty) {
+      renderStaticBg(w, h, dpr);
+    }
+    if (bgCanvas.width > 0 && bgCanvas.height > 0) {
+      ctx.drawImage(bgCanvas, 0, 0);
     }
 
     ctx.save();
     ctx.scale(dpr, dpr);
-
-    // Clear background
-    ctx.fillStyle = '#080512';
-    ctx.fillRect(0, 0, w, h);
-
-    const gutterW = 96;                   // Left column width for pitch labels
-    const playheadX = gutterW;            // Notes start exactly at the divider
-    const pxPerMs = 0.12;                 // Scroll speed: 120px per second
 
     // Safety timeout: auto-close any open note block held > 15000ms without noteOff
     for (const [key, block] of activeNotesMap.entries()) {
@@ -2450,38 +2549,6 @@ function initScrollCanvas() {
     const rowCount = Math.max(1, activePitchRows.length);
     const rowH = h / rowCount;
 
-    // 1. Draw horizontal pitch row grid lines
-    ctx.strokeStyle = 'rgba(110, 70, 240, 0.22)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let i = 0; i < activePitchRows.length; i++) {
-      const y = i * rowH;
-      ctx.moveTo(gutterW, y + rowH);
-      ctx.lineTo(w, y + rowH);
-    }
-    ctx.stroke();
-
-    // 2. Left gutter background & separator line
-    ctx.fillStyle = '#0a0718';
-    ctx.fillRect(0, 0, gutterW, h);
-    ctx.strokeStyle = 'rgba(110, 70, 240, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(gutterW, 0);
-    ctx.lineTo(gutterW, h);
-    ctx.stroke();
-
-    // Gutter text labels (aligned right inside left gutter)
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    ctx.font = '600 11px "JetBrains Mono", monospace';
-    for (let i = 0; i < activePitchRows.length; i++) {
-      const pKey = activePitchRows[i];
-      const y = i * rowH;
-      ctx.fillStyle = (pKey < 0) ? '#fbbf24' : '#a78bfa';
-      ctx.fillText(getNoteLabel(pKey), gutterW - 10, y + rowH / 2);
-    }
-
     // 3. Playhead line removed per user request
 
     // 4. Draw note blocks (starting at playheadX and scrolling left-to-right towards w).
@@ -2489,6 +2556,7 @@ function initScrollCanvas() {
     //    pitchDevices.  We iterate blocks once, building per-color Path2D batches.
     const pathByColor = new Map();
     const flashes = [];
+    let deadCount = 0;
 
     for (let i = noteBlocksReadIdx; i < noteBlocks.length; i++) {
       const block = noteBlocks[i];
@@ -2498,7 +2566,10 @@ function initScrollCanvas() {
       let blockW   = leadX - trailX;
       if (blockW < 2) blockW = 2;
 
-      if (trailX > w) continue; // Off screen right
+      if (trailX > w) {
+        deadCount++;
+        continue; // Off screen right
+      }
 
       const drawX = Math.max(playheadX, trailX);
       const drawW = Math.min(w - drawX, blockW - (drawX - trailX));
@@ -2518,7 +2589,7 @@ function initScrollCanvas() {
       if (!path) { path = new Path2D(); pathByColor.set(block.color, path); }
 
       const r = Math.min(3, subH / 2, drawW / 2);
-      if (path.roundRect) {
+      if (r >= 1.5 && path.roundRect) {
         path.roundRect(drawX, y, drawW, subH - 1, r);
       } else {
         path.rect(drawX, y, drawW, subH - 1);
@@ -2534,28 +2605,47 @@ function initScrollCanvas() {
       }
     }
 
-    // Draw all colored note paths in one pass; set shadow once per color.
-    ctx.shadowBlur = 6;
+    // Compact scrolled-off blocks behind long held notes so iteration stays tight.
+    if (deadCount > 250) {
+      let writeIdx = 0;
+      for (let i = noteBlocksReadIdx; i < noteBlocks.length; i++) {
+        const block = noteBlocks[i];
+        if (block.endT === null || (playheadX + (now - block.endT) * pxPerMs) <= w) {
+          noteBlocks[writeIdx++] = block;
+        }
+      }
+      noteBlocks.length = writeIdx;
+      noteBlocksReadIdx = 0;
+    }
+
+    // Draw all colored note paths in one pass per color; simulate neon glow via
+    // a wide semi-transparent stroke instead of costly shadowBlur Gaussian passes.
+    ctx.lineJoin = 'round';
     for (const [color, path] of pathByColor.entries()) {
+      ctx.globalAlpha = 0.22;
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = color;
+      ctx.stroke(path);
+      ctx.globalAlpha = 1;
       ctx.fillStyle = color;
-      ctx.shadowColor = color;
       ctx.fill(path);
     }
-    ctx.shadowBlur = 0;
 
-    // Draw white flashes over new notes
+    // Draw white flashes over new notes using layered alpha rects instead of shadowBlur.
     for (const f of flashes) {
       // Gamma correction for visually brighter fade curve
       const brightAlpha = Math.pow(f.alpha, 0.6);
+      ctx.fillStyle = `rgba(255, 255, 255, ${brightAlpha * 0.22})`;
+      ctx.fillRect(f.x - 3, f.y - 3, f.w + 6, f.h + 6);
       ctx.fillStyle = `rgba(255, 255, 255, ${brightAlpha})`;
-      ctx.shadowColor = 'rgba(255, 255, 255, 1)';
-      ctx.shadowBlur = 24 * brightAlpha;
-      ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(f.x, f.y, f.w, f.h, f.r);
-      else ctx.rect(f.x, f.y, f.w, f.h);
-      ctx.fill();
+      if (f.r >= 1.5 && ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(f.x, f.y, f.w, f.h, f.r);
+        ctx.fill();
+      } else {
+        ctx.fillRect(f.x, f.y, f.w, f.h);
+      }
     }
-    ctx.shadowBlur = 0;
 
     ctx.restore();
   }

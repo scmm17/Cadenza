@@ -252,10 +252,23 @@ function loadPresetCatalog() {
   } catch (err) {
     console.error('Failed to parse preset catalog from patch.ck:', err.message);
   }
+  const moog = [];
+  for (let b = 0; b < 16; b++) {
+    const category = `Bank ${b + 1}`;
+    for (let p = 0; p < 16; p++) {
+      moog.push({
+        program: p,
+        bank: b,
+        name: `Bank: ${b + 1} Program: ${p + 1}`,
+        category,
+      });
+    }
+  }
   return {
     V3: v3,
     Hydrasynth: hydrasynth,
     'SH-4d': sh4d,
+    Moog: moog,
     synths: ['V3', 'Hydrasynth', 'SH-4d', 'S-1', 'Moog', 'RD-6'],
   };
 }

@@ -16,7 +16,7 @@
 RolandS1 s1(2, 10, 64);
 //RolandS1 s1(2, 9, 100);
 //
-MoogMessenger moog(1, 4, 12, 127);
+MoogMessenger moog(1, 3, 4, 127);
 V3GrandPiano piano(1, "Steel drums", 110);
 RolandSH4d sh4d_2(2, "channel 2", 64);
 RolandSH4d sh4d_3(3, "channel 3", 127);
@@ -37,17 +37,17 @@ Chord V7_Higher(NoteCollection.V7_notes(), 1);
 
 // Chord notes
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] @=> int progression[];
-[I7_Low, I7_Low, I7_Low, I7_Low, 
- IV7_Low, IV7_Low, I7_Low, I7_Low, 
+[I7_Low, I7_Low, I7_Low, I7_Low,
+ IV7_Low, IV7_Low, I7_Low, I7_Low,
  V7_Low, IV7_Low, I7_Low, I7_Low] @=> Chord chordsL[];
 
 // Chords
-[I7_High, I7_High, I7_High, I7_High, 
- IV7_High, IV7_High, I7_High, I7_High, 
+[I7_High, I7_High, I7_High, I7_High,
+ IV7_High, IV7_High, I7_High, I7_High,
  V7_High, IV7_High, I7_High, I7_High] @=> Chord chordsH[];
 
-[I7_High, I7_High, I7_High, I7_High, 
- IV7_High, IV7_High, I7_Higher, I7_High, 
+[I7_High, I7_High, I7_High, I7_High,
+ IV7_High, IV7_High, I7_Higher, I7_High,
  V7_High, IV7_High, I7_Higher, I7_Higher] @=> Chord chordsMelody[];
 
 Chord I7_bass_Low(NoteCollection.I7_bass_notes(), -1);
@@ -59,12 +59,12 @@ Chord IV7_bass_High(NoteCollection.IV7_bass_notes(), 0);
 Chord V7_bass_High(NoteCollection.V7_bass_notes(), 0);
 
 // Bass Line
-[I7_bass_Low, I7_bass_Low, I7_bass_Low, I7_bass_Low, 
- IV7_bass_Low, IV7_bass_Low, I7_bass_Low, I7_bass_Low, 
+[I7_bass_Low, I7_bass_Low, I7_bass_Low, I7_bass_Low,
+ IV7_bass_Low, IV7_bass_Low, I7_bass_Low, I7_bass_Low,
  V7_bass_Low, IV7_bass_Low, I7_bass_Low, I7_bass_Low] @=> Chord chordsBassL[];
 
-[I7_bass_High, I7_bass_High, I7_bass_High, I7_bass_High, 
- IV7_bass_High, IV7_bass_High, I7_bass_High, I7_bass_High, 
+[I7_bass_High, I7_bass_High, I7_bass_High, I7_bass_High,
+ IV7_bass_High, IV7_bass_High, I7_bass_High, I7_bass_High,
  V7_bass_High, IV7_bass_High, I7_bass_High, I7_bass_High] @=> Chord chordsBassH[];
 
 [1.0, 1.0] @=> float probabilitiesa[];

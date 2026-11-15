@@ -1,0 +1,102 @@
+song:
+  devices:
+    SH-4d-0:
+      deviceName: "SH-4d"
+      midiChannel: 0
+      patchName: "Space Clav"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 106
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 1
+      bank: 3
+      programChange: 1
+      presetType: "tone"
+      toneProgram: 49
+      toneBank: 69
+    SH-4d-1:
+      deviceName: "SH-4d"
+      midiChannel: 1
+      patchName: "Dripper EP"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 97
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 9
+      toneBank: 72
+    S-1-2:
+      deviceName: "S-1 MIDI IN"
+      midiChannel: 2
+      patchName: "Bank: 2 Program: 10"
+      uiName: "S-1"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 10
+      bank: 2
+    SH-4d-2:
+      deviceName: "SH-4d"
+      midiChannel: 2
+      patchName: "Space Clav"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 120
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 49
+      toneBank: 69
+    SH-4d-3:
+      deviceName: "SH-4d"
+      midiChannel: 3
+      patchName: "Channel 4"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 100
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "channel"
+    SH-4d-9:
+      deviceName: "SH-4d"
+      midiChannel: 9
+      patchName: "Drums"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 43
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "channel"
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "Tubular FP"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "A043"
+  bpm: 60.000000

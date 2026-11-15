@@ -13,18 +13,19 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
     Moog-0:
       deviceName: "Moog Messenger"
       midiChannel: 0
-      patchName: "Bank: 4 Program: 12"
+      patchName: "Bank: 3 Program: 4"
       uiName: "Moog"
       muted: 0
       volume: 127
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 11
-      bank: 3
+      program: 3
+      bank: 2
     V3-0:
       deviceName: "U2MIDI Pro"
       midiChannel: 0
@@ -63,3 +64,5 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
+  bpm: 100.000000

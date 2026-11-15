@@ -135,18 +135,42 @@ public class Patch
         config.SetInt("pan", pan);
     }
 
+    fun void setCutoff(int val)
+    {
+        val => filterCutoff;
+        if (filterCutoff != -1) {
+            sendControllerChange(74, filterCutoff);
+        }
+    }
+
+    fun void setResonance(int val)
+    {
+        val => filterResonance;
+        if (filterResonance != -1) {
+            sendControllerChange(71, filterResonance);
+        }
+    }
+
+    fun void setPan(int val)
+    {
+        val => pan;
+        if (pan != -1) {
+            sendControllerChange(10, pan);
+        }
+    }
+
     fun void updateControllers()
     {
         setPreset();
 
         if (filterCutoff != -1) {
-            sendControllerChange(74, filterCutoff);
+            setCutoff(filterCutoff);
         }
         if (filterResonance != -1) {
-            sendControllerChange(71, filterResonance);
+            setResonance(filterResonance);
         }
         if (pan != -1) {
-            sendControllerChange(10, pan);
+            setPan(pan);
         }
         if (volume != -1) {
             sendControllerChange(7, volume);
@@ -1212,10 +1236,8 @@ public class Hydrasynth extends Patch
 }
 
 // MoogMessenger is a class that represents a Moog Messenger MIDI device in the framework.
-// It extends Patch and uses the same bank/program MIDI sequence as Hydrasynth (CC0/CC32 + program change).
-//
-// bank is 0-based (same as Hydrasynth letter banks: A=0, B=1, ...). program is 1-based (1-128), matching
-// the numeric part of a Hydrasynth preset string.
+// It extends Patch and selects banks 1-16 (0-based 0-15) and programs 1-16 (0-based 0-15)
+// using CC 0 = 0, CC 32 (0 = Banks 1-8, 1 = Banks 9-16), and a 2-byte Program Change (0-127).
 public class MoogMessenger extends Patch
 {
     fun MoogMessenger()
@@ -1233,25 +1255,76 @@ public class MoogMessenger extends Patch
         "Moog Messenger" => deviceName;
         "Moog" => uiName;
         channel - 1 => midiChannel;
-        bank - 1 => this.bank;
-        program  - 1 => this.program;
-        "Bank: " + Std.itoa(bank) + " Program: " + Std.itoa(program) => patchName;
+        clampSlot(bank - 1) => this.bank;
+        clampSlot(program - 1) => this.program;
+        "Bank: " + Std.itoa(this.bank + 1) + " Program: " + Std.itoa(this.program + 1) => patchName;
         Patch(v);
+    }
+
+    fun int clampSlot(int val)
+    {
+        if (val < 0) return 0;
+        if (val > 15) return 15;
+        return val;
     }
 
     fun void programChangeMoogMessenger(int program, int bank)
     {
-        MidiMsg msg;
-        0xC0 | midiChannel => msg.data1;
-        program => msg.data2;
-        0 => msg.data3;
-        gma.send(msg);
-    }
-    
-    fun void setPreset()
-    {
+        clampSlot(bank) => int b;
+        clampSlot(program) => int p;
+
+        (b / 8) & 0x01 => int bankGroup;
+        ((b % 8) * 16) + p => int pcNumber;
+
+        // Bank Select MSB (CC 0 = 0) and LSB (CC 32: 0 = Banks 1-8, 1 = Banks 9-16)
+        sendControllerChange(0, 0);
+        sendControllerChange(32, bankGroup);
+
+        // 2-byte MIDI Program Change (0-127 within the active 8-bank group)
+        gma.programChange(midiChannel, pcNumber);
     }
 
+    fun void setPreset()
+    {
+        programChangeMoogMessenger(program, bank);
+    }
+
+    fun void setCutoff(int val)
+    {
+        val => filterCutoff;
+        if (filterCutoff != -1) {
+            sendControllerChange(19, filterCutoff);
+        }
+    }
+
+    fun void setResonance(int val)
+    {
+        val => filterResonance;
+        if (filterResonance != -1) {
+            sendControllerChange(21, filterResonance);
+        }
+    }
+
+    fun void setPan(int val)
+    {
+        // CC 10 maps to OSC Tune on Moog Messenger; keep pan in state without sending CC 10.
+        val => pan;
+    }
+
+    fun void updateControllers()
+    {
+        setPreset();
+
+        if (filterCutoff != -1) {
+            setCutoff(filterCutoff);
+        }
+        if (filterResonance != -1) {
+            setResonance(filterResonance);
+        }
+        if (volume != -1) {
+            sendControllerChange(7, volume);
+        }
+    }
 
     fun void saveConfig(YamlNode @config)
     {
@@ -1267,18 +1340,16 @@ public class MoogMessenger extends Patch
         "Moog" => uiName;
         openDevice();
         if (config.findChild("program") >= 0) {
-            config.GetInt("program") => program;
+            clampSlot(config.GetInt("program")) => program;
         } else {
             0 => program;
         }
         if (config.findChild("bank") >= 0) {
-            config.GetInt("bank") => bank;
+            clampSlot(config.GetInt("bank")) => bank;
         } else {
             0 => bank;
         }
-        if (patchName == "") {
-            "Bank: " + Std.itoa(bank + 1) + " Program: " + Std.itoa(program + 1) => patchName;
-        }
+        "Bank: " + Std.itoa(bank + 1) + " Program: " + Std.itoa(program + 1) => patchName;
         updateControllers();
     }
 }

@@ -33,7 +33,7 @@ song:
       patchName: "Drawing Sine Ld"
       uiName: "SH-4d"
       muted: 0
-      volume: 115
+      volume: 127
       filterCutoff: -1
       filterResonance: -1
       pan: 64

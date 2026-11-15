@@ -1,0 +1,108 @@
+song:
+  devices:
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Full Strings 2 medium Release medium"
+      uiName: "V3"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 6
+      bank: 4
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Full Strings 2 medium Release medium"
+      uiName: "V3"
+      muted: 0
+      volume: 99
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 6
+      bank: 4
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Strings PWM A"
+      uiName: "V3"
+      muted: 0
+      volume: 100
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 29
+      bank: 4
+      programChange: 1
+    V3-3:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 3
+      patchName: "Oboe"
+      uiName: "V3"
+      muted: 0
+      volume: 110
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 93
+      bank: 5
+      programChange: 1
+    V3-4:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 4
+      patchName: "Disco Strings Slide velo. 116-127 Slide"
+      uiName: "V3"
+      muted: 0
+      volume: 93
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 19
+      bank: 4
+      programChange: 1
+    V3-5:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 5
+      patchName: "Full Strings 3 slow slow"
+      uiName: "V3"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 12
+      bank: 4
+      programChange: 1
+    V3-6:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 6
+      patchName: "Upright Bass more finger attack"
+      uiName: "V3"
+      muted: 0
+      volume: 91
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 73
+      bank: 3
+      programChange: 1
+    SH-4d-9:
+      deviceName: "SH-4d"
+      midiChannel: 9
+      patchName: "Drums"
+      uiName: "SH-4d"
+      muted: 1
+      volume: 98
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "channel"
+  bpm: 85.000000

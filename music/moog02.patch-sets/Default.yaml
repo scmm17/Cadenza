@@ -10,8 +10,8 @@ song:
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 0
-      bank: 0
+      program: 3
+      bank: 3
     V3-2:
       deviceName: "U2MIDI Pro"
       midiChannel: 2
@@ -22,8 +22,8 @@ song:
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 19
-      bank: 4
+      program: 3
+      bank: 3
       programChange: 1
     V3-1:
       deviceName: "U2MIDI Pro"

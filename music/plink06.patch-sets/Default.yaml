@@ -1,0 +1,40 @@
+song:
+  devices:
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "Frantasia FP"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 100
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "A011"
+    S-1-2:
+      deviceName: "S-1 MIDI IN"
+      midiChannel: 2
+      patchName: "Bank: 2 Program: 6"
+      uiName: "S-1"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 6
+      bank: 2
+    SH-4d-9:
+      deviceName: "SH-4d"
+      midiChannel: 9
+      patchName: "Drums"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 100
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "channel"
+  bpm: 65.000000
