@@ -754,7 +754,7 @@ public class Song
         if (p > 15) { 15 => p; }
         b => currentDevice.bank;
         p => currentDevice.program;
-        "Bank: " + Std.itoa(b + 1) + " Program: " + Std.itoa(p + 1) => currentDevice.patchName;
+        MoogMessenger.formatPatchName(b, p) => currentDevice.patchName;
         currentDevice.setPreset();
         if (volume != -1) {
             currentDevice.sendControllerChange(7, volume);
@@ -869,12 +869,17 @@ public class Song
                 }
             }
         } else if (currentDevice.uiName == "Moog") {
-            presetName.find("Bank:") => int bPos;
             presetName.find("Program:") => int pPos;
-            if (bPos >= 0 && pPos > bPos) {
-                Std.atoi(YamlNode.trimLeft(YamlNode.trimRight(presetName.substring(bPos + 5, pPos - (bPos + 5))))) - 1 => int b;
+            if (pPos > 0) {
+                YamlNode.trimLeft(YamlNode.trimRight(presetName.substring(0, pPos))) => string bankPart;
                 Std.atoi(YamlNode.trimLeft(YamlNode.trimRight(presetName.substring(pPos + 8)))) - 1 => int p;
-                applyMoogPreset(b, p, volume);
+                MoogMessenger.findBankByName(bankPart) => int b;
+                if (b < 0 && bankPart.find("Bank:") == 0) {
+                    Std.atoi(YamlNode.trimLeft(YamlNode.trimRight(bankPart.substring(5)))) - 1 => b;
+                }
+                if (b >= 0) {
+                    applyMoogPreset(b, p, volume);
+                }
             }
         }
     }

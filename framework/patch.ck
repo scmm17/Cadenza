@@ -1240,6 +1240,13 @@ public class Hydrasynth extends Patch
 // using CC 0 = 0, CC 32 (0 = Banks 1-8, 1 = Banks 9-16), and a 2-byte Program Change (0-127).
 public class MoogMessenger extends Patch
 {
+    [
+        "Messenger", "Classic Bass", "Modern Bass", "Sub Bass",
+        "Hard Lead", "Soft Lead", "Arps", "Orchestral",
+        "Keys", "Pads", "Mallets and Metal", "Sweeps",
+        "Drones", "Percussion", "FX", "User"
+    ] @=> static string BANK_NAMES[];
+
     fun MoogMessenger()
     {
         "Moog Messenger" => deviceName;
@@ -1247,7 +1254,7 @@ public class MoogMessenger extends Patch
         0 => midiChannel;
         0 => bank;
         0 => program;
-        "Bank: 1 Program: 1" => patchName;
+        formatPatchName(0, 0) => patchName;
     }
 
     fun MoogMessenger(int channel, int bank, int program, int v)
@@ -1257,15 +1264,33 @@ public class MoogMessenger extends Patch
         channel - 1 => midiChannel;
         clampSlot(bank - 1) => this.bank;
         clampSlot(program - 1) => this.program;
-        "Bank: " + Std.itoa(this.bank + 1) + " Program: " + Std.itoa(this.program + 1) => patchName;
+        formatPatchName(this.bank, this.program) => patchName;
         Patch(v);
     }
 
-    fun int clampSlot(int val)
+    fun static int clampSlot(int val)
     {
         if (val < 0) return 0;
         if (val > 15) return 15;
         return val;
+    }
+
+    fun static string bankName(int b)
+    {
+        return BANK_NAMES[clampSlot(b)];
+    }
+
+    fun static string formatPatchName(int b, int p)
+    {
+        return bankName(b) + " Program: " + Std.itoa(clampSlot(p) + 1);
+    }
+
+    fun static int findBankByName(string name)
+    {
+        for (0 => int i; i < BANK_NAMES.cap(); i++) {
+            if (BANK_NAMES[i] == name) return i;
+        }
+        return -1;
     }
 
     fun void programChangeMoogMessenger(int program, int bank)
@@ -1349,7 +1374,7 @@ public class MoogMessenger extends Patch
         } else {
             0 => bank;
         }
-        "Bank: " + Std.itoa(bank + 1) + " Program: " + Std.itoa(program + 1) => patchName;
+        formatPatchName(bank, program) => patchName;
         updateControllers();
     }
 }

@@ -252,14 +252,20 @@ function loadPresetCatalog() {
   } catch (err) {
     console.error('Failed to parse preset catalog from patch.ck:', err.message);
   }
+  const moogCategories = [
+    'Messenger', 'Classic Bass', 'Modern Bass', 'Sub Bass',
+    'Hard Lead', 'Soft Lead', 'Arps', 'Orchestral',
+    'Keys', 'Pads', 'Mallets and Metal', 'Sweeps',
+    'Drones', 'Percussion', 'FX', 'User',
+  ];
   const moog = [];
   for (let b = 0; b < 16; b++) {
-    const category = `Bank ${b + 1}`;
+    const category = moogCategories[b];
     for (let p = 0; p < 16; p++) {
       moog.push({
         program: p,
         bank: b,
-        name: `Bank: ${b + 1} Program: ${p + 1}`,
+        name: `${category} Program: ${p + 1}`,
         category,
       });
     }
