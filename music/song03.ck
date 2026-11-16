@@ -1,7 +1,4 @@
-@import "../framework/song.ck"
-@import "../framework/chords.ck"
-@import "../framework/melody.ck"
-@import "../framework/midi-events.ck"
+@import "../framework/cadenza.ck"
 
 // Global parameters
 50 => float BPM;          // Beats per minute

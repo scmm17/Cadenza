@@ -1,6 +1,4 @@
-@import "../framework/song.ck"
-@import "../framework/chords.ck"
-@import "../framework/melody.ck"
+@import "../framework/cadenza.ck"
 
 // ============================================================
 // bq03.ck -- Baroque Prelude in C Major (Extended)

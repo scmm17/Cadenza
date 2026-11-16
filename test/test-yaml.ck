@@ -1,4 +1,4 @@
-@import "../framework/yaml.ck"
+@import "../framework/core/yaml.ck"
 
 // Global flag indicating whether fallback path was used in last parse
 0 => int gYamlParseUsedFallback;

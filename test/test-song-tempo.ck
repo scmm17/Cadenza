@@ -1,7 +1,6 @@
 @import "test-helpers.ck"
 @import "mock-patch.ck"
-@import "../framework/song.ck"
-@import "../framework/chords.ck"
+@import "../framework/cadenza.ck"
 
 public class SongTempoTests {
     fun static void run() {
@@ -40,7 +39,7 @@ public class SongTempoTests {
         Assert.equalFloat("testPartDuration_60BPM", (part.totalDuration(song) / 1::ms), 8000.0, 0.001);
 
         // 4. Paused state at init
-        Assert.equalInt("testSong_init_isPaused", Song.isPaused, 1);
+        Assert.equalInt("testSong_init_isPaused", SongContext.isPaused, 1);
 
         // 5. resolveMidiChannelForSynth channel rules
         MockSong chanSong;

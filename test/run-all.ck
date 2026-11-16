@@ -9,6 +9,7 @@
 @import "test-fragment-transitions.ck"
 @import "test-drum-machine.ck"
 @import "test-song-tempo.ck"
+@import "test-mixer-and-presets.ck"
 
 // Explicitly call the runner functions from each module
 // since @import does not execute top-level statements.
@@ -18,6 +19,7 @@ PartRhythmTests.run();
 FragmentTransitionsTests.run();
 DrumMachineTests.run();
 SongTempoTests.run();
+MixerAndPresetsTests.run();
 
 // Print final summary
 <<< "===========================" >>>;

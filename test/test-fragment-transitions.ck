@@ -1,6 +1,6 @@
 @import "test-helpers.ck"
 @import "mock-patch.ck"
-@import "../framework/song.ck"
+@import "../framework/cadenza.ck"
 
 public class FragmentTransitionsTests {
     fun static void run() {
@@ -22,7 +22,7 @@ public class FragmentTransitionsTests {
         Assert.equalString("testSingleTransition_alwaysPicked", next1.name, "Frag2");
 
         // testGoldenMode_picksFirst
-        1 => Song.golden;
+        1 => SongContext.golden;
         FragmentTransition t2(f3, 0.9); // even with high prob, golden should pick first
         
         Fragment f_golden("FragGolden", 4, emptyParts);
@@ -34,7 +34,7 @@ public class FragmentTransitionsTests {
 
         f_golden.getNextSongFragment() @=> Fragment next2;
         Assert.equalString("testGoldenMode_picksFirst", next2.name, "Frag2");
-        0 => Song.golden; // reset
+        0 => SongContext.golden; // reset
 
         // testTwoTransitions_sumToOne
         Fragment f_dist("FragDist", 4, emptyParts);

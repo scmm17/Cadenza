@@ -1,5 +1,4 @@
-@import "../framework/midi-events.ck"
-@import "../framework/patch.ck"
+@import "../framework/cadenza.ck"
 
 V3GrandPiano piano(1, 0, 0);
 

@@ -1,7 +1,6 @@
 @import "test-helpers.ck"
 @import "mock-patch.ck"
-@import "../framework/note-collection.ck"
-@import "../framework/song.ck"
+@import "../framework/cadenza.ck"
 
 public class LSystemTests {
     fun static void run() {

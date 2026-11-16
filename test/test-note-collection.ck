@@ -1,8 +1,6 @@
 @import "test-helpers.ck"
 @import "mock-patch.ck"
-@import "../framework/note-collection.ck"
-@import "../framework/chords.ck"
-@import "../framework/song.ck"
+@import "../framework/cadenza.ck"
 
 public class NoteCollectionTests {
     fun static void run() {

@@ -1,7 +1,6 @@
 // Note Collections
 
-@import "song.ck"
-@import "yaml.ck"
+@import "song-context.ck"
 
 // NoteCollection is a fundamental class for managing collections of musical notes in the framework.
 // It provides static factory methods for creating common musical scales, chords, and note patterns,
@@ -329,116 +328,9 @@ public class NoteCollection
         return notes.cap();
     }
 
-    fun int getMidiNote(Song song, int noteIndex, int offset)
+    fun int getMidiNote(SongContext song, int noteIndex, int offset)
     {
         // get the note, adding or subtracting octaves, as needed
         return song.rootNote + offset + notes[noteIndex % numNotes()] /* + 12 * (noteIndex / numNotes()) */;
-    }
-}
-
-// LSystemNotes extends NoteCollection to generate note sequences using L-systems (Lindenmayer systems).
-// L-systems are a type of formal grammar that can generate complex patterns through recursive rewriting rules.
-// This class reads L-system definitions from YAML files and expands them into sequences of musical notes.
-//
-// The L-system is defined by:
-// - A start symbol (initial state)
-// - A set of rewriting rules that replace symbols with sequences of other symbols
-// - Offset values that modify the pitch when expanding symbols
-// - A maximum depth to control the recursion level
-//
-// Example YAML structure:
-// startSymbol: "A"
-// maxDepth: 3
-// rules:
-//   A: ["A", "B"]
-//   B: ["A"]
-// offsets:
-//   A: [0, 2]
-//   B: [1]
-//
-// The expansion process recursively applies the rules until maxDepth is reached,
-// then maps the final positions to actual MIDI notes from the basis note collection.
-
-public class LSystemNotes extends NoteCollection
-{
-    NoteCollection @ basisNotes;
-   
-    YamlNode @ lSystem;
-    int maxDepth;
-    string startSymbol;
-    YamlNode @ rules;
-    YamlNode @ offsets;
-    int currentIndex;
-
-    int expandedNotes[];
-
-    fun LSystemNotes(NoteCollection theNotes, string lSystemFilename)
-    {
-        theNotes @=> basisNotes;
-        YamlNode.ParseFile(lSystemFilename) @=> lSystem;
-        lSystem.GetString("startSymbol") => startSymbol;
-        lSystem.GetInt("maxDepth") => maxDepth;
-        lSystem.GetMap("rules") @=> rules;
-        lSystem.GetMap("offsets") @=> offsets;
-        computeSize(startSymbol, 0) => int size;
-        <<< "l-system size: ", size, " maxDepth: ", maxDepth >>>;
-        int eNotes[size];
-        eNotes @=> expandedNotes;
-        0 => currentIndex;
-        expand(startSymbol, 0, 0);
-        expandedNotes @=> notes;
-    }
-
-    fun void expand(string currentSymbol, int currentOffset, int currentDepth)
-    {
-        rules.GetValue(currentSymbol) @=> YamlNode@ ruleNode;
-        ruleNode.GetArray() @=> YamlNode@ ruleArray[];
-        offsets.GetValue(currentSymbol) @=> YamlNode@ offsetNode;
-        offsetNode.GetArray() @=> YamlNode@ offsetArray[];
-        if (currentDepth == maxDepth)
-        {
-            // currentOffset % basisNotes.numNotes() => octave;
-            basisNotes.notes[currentOffset % basisNotes.notes.cap()] => expandedNotes[currentIndex++];
-            return;
-        }
-        for (0 => int i; i < ruleArray.cap(); i++)
-        {
-            ruleArray[i].GetString() => string nextSymbol;
-            offsetArray[i].GetInt() => int nextOffset;
-            expand(nextSymbol, currentOffset + nextOffset, currentDepth + 1);
-        }
-        return;
-    }
-
-    fun int computeSize(string currentSymbol, int currentDepth)
-    {
-        rules.GetValue(currentSymbol) @=> YamlNode@ ruleNode;
-        ruleNode.GetArray() @=> YamlNode@ ruleArray[];
-        if (currentDepth == maxDepth-1)
-        {
-            return ruleArray.cap();
-        }
-        0 => int size;
-        for (0 => int i; i < ruleArray.cap(); i++)
-        {
-            ruleArray[i].GetString() => string nextSymbol;
-            computeSize(nextSymbol, currentDepth + 1) => int nextSize;
-            size + nextSize => size;
-        }
-        return size;
-    }
-
-
-
-    fun string arrayToString(int a[])
-    {
-        "[" => string s;
-        for(0 => int i; i < a.cap(); i++) {
-            s + Std.itoa(a[i]) => s;
-            if (i < a.cap() - 1) {
-                s + ", " => s;
-            }
-        }
-        return s + "]";
     }
 }

@@ -22,23 +22,41 @@ The `Song` class is the runtime engine. It drives timing, manages state, listens
 
 ## File Map
 
-| File | Contents |
+All song scripts import a single entry point: `@import "../framework/cadenza.ck"`.
+
+| File / Directory | Contents |
 |---|---|
-| `framework/song.ck` | `Song`, `Part`, `Fragment`, `FragmentTransition`, `LaunchControl`, `ControlChange` |
-| `framework/patch.ck` | `Patch` (base), all device subclasses, `V3Preset`, `V3PresetCollection` |
-| `framework/chords.ck` | `Chord`, `ChordProgression` |
-| `framework/melody.ck` | `Melody`, `AleatoricMelody`, `SequentialMelody`, `DrumMachine` |
-| `framework/note-collection.ck` | `NoteCollection`, `LSystemNotes` |
-| `framework/midi-events.ck` | `MidiMapper` (Hydrasynth keyboard event routing) |
-| `framework/yaml.ck` | `YamlNode` YAML parser and writer |
+| `framework/cadenza.ck` | Umbrella import for the entire framework in topological order |
+| `framework/core/constants.ck` | `CadenzaConstants` (OSC ports, MIDI CCs, LaunchControl mappings) |
+| `framework/core/gui-link.ck` | `GuiLink` (shared `OscSend` to `localhost:9450`) |
+| `framework/core/yaml.ck` | `YamlNode`, `YamlParser` (YAML parser and writer) |
+| `framework/devices/patch.ck` | `Patch` base class and polymorphic preset/state hooks |
+| `framework/devices/presets/` | `Preset`, `PresetCollection`, and `generated/*.ck` (from `presets/catalog.json` via `tools/gen-presets.js`) |
+| `framework/devices/{hydrasynth,moog-messenger,roland-s1,roland-sh4d,behringer-rd6,v3-grand-piano}.ck` | Hardware synth subclasses of `Patch` |
+| `framework/devices/synth-registry.ck` | `SynthRegistry` factory and channel auto-assignment rules |
+| `framework/composition/song-context.ck` | `SongContext` (BPM/durations, device array, virtual hooks) |
+| `framework/composition/part.ck` | `Part` (probability rhythms and velocity loops) |
+| `framework/composition/fragment.ck` | `FragmentTransition`, `Fragment`, `SongState` |
+| `framework/composition/note-collection.ck` | `NoteCollection` (scales, chord factories) |
+| `framework/composition/lsystem-notes.ck` | `LSystemNotes` (YAML L-system grammar expander) |
+| `framework/composition/{chords,chord-progression,melody,drum-machine}.ck` | `Chord`, `ChordProgression`, `Melody`, `AleatoricMelody`, `SequentialMelody`, `DrumMachine` |
+| `framework/control/midi-mapper.ck` | `MidiMapper` (keyboard-to-active-synth MIDI forwarder) |
+| `framework/control/launch-control.ck` | `LaunchControl`, `ControlChange` (Launch Control XL input & LEDs) |
+| `framework/control/keyboard-control.ck` | `KeyboardControl` (terminal `KBHit` loop) |
+| `framework/control/osc-control.ck` | `OscControl` (OSC `:9449` receiver & dispatcher — see [osc-protocol.md](osc-protocol.md)) |
+| `framework/control/terminal-display.ck` | `TerminalDisplay` (ANSI device table & `dashboard.md` writer) |
+| `framework/control/state-broadcaster.ck` | `StateBroadcaster` (JSON state & fragment graph → GUI) |
+| `framework/song/mixer.ck` | `Mixer` (mute/solo state machine) |
+| `framework/song/patch-set-store.ck` | `PatchSetStore` (`.patch-sets/*.yaml` & `.default` persistence) |
+| `framework/song/song.ck` | `Song` (wires transport, `Mixer`, `PatchSetStore`, and controllers) |
 
 ---
 
 ## Class Reference
 
-### `Patch` (`framework/patch.ck`)
+### `Patch` (`framework/devices/patch.ck` & `framework/devices/*.ck`)
 
-The base class for all MIDI devices. It owns the `MidiOut` connection, handles note-on/note-off messaging, controller changes, volume, pan, filter, and mute state. It also transmits OSC note events to the GUI.
+The base class for all MIDI devices. It owns the `MidiOut` connection, handles note-on/note-off messaging, controller changes, volume, pan, filter, mute state, and polymorphic preset navigation hooks. Note and all-notes-off events are forwarded to the GUI via `GuiLink`.
 
 **Key fields:**
 
@@ -87,7 +105,7 @@ public class MyNewSynth extends Patch
     fun void setPreset()
     {
         // Send program change messages here
-        programChangeHydra(program, bank);  // or write custom MIDI messages
+        sendProgramChange(bank, bank, program);  // or write custom MIDI messages
     }
 
     fun void saveConfig(YamlNode @config)
@@ -109,14 +127,14 @@ public class MyNewSynth extends Patch
 
 ---
 
-### `NoteCollection` (`framework/note-collection.ck`)
+### `NoteCollection` (`framework/composition/note-collection.ck`)
 
 Stores an array of semitone offsets from the song's root note. The fundamental unit of musical content.
 
 **Key method:**
 
 ```chuck
-fun int getMidiNote(Song song, int noteIndex, int offset)
+fun int getMidiNote(SongContext song, int noteIndex, int offset)
 ```
 
 Returns `song.rootNote + offset + notes[noteIndex % numNotes()]`. The `noteIndex` wraps around, so you can pass any integer and it cycles the collection.
@@ -140,7 +158,7 @@ The expansion is done once at construction time, so there is no runtime overhead
 
 ---
 
-### `Part` (`framework/song.ck`)
+### `Part` (`framework/composition/part.ck`)
 
 Abstract base class. All musical generators (progressions, melodies, drums) extend it.
 
@@ -156,15 +174,15 @@ Abstract base class. All musical generators (progressions, melodies, drums) exte
 | `legato` | `int` | If true, notes extend into the next beat |
 | `mutateProbabilityRange` | `float` | Amount of random drift added to probabilities each cycle |
 
-**Methods to implement in subclasses:**
+**Methods to implement in subclasses** (note: in ChucK, overrides must use `SongContext`, not `Song`, so virtual dispatch fires when called through `Part`):
 
 ```chuck
-fun void play(Song song)           // Entry point — called by Song.playParts()
-fun dur totalDuration(Song song)   // Must return the part's total runtime
-fun int generateNote(Song song, int measure, int noteInMeasure)  // Return MIDI note number
+fun void play(SongContext song)           // Entry point — called by Song.playParts()
+fun dur totalDuration(SongContext song)   // Must return the part's total runtime
+fun int generateNote(SongContext song, int measure, int noteInMeasure)  // Return MIDI note number
 ```
 
-**`playProbabilityRhythm(Song song)`** — the heart of the engine. Called by `play()` in most subclasses. For each note slot it:
+**`playProbabilityRhythm(SongContext song)`** — the heart of the engine. Called by `play()` in most subclasses. For each note slot it:
 1. Rolls a random number against `rhythmProbabilities`.
 2. Calls `generateNote()` to get the MIDI pitch.
 3. Calls `patch.noteOn()` with the appropriate duration.
@@ -186,15 +204,15 @@ public class MyWalkingBass extends Part
         theScale @=> scale;
         npm => notesPerMeasure;
         numMeasures => numberOfMeasures;
-        probs => rhythmProbabilities;
+        probs @=> rhythmProbabilities;
         0 => currentNote;
     }
 
-    fun dur totalDuration(Song song) { return song.whole() * numberOfMeasures; }
+    fun dur totalDuration(SongContext song) { return song.whole() * numberOfMeasures; }
 
-    fun void play(Song song) { playProbabilityRhythm(song); }
+    fun void play(SongContext song) { playProbabilityRhythm(song); }
 
-    fun int generateNote(Song song, int measure, int noteInMeasure)
+    fun int generateNote(SongContext song, int measure, int noteInMeasure)
     {
         scale.getMidiNote(song, currentNote++, 0) => int note;
         if (currentNote >= scale.numNotes()) 0 => currentNote;
@@ -205,7 +223,7 @@ public class MyWalkingBass extends Part
 
 ---
 
-### `Fragment` and `FragmentTransition` (`framework/song.ck`)
+### `Fragment` and `FragmentTransition` (`framework/composition/fragment.ck`)
 
 `Fragment` groups a set of `Part` objects for one section of a song. It plays the parts together for `repeatCount` cycles. After playing, it probabilistically selects the next Fragment from its `nextFragments` array.
 
@@ -213,23 +231,23 @@ public class MyWalkingBass extends Part
 
 ---
 
-### `Song` (`framework/song.ck`)
+### `Song` (`framework/song/song.ck`)
 
 The runtime engine. Created once per performance. Key responsibilities:
 
-**Timing:** `song.whole()`, `song.half()`, `song.quarter()`, etc. return `dur` values derived from BPM. `song.advance(dur d)` advances ChucK's clock while correctly handling pause/resume.
+**Timing:** `song.whole()`, `song.half()`, `song.quarter()`, etc. return `dur` values derived from BPM (inherited from `SongContext`). `song.advance(dur d)` advances ChucK's clock while correctly handling pause/resume.
 
-**Device management:** `initDevicesFromParts()` scans all Parts and registers their Patches into the `devices[16]` array (indexed by insertion order). The `devIndex` (1-based) is set here and is used by Patch to route OSC to the GUI.
+**Device management:** `initDevicesFromParts()` scans all Parts and registers their Patches into the `devices[16]` array (indexed by insertion order). The `devIndex` (1-based) is set here and is used by `Patch` / `GuiLink` to route OSC to the GUI.
 
-**Mute/Solo:** The Song manages two parallel mute concepts:
+**Mute/Solo (`framework/song/mixer.ck`):** `Song` delegates mute/solo state to `Mixer`, managing two parallel mute concepts:
 - `userMuted` — what the user has toggled via GUI or LaunchControl.
 - `muted` — the *effective* mute state, which may be overridden by Solo mode.
 
 `updateEffectiveMuteStates()` reconciles these whenever mute/solo state changes.
 
-**Playback:** `song.play()` drives a fragment chain loop. For each Fragment, it calls `playPartOnce()`, which sporkes each Part into its own shred. All parts run concurrently; the song waits for the longest one to complete before advancing to the next Fragment.
+**Playback:** `song.play()` drives a fragment chain loop. For each Fragment, it calls `playPartOnce()`, which sporks each Part into its own shred. All parts run concurrently; the song waits for the longest one to complete before advancing to the next Fragment.
 
-**Keyboard Controls (terminal):**
+**Keyboard Controls (`framework/control/keyboard-control.ck`):**
 
 | Key | Action |
 |---|---|
@@ -239,15 +257,11 @@ The runtime engine. Created once per performance. Key responsibilities:
 | `w` | Save current config to YAML |
 | `Q` | Shutdown gracefully |
 
-**OSC Control Loop:** Runs on port `9449`. Each GUI action is translated to an OSC message and dispatched to a dedicated handler shred. Adding a new GUI control requires:
-1. Adding a new `recv.event(...)` declaration in `oscControlLoop()`.
-2. Adding a handler method `fun handleOscMyAction(OscEvent e)`.
-3. Sporking the handler.
-4. Implementing the corresponding GUI logic in `gui/index.html`.
+**OSC Control Loop (`framework/control/osc-control.ck`):** Runs on port `9449`. Each GUI action is received as an OSC message and dispatched in `OscControl.dispatch()`. See [`docs/osc-protocol.md`](osc-protocol.md) for the full address list and `gui/server/osc-bridge.js` + `gui/js/` for the frontend bridge.
 
 ---
 
-### `LaunchControl` (`framework/song.ck`)
+### `LaunchControl` (`framework/control/launch-control.ck`)
 
 Integrates a **Novation Launch Control XL** hardware control surface. On init it opens the device by name and listens for MIDI CC messages. The `ControlChange` objects define the mapping from physical knob ranges to MIDI CC output channels:
 
@@ -258,11 +272,11 @@ Integrates a **Novation Launch Control XL** hardware control surface. On init it
 | 29–36 | Resonance, channels 1–8 | CC 71 |
 | 49–56 | Pan, channels 1–8 | CC 10 |
 
-The pad buttons (notes 41, 57, 73, 89) select the active device. Buttons 109 and 110 toggle mute and solo mode. The LEDs provide visual feedback about the current state.
+The pad buttons (notes 41–48 and 73–80) select the active device or toggle mute/solo. Buttons 104–107 step preset categories/presets; buttons 109 and 110 toggle mute and solo mode. The LEDs provide visual feedback about the current state.
 
 ---
 
-### `YamlNode` (`framework/yaml.ck`)
+### `YamlNode` (`framework/core/yaml.ck`)
 
 A minimal YAML parser and writer built in ChucK. Supports scalars (string, int, float), arrays (block and flow style), and nested maps.
 
@@ -328,10 +342,15 @@ GUI user action
 
 ## Testing
 
-YAML round-trip tests live in `test/test-yaml.ck`. Run them after any changes to `yaml.ck`:
+Run the full verification script (unit tests, YAML round-trip tests, `chuck --syntax` across `music/*.ck`, JS syntax checks, and generated preset sync check):
 
 ```bash
-chuck test/test-yaml.ck
+./scripts/check.sh
 ```
 
-There is no automated integration test runner for the framework beyond manually loading songs. When adding new Part or Patch subclasses, verify by writing a minimal composition in `music/` that exercises the new code and running it through the GUI.
+Or run the suites directly in silent mode:
+
+```bash
+chuck -s test/run-all.ck
+(cd test && chuck -s test-yaml.ck)
+```

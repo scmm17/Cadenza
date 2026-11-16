@@ -15,15 +15,13 @@ Every composition follows the same pattern:
 
 ### Imports
 
-Always import the modules you use. The most common set is:
+Import the umbrella framework entry point at the top of your song file:
 
 ```chuck
-@import "../framework/song.ck"
-@import "../framework/chords.ck"
-@import "../framework/melody.ck"
+@import "../framework/cadenza.ck"
 ```
 
-`melody.ck` and `chords.ck` both transitively import `song.ck`, `patch.ck`, and `note-collection.ck`, so you rarely need to import those directly.
+This single import pulls in `Song`, all `Patch` subclasses, `NoteCollection`, `Chord`, `ChordProgression`, `Melody`, `AleatoricMelody`, `SequentialMelody`, `DrumMachine`, `LSystemNotes`, and `MidiMapper`.
 
 ### Global Parameters
 

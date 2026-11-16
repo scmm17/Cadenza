@@ -1,6 +1,4 @@
-@import "../framework/song.ck"
-@import "../framework/chords.ck"
-@import "../framework/melody.ck"
+@import "../framework/cadenza.ck"
 
 // bq01.ck -- Baroque Prelude in C Major
 // In the manner of J.S. Bach Well-Tempered Clavier Book I

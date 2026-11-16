@@ -1,5 +1,4 @@
-@import "../framework/patch.ck"
-@import "../framework/song.ck"
+@import "../framework/cadenza.ck"
 
 public class MockPatch extends Patch {
     // Override deviceName to prevent gma.open()
@@ -11,6 +10,7 @@ public class MockPatch extends Patch {
     dur lastDurationPlayed;
 
     fun MockPatch() {
+        GuiLink.setEnabled(false);
         Patch(); // Call our new no-arg constructor
     }
 
@@ -27,10 +27,15 @@ public class MockPatch extends Patch {
 
 public class MockSong extends Song {
     fun MockSong() {
+        GuiLink.setEnabled(false);
         // Minimal setup to avoid event loops and live MIDI
         // We override initialization fields without starting LaunchControl or timers
         60 => rootNote; // Middle C
         120 => BPM;
+        60::second / BPM => beat;
+        0 => muteMode;
+        1 => soloMode;
+        0 => liveUiEnabled;
         // Don't call LaunchControl or anything else
     }
 

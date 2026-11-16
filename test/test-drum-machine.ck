@@ -1,7 +1,6 @@
 @import "test-helpers.ck"
 @import "mock-patch.ck"
-@import "../framework/song.ck"
-@import "../framework/melody.ck"
+@import "../framework/cadenza.ck"
 
 public class DummyDrumMachine extends DrumMachine {
     fun DummyDrumMachine() {

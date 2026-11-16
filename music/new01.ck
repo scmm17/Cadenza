@@ -1,6 +1,4 @@
-@import "../framework/song.ck"
-@import "../framework/chords.ck"
-@import "../framework/melody.ck"
+@import "../framework/cadenza.ck"
 
 // ============================================================
 // new01.ck — ii–V–I in D Major, Tonal Jazz, AABA 32-bar form
