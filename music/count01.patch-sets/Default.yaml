@@ -13,6 +13,7 @@ song:
       program: 12
       bank: 3
       programChange: 1
+      presetType: "bank"
     SH-4d-1:
       deviceName: "SH-4d"
       midiChannel: 1
@@ -26,6 +27,7 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
     S-1-2:
       deviceName: "S-1 MIDI IN"
       midiChannel: 2
@@ -64,18 +66,19 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
     V3-1:
       deviceName: "U2MIDI Pro"
       midiChannel: 1
-      patchName: "Theatre O. Royal + Xylo Reiteration"
+      patchName: "Accordion French Celeste +4+16 French"
       uiName: "V3"
       muted: 0
-      volume: 116
+      volume: 81
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 35
-      bank: 1
+      program: 99
+      bank: 3
       programChange: 1
     SH-4d-9:
       deviceName: "SH-4d"
@@ -90,3 +93,5 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
+  bpm: 55.000000
