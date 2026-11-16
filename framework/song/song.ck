@@ -315,6 +315,10 @@ public class Song extends SongState
 
     fun void queueFragmentByName(string fragName)
     {
+        if (fragName == "") {
+            null @=> queuedFragment;
+            return;
+        }
         findFragmentByName(fragName) @=> Fragment f;
         if (f != null) {
             f @=> queuedFragment;
@@ -323,12 +327,17 @@ public class Song extends SongState
 
     fun void loopFragmentByName(string fragName)
     {
+        if (fragName == "") {
+            null @=> loopFragment;
+            return;
+        }
         findFragmentByName(fragName) @=> Fragment f;
         if (f == null) return;
         if (loopFragment == f) {
             null @=> loopFragment;
         } else {
             f @=> loopFragment;
+            null @=> queuedFragment;
         }
     }
 

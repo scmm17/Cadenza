@@ -65,6 +65,12 @@ public class FragmentTransitionsTests {
         song.queueFragmentByName("Frag4");
         Assert.isTrue("testQueuedFragment_setByName", song.queuedFragment == f4);
 
+        song.queueFragmentByName("");
+        Assert.isTrue("testQueuedFragment_clearedByEmptyName", song.queuedFragment == null);
+
+        song.queueFragmentByName("Frag4");
+        Assert.isTrue("testQueuedFragment_reSetByName", song.queuedFragment == f4);
+
         f1.resolveNextFragment(song) @=> Fragment nextQueued;
         Assert.equalString("testQueuedFragment_pickedInsteadOfTransitions", nextQueued.name, "Frag4");
         Assert.isTrue("testQueuedFragment_clearedAfterUse", song.queuedFragment == null);
@@ -73,8 +79,10 @@ public class FragmentTransitionsTests {
         Assert.equalString("testQueuedFragment_resumesNormalTransitions", nextNormal.name, "Frag2");
 
         // testLoopFragment_repeatsUntilToggledOff
+        song.queueFragmentByName("Frag2");
         song.loopFragmentByName("Frag4");
         Assert.isTrue("testLoopFragment_setByName", song.loopFragment == f4);
+        Assert.isTrue("testLoopFragment_clearsQueuedFragment", song.queuedFragment == null);
 
         f1.resolveNextFragment(song) @=> Fragment nextLoop1;
         Assert.equalString("testLoopFragment_firstIteration", nextLoop1.name, "Frag4");
@@ -86,6 +94,12 @@ public class FragmentTransitionsTests {
         // Toggling the same fragment again clears loopFragment
         song.loopFragmentByName("Frag4");
         Assert.isTrue("testLoopFragment_toggledOff", song.loopFragment == null);
+
+        // Passing empty string (as sent by the GUI when double-clicking the active loop fragment) clears loopFragment
+        song.loopFragmentByName("Frag4");
+        Assert.isTrue("testLoopFragment_reEnabledBeforeEmptyClear", song.loopFragment == f4);
+        song.loopFragmentByName("");
+        Assert.isTrue("testLoopFragment_clearedByEmptyName", song.loopFragment == null);
 
         f1.resolveNextFragment(song) @=> Fragment nextAfterLoop;
         Assert.equalString("testLoopFragment_resumesNormalAfterToggleOff", nextAfterLoop.name, "Frag2");
