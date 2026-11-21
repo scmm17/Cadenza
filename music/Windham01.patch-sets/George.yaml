@@ -1,0 +1,108 @@
+song:
+  devices:
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "Etherpad RJ"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 70
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "A016"
+    V3-5:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 5
+      patchName: "Organ 776555678 slow 4"
+      uiName: "V3"
+      muted: 0
+      volume: 55
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 58
+      bank: 0
+      programChange: 1
+    V3-0:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 0
+      patchName: "Grand Piano Vienna - softer"
+      uiName: "V3"
+      muted: 0
+      volume: 92
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 6
+      bank: 0
+      programChange: 1
+    V3-1:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 1
+      patchName: "Guitar Nylon soft"
+      uiName: "V3"
+      muted: 0
+      volume: 104
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 23
+      bank: 3
+      programChange: 1
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Harp long"
+      uiName: "V3"
+      muted: 0
+      volume: 84
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 60
+      bank: 3
+      programChange: 1
+    V3-3:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 3
+      patchName: "Flute"
+      uiName: "V3"
+      muted: 0
+      volume: 80
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 102
+      bank: 5
+      programChange: 1
+    V3-4:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 4
+      patchName: "Vibraphone Tremolo soft"
+      uiName: "V3"
+      muted: 0
+      volume: 80
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 5
+      bank: 3
+      programChange: 1
+    SH-4d-0:
+      deviceName: "SH-4d"
+      midiChannel: 0
+      patchName: "Soft Bell"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 78
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 84
+      toneBank: 72
+  bpm: 72.000000
