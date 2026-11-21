@@ -447,7 +447,7 @@ end1BowVel @=> end1FidBow.velocities;
 [72, 60] @=> int end1BassVel[];
 mkMel(bassDev, end1Lo, end1BassMel, end1BassProbs, end1BassDurs, end1BassVel) @=> ChordProgression end1Bass;
 
-[end1Bass, end1GtrRhythm, end1GtrLead, end1Mando, end1FidLead, end1FidBow] @=> Part ending1Parts[];
+[end1Bass, end1GtrRhythm, end1Mando, end1FidLead, end1FidBow] @=> Part ending1Parts[];
 Fragment fEnding1("Ending 1", 1, ending1Parts);
 
 // ------------------------------------------------------------
@@ -527,7 +527,7 @@ mkMel(fiddleLeadDev,   end2Hi,  end2HiTriadMel, end2LeadProbs, end2LeadDurs, end
 mkMel(fiddleBowDev,    end2Mid, end2ChordMel,   end2RollProbs, end2RollDurs, end2SoftVel) @=> ChordProgression end2FidBow;
 mkMel(bassDev,         end2Lo,  end2BassMel,    end2BassProbs, end2BassDurs, end2BassVel) @=> ChordProgression end2Bass;
 
-[end2Bass, end2GtrRhythm, end2GtrLead, end2Mando, end2FidLead, end2FidBow] @=> Part ending2Parts[];
+[end2Bass, end2GtrRhythm, end2Mando, end2FidLead, end2FidBow] @=> Part ending2Parts[];
 Fragment fEnding2("Ending 2", 1, ending2Parts);
 
 // ------------------------------------------------------------

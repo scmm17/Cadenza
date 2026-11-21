@@ -6,9 +6,9 @@ song:
       patchName: "Acid Bugs"
       uiName: "SH-4d"
       muted: 0
-      volume: 106
-      filterCutoff: -1
-      filterResonance: -1
+      volume: 127
+      filterCutoff: 84
+      filterResonance: 63
       pan: 64
       program: 0
       bank: 0
@@ -19,15 +19,15 @@ song:
     V3-1:
       deviceName: "U2MIDI Pro"
       midiChannel: 1
-      patchName: "Full Strings 2 medium Release medium"
+      patchName: "OBell"
       uiName: "V3"
       muted: 0
       volume: 99
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 6
-      bank: 4
+      program: 68
+      bank: 2
       programChange: 1
     V3-2:
       deviceName: "U2MIDI Pro"
@@ -58,52 +58,52 @@ song:
       presetType: "tone"
       toneProgram: 14
       toneBank: 72
-    V3-4:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 4
-      patchName: "Disco Strings Slide velo. 116-127 Slide"
-      uiName: "V3"
-      muted: 0
-      volume: 78
-      filterCutoff: -1
-      filterResonance: -1
-      pan: 64
-      program: 19
-      bank: 4
-      programChange: 1
-    V3-5:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 5
-      patchName: "Full Strings 3 slow slow"
-      uiName: "V3"
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "M12 XyloPad RA"
+      uiName: "Hydrasynth"
       muted: 0
       volume: 127
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 12
-      bank: 4
-      programChange: 1
-    V3-6:
-      deviceName: "U2MIDI Pro"
-      midiChannel: 6
-      patchName: "Upright Bass more finger attack"
-      uiName: "V3"
+      presetName: "E004"
+    SH-4d-2:
+      deviceName: "SH-4d"
+      midiChannel: 2
+      patchName: "Synth Pad/Str 1"
+      uiName: "SH-4d"
       muted: 0
-      volume: 91
+      volume: 116
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 73
-      bank: 3
-      programChange: 1
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 48
+      toneBank: 64
+    Moog-0:
+      deviceName: "Moog Messenger"
+      midiChannel: 0
+      patchName: "Classic Bass: 12"
+      uiName: "Moog"
+      muted: 0
+      volume: 92
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 11
+      bank: 1
     SH-4d-9:
       deviceName: "SH-4d"
       midiChannel: 9
       patchName: "Drums"
       uiName: "SH-4d"
-      muted: 1
-      volume: 52
+      muted: 0
+      volume: 76
       filterCutoff: -1
       filterResonance: -1
       pan: 64
