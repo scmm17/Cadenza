@@ -5,6 +5,7 @@ import {
   normalizeMoogDevicePatchName,
   send,
   syncModeButtons,
+  syncPatchSetButton,
 } from './state.js';
 import { DEVICE_COLORS, clearDrumCache } from './piano-roll.js';
 
@@ -276,6 +277,7 @@ function onSynthChange(selectEl, devIdx) {
   send('setSynth', { devIdx, synthName });
   send('setChannel', { devIdx, channel: res.channel });
   renderDevicesTable();
+  syncPatchSetButton();
 }
 
 function onChannelChange(selectEl, devIdx) {
@@ -293,6 +295,24 @@ function onChannelChange(selectEl, devIdx) {
   }
   send('setChannel', { devIdx, channel });
   renderDevicesTable();
+  syncPatchSetButton();
+}
+
+const PARAM_STATE_KEYS = {
+  volume: 'volume',
+  cutoff: 'filterCutoff',
+  resonance: 'filterResonance',
+  pan: 'pan',
+};
+
+function setDeviceStateParam(devIdx, param, val) {
+  const key = PARAM_STATE_KEYS[param];
+  if (!key || !state.chuckState || !Array.isArray(state.chuckState.devices)) return;
+  const dev = state.chuckState.devices.find(d => d.index === devIdx);
+  if (dev) {
+    dev[key] = val;
+    syncPatchSetButton();
+  }
 }
 
 function updateParamDisplay(devIdx, param, val) {
@@ -321,6 +341,7 @@ function onVolSlider(e, devIdx) {
   e.target.style.setProperty('--pct', Math.round((val / 127) * 100) + '%');
   const label = document.getElementById('val-' + devIdx + '-volume');
   if (label && !label.querySelector('input')) label.textContent = val;
+  setDeviceStateParam(devIdx, 'volume', val);
   send('setParam', { devIdx, param: 'volume', value: val });
   clearTimeout(volSliderTimer);
   volSliderTimer = setTimeout(() => { state.isDragging = false; }, 500);
@@ -404,6 +425,8 @@ export function editTempoInline(span) {
   const currentBpm = (slider && parseInt(slider.value, 10)) || 120;
   startInlineEdit(span, 40, 240, currentBpm, (newBpm) => {
     updateTempoDisplay(newBpm);
+    if (state.chuckState) state.chuckState.bpm = newBpm;
+    syncPatchSetButton();
     send('setTempo', newBpm);
   });
 }
@@ -413,11 +436,11 @@ function editParamInline(span, devIdx, param, min, max) {
   startInlineEdit(span, min, max, currentVal, (newVal) => {
     if (param === 'volume') {
       updateVolDisplay(devIdx, newVal);
-      send('setParam', { devIdx, param: 'volume', value: newVal });
     } else {
       updateParamDisplay(devIdx, param, newVal);
-      send('setParam', { devIdx, param, value: newVal });
     }
+    setDeviceStateParam(devIdx, param, newVal);
+    send('setParam', { devIdx, param, value: newVal });
   });
 }
 
@@ -427,6 +450,8 @@ export function initDevicesEvents() {
     tempoSlider.addEventListener('input', (e) => {
       const bpm = parseInt(e.target.value, 10);
       updateTempoDisplay(bpm);
+      if (state.chuckState) state.chuckState.bpm = bpm;
+      syncPatchSetButton();
       send('setTempo', bpm);
     });
   }
@@ -443,6 +468,13 @@ export function initDevicesEvents() {
           return;
         }
         if (action === 'muteDevice') {
+          if (state.chuckState && Array.isArray(state.chuckState.devices)) {
+            const dev = state.chuckState.devices.find(d => d.index === devIdx);
+            if (dev) {
+              dev.muted = dev.muted ? 0 : 1;
+              render();
+            }
+          }
           send('muteDevice', devIdx);
           return;
         }
@@ -508,6 +540,7 @@ export function initDevicesEvents() {
     const delta = Math.round((e.clientX - activeDrag.startX) * (range / 200));
     const newVal = Math.max(activeDrag.min, Math.min(activeDrag.max, activeDrag.startVal + delta));
     updateParamDisplay(activeDrag.devIdx, activeDrag.param, newVal);
+    setDeviceStateParam(activeDrag.devIdx, activeDrag.param, newVal);
     send('setParam', { devIdx: activeDrag.devIdx, param: activeDrag.param, value: newVal });
   });
 

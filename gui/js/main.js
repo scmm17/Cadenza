@@ -47,6 +47,10 @@ import {
   createNewPatchSet,
   closeDeletePatchSetModal,
   confirmDeletePatchSet,
+  openDiffModal,
+  closeDiffModal,
+  saveDiffModal,
+  renderDiffModal,
   initModals,
 } from './modals.js';
 import { initKeyboard } from './keyboard.js';
@@ -62,6 +66,7 @@ registerUiCallbacks({
   flashTransition,
   renderSongList,
   renderPatchSetList,
+  renderDiffModal,
   syncTempoSlider,
 });
 
@@ -91,6 +96,9 @@ const ACTIONS = {
   closeDeletePatchSetModal: () => closeDeletePatchSetModal(),
   confirmDeletePatchSet: () => confirmDeletePatchSet(),
   closeWarningModal: () => closeWarningModal(),
+  openDiffModal: () => openDiffModal(),
+  closeDiffModal: () => closeDiffModal(),
+  saveDiffModal: () => saveDiffModal(),
 };
 
 document.addEventListener('click', (e) => {

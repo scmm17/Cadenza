@@ -7,7 +7,7 @@
   <meta name="description" content="Real-time dashboard and controller for the Cadenza ChucK music system">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/dashboard.css">
 </head>
 <body>
@@ -70,6 +70,7 @@
       <div class="ctrl-label">Patch Set</div>
       <div class="btn-row">
         <button class="btn-action" id="btnPatchSet" data-action="openPatchSetModal" style="min-width: 96px; padding: 0 14px; height: 36px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px;" data-tooltip="Manage &amp; switch patch sets">Default</button>
+        <button class="btn-action" id="btnDiff" data-action="openDiffModal" style="padding: 0 12px; height: 36px; font-size: 12.5px;" data-tooltip="View unsaved changes" disabled>Diff</button>
       </div>
     </div>
   </div>
@@ -190,6 +191,30 @@
     <p id="warningModalMessage"></p>
     <div class="modal-btns">
       <button type="button" class="btn-action" id="btnWarningOk" style="padding: 8px 18px; border-radius: 9px;" data-action="closeWarningModal">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="diffModal" role="dialog" aria-modal="true" aria-labelledby="diffModalTitle">
+  <div class="modal diff-modal">
+    <h3 id="diffModalTitle" style="color: var(--accent-lite); margin-bottom: 12px;">📋 Unsaved Changes</h3>
+    <div tabindex="0" role="region" aria-labelledby="diffModalTitle" class="diff-table-wrap">
+      <table class="diff-table">
+        <thead>
+          <tr>
+            <th scope="col">Device</th>
+            <th scope="col">Channel</th>
+            <th scope="col">Value</th>
+            <th scope="col">Old</th>
+            <th scope="col">New</th>
+          </tr>
+        </thead>
+        <tbody id="diffTableBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-btns">
+      <button type="button" class="btn-cancel" id="btnDiffClose" data-action="closeDiffModal">Close</button>
+      <button type="button" class="btn-action" id="btnDiffSave" style="padding: 8px 18px; border-radius: 9px;" data-action="saveDiffModal">Save</button>
     </div>
   </div>
 </div>

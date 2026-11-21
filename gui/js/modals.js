@@ -2,11 +2,18 @@ import {
   state,
   esc,
   send,
+  doSave,
   syncSongInfo,
   syncPatchSetButton,
+  computeYamlDiffs,
+  resetYamlBaseline,
+  beginPatchSetLoad,
 } from './state.js';
 import { render } from './devices-table.js';
 import { updateGraph } from './fragment-graph.js';
+import { DEVICE_COLORS } from './piano-roll.js';
+
+let pendingDiffAction = null;
 
 // ─── Shutdown Modal ───────────────────────────────────────────────────────────
 export function openShutdown() {
@@ -59,6 +66,15 @@ export function closeSongModal() {
   if (searchInput) searchInput.blur();
   document.body.focus();
 }
+function executeOpenSong(songToLoad) {
+  state.isSongReset = true;
+  state.lastTransition = null;
+  state.pendingBaselineReset = true;
+  send('loadSong', songToLoad);
+  updateGraph(false);
+  syncSongInfo();
+}
+
 export function confirmOpenSong(explicitSong = null) {
   let songToLoad = explicitSong;
   if (!songToLoad) {
@@ -69,13 +85,12 @@ export function confirmOpenSong(explicitSong = null) {
       songToLoad = filteredSongs[state.selectedSongIdx];
     }
   }
-  if (songToLoad) {
-    state.isSongReset = true;
-    state.lastTransition = null;
-    send('loadSong', songToLoad);
-    closeSongModal();
-    updateGraph(false);
-    syncSongInfo();
+  if (!songToLoad) return;
+  closeSongModal();
+  if (computeYamlDiffs().length > 0) {
+    openDiffModal(() => executeOpenSong(songToLoad));
+  } else {
+    executeOpenSong(songToLoad);
   }
 }
 export function renderSongList() {
@@ -369,12 +384,15 @@ export function renderPatchSetList(syncInput = false) {
   }
 
   container.innerHTML = '';
+  const isDirty = computeYamlDiffs().length > 0;
   list.forEach((setName) => {
     const isSelected = setName === currentName;
     const isDefault = setName === defaultName;
 
     const row = document.createElement('div');
-    row.className = 'song-item patchset-item' + (isSelected ? ' selected' : '');
+    row.className = 'song-item patchset-item'
+      + (isSelected ? ' selected' : '')
+      + (isSelected && isDirty ? ' is-dirty' : '');
 
     const nameSpan = document.createElement('span');
     nameSpan.className = 'patchset-item-name';
@@ -408,30 +426,49 @@ export function renderPatchSetList(syncInput = false) {
     row.appendChild(nameSpan);
     row.appendChild(actions);
 
-    row.addEventListener('click', () => selectPatchSet(setName));
-    row.addEventListener('dblclick', () => {
-      selectPatchSet(setName);
-      closePatchSetModal();
-    });
+    row.addEventListener('click', () => selectPatchSet(setName, false));
+    row.addEventListener('dblclick', () => selectPatchSet(setName, true));
 
     container.appendChild(row);
   });
 }
 
-function selectPatchSet(name) {
-  if (!name) return;
+function executeSelectPatchSet(name, closeModalAfter = false) {
   state.activePatchSetName = name;
   if (state.chuckState) state.chuckState.patchSetName = name;
   const input = document.getElementById('patchSetNameInput');
   if (input) input.value = name;
+  beginPatchSetLoad();
   syncPatchSetButton();
   renderPatchSetList(true);
   send('selectPatchSet', { name });
+  if (closeModalAfter) {
+    closePatchSetModal();
+  }
+}
+
+export function selectPatchSet(name, closeModalAfter = false) {
+  if (!name) return;
+  const diffModal = document.getElementById('diffModal');
+  if (diffModal && diffModal.classList.contains('open') && pendingDiffAction && pendingDiffAction.patchSetName === name) {
+    if (closeModalAfter) pendingDiffAction.closePatchSetAfter = true;
+    return;
+  }
+  if (computeYamlDiffs().length > 0) {
+    openDiffModal({
+      patchSetName: name,
+      closePatchSetAfter: closeModalAfter,
+      run: (_didSave, action) => executeSelectPatchSet(name, Boolean(action && action.closePatchSetAfter)),
+    });
+    return;
+  }
+  executeSelectPatchSet(name, closeModalAfter);
 }
 
 export function createNewPatchSet() {
   commitRenamePatchSet();
   state.pendingFocusNewPatchSet = true;
+  resetYamlBaseline(state.chuckState);
   send('createPatchSet', {});
 }
 
@@ -501,7 +538,76 @@ export function confirmDeletePatchSet() {
   const name = state.pendingDeletePatchSetName;
   closeDeletePatchSetModal();
   if (!name) return;
+  if (name === state.activePatchSetName) {
+    beginPatchSetLoad();
+  }
   send('deletePatchSet', { name });
+}
+
+// ─── Diff Modal ───────────────────────────────────────────────────────────────
+export function openDiffModal(pending = null) {
+  if (computeYamlDiffs().length === 0) return;
+  pendingDiffAction = typeof pending === 'function' ? { run: pending } : pending;
+  renderDiffModal();
+  const modal = document.getElementById('diffModal');
+  if (modal) modal.classList.add('open');
+  const focusBtn = document.getElementById(pendingDiffAction ? 'btnDiffSave' : 'btnDiffClose');
+  if (focusBtn) setTimeout(() => focusBtn.focus(), 20);
+}
+
+export function closeDiffModal() {
+  const modal = document.getElementById('diffModal');
+  if (modal) modal.classList.remove('open');
+  const action = pendingDiffAction;
+  pendingDiffAction = null;
+  if (action && typeof action.run === 'function') {
+    action.run(false, action);
+  }
+  document.body.focus();
+}
+
+export function saveDiffModal() {
+  doSave();
+  const modal = document.getElementById('diffModal');
+  if (modal) modal.classList.remove('open');
+  const action = pendingDiffAction;
+  pendingDiffAction = null;
+  if (action && typeof action.run === 'function') {
+    setTimeout(() => action.run(true, action), 60);
+  }
+  document.body.focus();
+}
+
+export function renderDiffModal() {
+  const tbody = document.getElementById('diffTableBody');
+  if (!tbody) return;
+  const diffs = computeYamlDiffs();
+  if (diffs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:18px;">No unsaved changes</td></tr>';
+    return;
+  }
+  tbody.innerHTML = diffs.map(d => {
+    let deviceHtml = '<span class="diff-dev-none">—</span>';
+    if (d.devIndex != null) {
+      const color = DEVICE_COLORS[(d.devIndex - 1) % DEVICE_COLORS.length];
+      deviceHtml = '<span class="diff-dev-cell">'
+        + '<span class="diff-dev-badge" style="background:' + color + '22;border-color:' + color + '66;color:' + color + '">'
+        + esc(d.devIndex)
+        + '</span>'
+        + '<span>' + esc(d.synthName || '') + '</span>'
+        + '</span>';
+    }
+    const channelHtml = d.channel != null
+      ? '<td class="cell-mono">' + esc(d.channel) + '</td>'
+      : '<td><span class="diff-dev-none">—</span></td>';
+    return '<tr>'
+      + '<td>' + deviceHtml + '</td>'
+      + channelHtml
+      + '<td>' + esc(d.field) + '</td>'
+      + '<td class="diff-val-old">' + esc(d.oldValue) + '</td>'
+      + '<td class="diff-val-new">' + esc(d.newValue) + '</td>'
+      + '</tr>';
+  }).join('');
 }
 
 export function initModals() {
@@ -546,6 +652,13 @@ export function initModals() {
   if (warningModal) {
     warningModal.addEventListener('click', (e) => {
       if (e.target === warningModal) closeWarningModal();
+    });
+  }
+
+  const diffModal = document.getElementById('diffModal');
+  if (diffModal) {
+    diffModal.addEventListener('click', (e) => {
+      if (e.target === diffModal) closeDiffModal();
     });
   }
 }

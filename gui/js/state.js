@@ -28,6 +28,10 @@ export const state = {
   isDragging: false,
   chuckGraph: [],
   lastTransition: null,
+  baselineState: null,
+  pendingBaselineReset: false,
+  patchSetLoadStage: null,
+  patchSetLoadTimer: null,
 };
 
 const ui = {
@@ -41,6 +45,7 @@ const ui = {
   flashTransition: () => {},
   renderSongList: () => {},
   renderPatchSetList: () => {},
+  renderDiffModal: () => {},
   syncTempoSlider: () => {},
 };
 
@@ -113,6 +118,103 @@ export function syncSongInfo() {
   }
 }
 
+const YAML_DEVICE_FIELDS = [
+  { key: 'uiName', label: 'Synth', format: v => String(v) },
+  { key: 'channel', label: 'Channel', format: v => String(v) },
+  { key: 'patchName', label: 'Patch', format: v => String(v) },
+  { key: 'volume', label: 'Volume', format: v => String(v) },
+  { key: 'filterCutoff', label: 'Cutoff', format: v => String(v) },
+  { key: 'filterResonance', label: 'Resonance', format: v => String(v) },
+  { key: 'pan', label: 'Pan', format: v => String(v) },
+  { key: 'muted', label: 'Mute', format: v => (v ? 'On' : 'Off') },
+];
+
+export function createYamlSnapshot(s) {
+  if (!s || !Array.isArray(s.devices)) return null;
+  return {
+    bpm: s.bpm != null ? Math.round(Number(s.bpm)) : 120,
+    devices: s.devices.map(d => {
+      const copy = {
+        index: d.index,
+        uiName: d.uiName || '',
+        channel: d.channel != null ? Number(d.channel) : 1,
+        patchName: d.patchName != null ? String(d.patchName) : '',
+        bank: d.bank,
+        program: d.program,
+        volume: d.volume != null ? Number(d.volume) : 0,
+        filterCutoff: (d.filterCutoff == null || d.filterCutoff === -1) ? 64 : Number(d.filterCutoff),
+        filterResonance: (d.filterResonance == null || d.filterResonance === -1) ? 64 : Number(d.filterResonance),
+        pan: d.pan != null ? Number(d.pan) : 0,
+        muted: d.muted ? 1 : 0,
+      };
+      normalizeMoogDevicePatchName(copy);
+      return {
+        index: copy.index,
+        uiName: copy.uiName,
+        channel: copy.channel,
+        patchName: copy.patchName,
+        volume: copy.volume,
+        filterCutoff: copy.filterCutoff,
+        filterResonance: copy.filterResonance,
+        pan: copy.pan,
+        muted: copy.muted,
+      };
+    }),
+  };
+}
+
+export function computeYamlDiffs() {
+  if (!state.baselineState || !state.chuckState) return [];
+  const base = state.baselineState;
+  const curr = createYamlSnapshot(state.chuckState);
+  if (!curr) return [];
+
+  const diffs = [];
+  if (base.bpm !== curr.bpm) {
+    diffs.push({
+      devIndex: null,
+      synthName: null,
+      channel: null,
+      field: 'Tempo',
+      oldValue: String(base.bpm),
+      newValue: String(curr.bpm),
+    });
+  }
+
+  const baseByIndex = new Map(base.devices.map(d => [d.index, d]));
+  for (const dev of curr.devices) {
+    const baseDev = baseByIndex.get(dev.index);
+    if (!baseDev) continue;
+    for (const { key, label, format } of YAML_DEVICE_FIELDS) {
+      if (baseDev[key] !== dev[key]) {
+        diffs.push({
+          devIndex: dev.index,
+          synthName: dev.uiName,
+          channel: dev.channel,
+          field: label,
+          oldValue: format(baseDev[key]),
+          newValue: format(dev[key]),
+        });
+      }
+    }
+  }
+  return diffs;
+}
+
+export function resetYamlBaseline(s = state.chuckState) {
+  state.baselineState = createYamlSnapshot(s);
+  syncPatchSetButton();
+}
+
+export function beginPatchSetLoad() {
+  clearTimeout(state.patchSetLoadTimer);
+  state.patchSetLoadStage = 'waitingForPatchSets';
+  state.baselineState = createYamlSnapshot(state.chuckState);
+  state.patchSetLoadTimer = setTimeout(() => {
+    state.patchSetLoadStage = null;
+  }, 800);
+}
+
 export function syncPatchSetButton() {
   const btn = document.getElementById('btnPatchSet');
   if (!btn) return;
@@ -122,6 +224,20 @@ export function syncPatchSetButton() {
     || 'Default';
   state.activePatchSetName = name;
   btn.textContent = name;
+
+  const diffs = computeYamlDiffs();
+  const isDirty = diffs.length > 0;
+  btn.classList.toggle('is-dirty', isDirty);
+
+  const diffBtn = document.getElementById('btnDiff');
+  if (diffBtn) {
+    diffBtn.disabled = !isDirty;
+  }
+
+  const diffModal = document.getElementById('diffModal');
+  if (diffModal && diffModal.classList.contains('open')) {
+    ui.renderDiffModal();
+  }
 }
 
 export function syncModeButtons() {
@@ -199,6 +315,7 @@ export function doRestart() {
 
 export function doSave() {
   send('save');
+  resetYamlBaseline(state.chuckState);
   const btn = document.getElementById('btnSave');
   if (!btn) return;
   btn.classList.remove('btn-flash-save');
@@ -223,6 +340,16 @@ export function connect() {
         state.chuckState = msg.data;
         if (state.chuckState && Array.isArray(state.chuckState.devices)) {
           state.chuckState.devices.forEach(normalizeMoogDevicePatchName);
+        }
+        if (!state.baselineState || songChanged || state.pendingBaselineReset) {
+          state.baselineState = createYamlSnapshot(state.chuckState);
+          state.pendingBaselineReset = false;
+        } else if (state.patchSetLoadStage === 'waitingForPatchSets') {
+          state.baselineState = createYamlSnapshot(state.chuckState);
+        } else if (state.patchSetLoadStage === 'waitingForChuckState') {
+          state.patchSetLoadStage = null;
+          clearTimeout(state.patchSetLoadTimer);
+          state.baselineState = createYamlSnapshot(state.chuckState);
         }
         if (!state.initialStateReceived) {
           state.initialStateReceived = true;
@@ -254,6 +381,9 @@ export function connect() {
         }
       } else if (msg.type === 'patchSets') {
         if (msg.data) {
+          if (state.patchSetLoadStage === 'waitingForPatchSets') {
+            state.patchSetLoadStage = 'waitingForChuckState';
+          }
           state.patchSetsState = {
             songName: msg.data.songName || '',
             patchSets: Array.isArray(msg.data.patchSets) ? msg.data.patchSets : [],

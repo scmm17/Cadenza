@@ -20,6 +20,8 @@ import {
   renderSongList,
   openShutdown,
   openSongModal,
+  closeDiffModal,
+  saveDiffModal,
 } from './modals.js';
 import { toggleGraphWindow } from './fragment-graph.js';
 
@@ -29,6 +31,7 @@ export function initKeyboard() {
     const k = e.key;
 
     const isWarningModalOpen = document.getElementById('warningModal').classList.contains('open');
+    const isDiffModalOpen = document.getElementById('diffModal').classList.contains('open');
     const isShutdownOpen = document.getElementById('shutdownModal').classList.contains('open');
     const isOpenModalOpen = document.getElementById('openModal').classList.contains('open');
     const isPresetModalOpen = document.getElementById('presetModal').classList.contains('open');
@@ -39,6 +42,21 @@ export function initKeyboard() {
       if (k === 'Enter' || k === 'Escape' || k === ' ') {
         e.preventDefault();
         closeWarningModal();
+      }
+      return;
+    }
+
+    if (isDiffModalOpen) {
+      if (k === 'Escape') {
+        e.preventDefault();
+        closeDiffModal();
+      } else if (k === 'Enter' || k === ' ') {
+        e.preventDefault();
+        if (document.activeElement && document.activeElement.id === 'btnDiffSave') {
+          saveDiffModal();
+        } else {
+          closeDiffModal();
+        }
       }
       return;
     }

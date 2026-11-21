@@ -612,6 +612,17 @@ button {
   background: rgba(6,182,212,.16); border-color: var(--cyan);
   transform: translateY(-1px); box-shadow: 0 5px 14px var(--cyan-glow);
 }
+.btn-action:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+  box-shadow: none;
+}
+#btnPatchSet.is-dirty,
+.patchset-item.is-dirty .patchset-item-name {
+  font-style: italic;
+}
 .btn-danger {
   background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.2); color: #f87171;
 }
@@ -800,3 +811,128 @@ body.graph-resizing { cursor: col-resize; user-select: none; }
 #graphCanvas { position: absolute; inset: 0; }
 #graphEmpty { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
               flex-direction: column; color: var(--text-dim); pointer-events: none; }
+
+/* ─── Unsaved Changes Diff Modal ─────────────────────────────────────────── */
+.diff-modal {
+  max-width: 680px;
+}
+.diff-table-wrap {
+  overflow: auto;
+  max-inline-size: 100%;
+  max-block-size: min(420px, 65vh);
+  container-type: inline-size;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 12px 0 20px;
+  background: rgba(14, 12, 28, 0.5);
+}
+.diff-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  --label-1: "Device";
+  --label-2: "Channel";
+  --label-3: "Value";
+  --label-4: "Old";
+  --label-5: "New";
+}
+.diff-table thead {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  background: #141128;
+}
+.diff-table thead th {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-bright);
+}
+.diff-table thead th:first-child {
+  text-align: left;
+}
+.diff-table tbody td {
+  padding: 9px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+.diff-table tbody td:first-child {
+  text-align: left;
+}
+.diff-dev-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.diff-dev-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.diff-dev-none {
+  color: var(--text-dim);
+}
+.diff-val-old {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.diff-val-new {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+@container (width < 420px) {
+  .diff-table,
+  .diff-table thead,
+  .diff-table tbody,
+  .diff-table tr,
+  .diff-table th,
+  .diff-table td {
+    display: block;
+  }
+
+  .diff-table thead {
+    display: none;
+  }
+
+  .diff-table tbody tr {
+    margin-block-end: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+  }
+
+  .diff-table tbody td {
+    border-bottom: 1px solid rgba(110, 70, 240, 0.06);
+    padding: 4px 0;
+    text-align: left;
+  }
+
+  .diff-table tbody td:last-child {
+    border-bottom: none;
+  }
+
+  .diff-table td::before {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-right: 6px;
+  }
+  .diff-table td:nth-child(1)::before { content: var(--label-1) ": "; }
+  .diff-table td:nth-child(2)::before { content: var(--label-2) ": "; }
+  .diff-table td:nth-child(3)::before { content: var(--label-3) ": "; }
+  .diff-table td:nth-child(4)::before { content: var(--label-4) ": "; }
+  .diff-table td:nth-child(5)::before { content: var(--label-5) ": "; }
+}
