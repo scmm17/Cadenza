@@ -32,7 +32,7 @@ All song scripts import a single entry point: `@import "../framework/cadenza.ck"
 | `framework/core/yaml.ck` | `YamlNode`, `YamlParser` (YAML parser and writer) |
 | `framework/devices/patch.ck` | `Patch` base class and polymorphic preset/state hooks |
 | `framework/devices/presets/` | `Preset`, `PresetCollection`, and `generated/*.ck` (from `presets/catalog.json` via `tools/gen-presets.js`) |
-| `framework/devices/{hydrasynth,moog-messenger,roland-s1,roland-sh4d,behringer-rd6,v3-grand-piano}.ck` | Hardware synth subclasses of `Patch` |
+| `framework/devices/{hydrasynth,moog-messenger,roland-s1,roland-sh4d,behringer-rd6,v3-grand-piano,acid-v,augmented-mallets}.ck` | Hardware & Arturia virtual synth subclasses of `Patch` |
 | `framework/devices/synth-registry.ck` | `SynthRegistry` factory and channel auto-assignment rules |
 | `framework/composition/song-context.ck` | `SongContext` (BPM/durations, device array, virtual hooks) |
 | `framework/composition/part.ck` | `Part` (probability rhythms and velocity loops) |
@@ -79,6 +79,7 @@ The base class for all MIDI devices. It owns the `MidiOut` connection, handles n
 - `noteOn(int note, int velocity, dur duration)` — sends Note On, sporkes a delayed Note Off, and emits an OSC message to the GUI. Skips if `muted`.
 - `noteOff(int note)` — sends Note Off and emits OSC.
 - `sendControllerChange(int cc, int value)` — sends a raw MIDI CC.
+- `setVolume(int val)` — sets `volume` and sends volume CC (overridden by Arturia synths whose default Master Volume CC differs from CC 7).
 - `sendAllNotesOff()` — sends CC 0x7B on the device's channel.
 - `updateControllers()` — called on init; sends volume, pan, filter, and calls `setPreset()`.
 - `setPreset()` — override in subclasses to send program change messages.

@@ -110,8 +110,7 @@ public class LaunchControl
                 song.devices[channel] @=> Patch patch;
                 if (patch != null) {
                     if (cc.mapToController == CadenzaConstants.CC_VOLUME()) {
-                        value => patch.volume;
-                        patch.sendControllerChange(CadenzaConstants.CC_VOLUME(), value);
+                        patch.setVolume(value);
                     } else if (cc.mapToController == CadenzaConstants.CC_CUTOFF()) {
                         patch.setCutoff(value);
                     } else if (cc.mapToController == CadenzaConstants.CC_RESONANCE()) {

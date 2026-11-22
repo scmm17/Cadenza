@@ -56,65 +56,32 @@ function genHydrasynth(entries) {
   return lines.join('\n');
 }
 
-function genSH4d(entries) {
+function genBankProgramPresetCollection({ desc, dataClass, presetClass, collectionClass, entries }) {
+  const safeEntries = Array.isArray(entries) ? entries : [];
   const lines = [
-    header('Roland SH-4d tone preset catalog and SH4dPresetCollection.'),
+    header(desc),
     '@import "../preset.ck"',
     '@import "../preset-collection.ck"',
     '',
-    'public class SH4dPresetsData',
+    `public class ${dataClass}`,
     '{',
     '    [',
   ];
-  entries.forEach((p, idx) => {
-    const comma = idx < entries.length - 1 ? ',' : '';
+  safeEntries.forEach((p, idx) => {
+    const comma = idx < safeEntries.length - 1 ? ',' : '';
     lines.push(
-      `        new SH4dPreset(${p.program}, ${p.bank}, "${escapeChuck(p.name)}", "${escapeChuck(p.category)}")${comma}`
+      `        new ${presetClass}(${p.program}, ${p.bank}, "${escapeChuck(p.name)}", "${escapeChuck(p.category)}")${comma}`
     );
   });
   lines.push(
     '    ] @=> static Preset @ items[];',
     '}',
     '',
-    'public class SH4dPresetCollection extends PresetCollection',
+    `public class ${collectionClass} extends PresetCollection`,
     '{',
-    '    fun SH4dPresetCollection()',
+    `    fun ${collectionClass}()`,
     '    {',
-    '        initItems(SH4dPresetsData.items);',
-    '        1 => preferCurrentCategory;',
-    '        0 => matchCode;',
-    '    }',
-    '}',
-    ''
-  );
-  return lines.join('\n');
-}
-
-function genV3(entries) {
-  const lines = [
-    header('V3 Grand Piano XXL preset catalog and V3PresetCollection.'),
-    '@import "../preset.ck"',
-    '@import "../preset-collection.ck"',
-    '',
-    'public class V3PresetsData',
-    '{',
-    '    [',
-  ];
-  entries.forEach((p, idx) => {
-    const comma = idx < entries.length - 1 ? ',' : '';
-    lines.push(
-      `        new V3Preset(${p.program}, ${p.bank}, "${escapeChuck(p.name)}", "${escapeChuck(p.category)}")${comma}`
-    );
-  });
-  lines.push(
-    '    ] @=> static Preset @ items[];',
-    '}',
-    '',
-    'public class V3PresetCollection extends PresetCollection',
-    '{',
-    '    fun V3PresetCollection()',
-    '    {',
-    '        initItems(V3PresetsData.items);',
+    `        initItems(${dataClass}.items);`,
     '        1 => preferCurrentCategory;',
     '        0 => matchCode;',
     '    }',
@@ -185,15 +152,16 @@ function genGuiCatalogModule(catalog) {
       });
     }
   }
-  const payload = {
-    V3: catalog.presets.V3,
-    Hydrasynth: catalog.presets.Hydrasynth,
-    'SH-4d': catalog.presets['SH-4d'],
-    Moog: moog,
-    synths: Object.keys(catalog.synths),
-    synthMeta: catalog.synths,
-    moogBanks: catalog.moogBanks,
-  };
+  const payload = Object.assign(
+    {},
+    catalog.presets,
+    {
+      Moog: moog,
+      synths: Object.keys(catalog.synths),
+      synthMeta: catalog.synths,
+      moogBanks: catalog.moogBanks,
+    }
+  );
   return [
     '// GENERATED from presets/catalog.json — do not edit manually.',
     '// Regenerate with: node tools/gen-presets.js',
@@ -208,8 +176,46 @@ function main() {
 
   const outputs = [
     [path.join(GEN_CK_DIR, 'hydrasynth-presets.ck'), genHydrasynth(catalog.presets.Hydrasynth)],
-    [path.join(GEN_CK_DIR, 'sh4d-presets.ck'), genSH4d(catalog.presets['SH-4d'])],
-    [path.join(GEN_CK_DIR, 'v3-presets.ck'), genV3(catalog.presets.V3)],
+    [
+      path.join(GEN_CK_DIR, 'sh4d-presets.ck'),
+      genBankProgramPresetCollection({
+        desc: 'Roland SH-4d tone preset catalog and SH4dPresetCollection.',
+        dataClass: 'SH4dPresetsData',
+        presetClass: 'SH4dPreset',
+        collectionClass: 'SH4dPresetCollection',
+        entries: catalog.presets['SH-4d'],
+      }),
+    ],
+    [
+      path.join(GEN_CK_DIR, 'v3-presets.ck'),
+      genBankProgramPresetCollection({
+        desc: 'V3 Grand Piano XXL preset catalog and V3PresetCollection.',
+        dataClass: 'V3PresetsData',
+        presetClass: 'V3Preset',
+        collectionClass: 'V3PresetCollection',
+        entries: catalog.presets.V3,
+      }),
+    ],
+    [
+      path.join(GEN_CK_DIR, 'acid-v-presets.ck'),
+      genBankProgramPresetCollection({
+        desc: 'Arturia Acid V preset catalog and AcidVPresetCollection.',
+        dataClass: 'AcidVPresetsData',
+        presetClass: 'AcidVPreset',
+        collectionClass: 'AcidVPresetCollection',
+        entries: catalog.presets['Acid V'],
+      }),
+    ],
+    [
+      path.join(GEN_CK_DIR, 'augmented-mallets-presets.ck'),
+      genBankProgramPresetCollection({
+        desc: 'Arturia Augmented Mallets preset catalog and AugmentedMalletsPresetCollection.',
+        dataClass: 'AugmentedMalletsPresetsData',
+        presetClass: 'AugmentedMalletsPreset',
+        collectionClass: 'AugmentedMalletsPresetCollection',
+        entries: catalog.presets['Augmented Mallets'],
+      }),
+    ],
     [path.join(GEN_CK_DIR, 'moog-banks.ck'), genMoogBanks(catalog.moogBanks)],
     [path.join(GEN_CK_DIR, 'synth-table.ck'), genSynthTable(catalog.synths)],
     [GUI_CATALOG_PATH, genGuiCatalogModule(catalog)],

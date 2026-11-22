@@ -78,8 +78,7 @@ public class OscControl
             e.getInt() => int val;
             getDevice(devIdx) @=> Patch @ p;
             if (p != null) {
-                val => p.volume;
-                p.sendControllerChange(CadenzaConstants.CC_VOLUME(), val);
+                p.setVolume(val);
                 song.notifyStateChanged();
             }
         } else if (cmd == "cutoff") {

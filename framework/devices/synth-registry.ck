@@ -11,6 +11,8 @@
 @import "roland-sh4d.ck"
 @import "behringer-rd6.ck"
 @import "v3-grand-piano.ck"
+@import "acid-v.ck"
+@import "augmented-mallets.ck"
 
 public class SynthRegistry
 {
@@ -38,6 +40,10 @@ public class SynthRegistry
             return new MoogMessenger();
         } else if (synthUiName == "RD-6") {
             return new BehringerRD6();
+        } else if (synthUiName == "Acid V") {
+            return new AcidV();
+        } else if (synthUiName == "Augmented Mallets") {
+            return new AugmentedMallets();
         }
         return null;
     }
@@ -59,6 +65,10 @@ public class SynthRegistry
             return new MoogMessenger(ch1Based, 1, 1, vol);
         } else if (synthUiName == "RD-6") {
             return new BehringerRD6(ch1Based, vol);
+        } else if (synthUiName == "Acid V") {
+            return new AcidV(ch1Based, "Fast Travel", vol);
+        } else if (synthUiName == "Augmented Mallets") {
+            return new AugmentedMallets(ch1Based, "A Royal Mallet", vol);
         }
         return null;
     }

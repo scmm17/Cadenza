@@ -145,6 +145,14 @@ public class Patch
         }
     }
 
+    fun void setVolume(int val)
+    {
+        val => volume;
+        if (volume != -1) {
+            sendControllerChange(CadenzaConstants.CC_VOLUME(), volume);
+        }
+    }
+
     fun void setPan(int val)
     {
         val => pan;
@@ -167,7 +175,7 @@ public class Patch
             setPan(pan);
         }
         if (volume != -1) {
-            sendControllerChange(CadenzaConstants.CC_VOLUME(), volume);
+            setVolume(volume);
         }
     }
 
@@ -203,6 +211,7 @@ public class Patch
             }
         }
         GuiLink.sendAllNotesOff(devIndex);
+        sendControllerChange(CadenzaConstants.CC_ALL_SOUND_OFF(), 0);
         sendControllerChange(CadenzaConstants.CC_ALL_NOTES_OFF(), 0);
     }
 

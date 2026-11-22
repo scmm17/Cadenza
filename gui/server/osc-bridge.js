@@ -2,9 +2,15 @@
 
 const fs = require('fs');
 const path = require('path');
-const { spawn, exec } = require('child_process');
+const { spawn, exec, execFile } = require('child_process');
 const { Client, Server: OscServer } = require('node-osc');
 const patchSets = require('./patch-sets');
+
+const ARTURIA_APPS_DIR = '/Applications/Arturia';
+const ARTURIA_LIB_ROOT = '/Library/Arturia';
+const LAUNCH_COOLDOWN_MS = 10000;
+const STOP_CHECK_COOLDOWN_MS = 10000;
+const COLD_LAUNCH_SYNC_DELAY_MS = 3000;
 
 const SIMPLE_OSC_COMMANDS = {
   device:        { addr: '/cadenza/device',        type: 'int' },
@@ -48,6 +54,147 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
     lastBroadcastSong: null,
   };
 
+  const lastLaunchAttempt = new Map();
+  const lastStopCheck = new Map();
+  const knownRunningApps = new Set();
+  const desiredRunning = new Map();
+
+  function ensureStandaloneMidiPref(meta) {
+    if (!meta || !meta.appName || !meta.deviceName) return;
+    const prefPath = path.join(ARTURIA_LIB_ROOT, meta.appName, 'tmp', 'standalone.pref');
+    try {
+      if (!fs.existsSync(prefPath)) return;
+      const xml = fs.readFileSync(prefPath, 'utf8');
+      const matches = [...xml.matchAll(/^[ \t]*<VALUE\s+name="MidiDevice_\d+"\s+val="([^"]*)"[^>]*\/>/gm)];
+      if (matches.length === 1 && matches[0][1] === meta.deviceName) {
+        return;
+      }
+      const desiredLine = `  <VALUE name="MidiDevice_1" val="${meta.deviceName}"/>`;
+      const stripped = xml.replace(/^[ \t]*<VALUE\s+name="MidiDevice_\d+"\s+[^>]*\/>\r?\n?/gm, '');
+      if (stripped.includes('</PROPERTIES>')) {
+        const updated = stripped.replace('</PROPERTIES>', `${desiredLine}\n</PROPERTIES>`);
+        fs.writeFileSync(prefPath, updated, 'utf8');
+      }
+    } catch (err) {
+      console.warn(`→ OS: could not update ${prefPath}:`, err.message);
+    }
+  }
+
+  function ensureVirtualSynthRunning(uiName, { foreground = false } = {}) {
+    if (!uiName || process.platform !== 'darwin') return;
+    const catalog = loadPresetCatalog();
+    const meta = catalog && catalog.synthMeta && catalog.synthMeta[uiName];
+    if (!meta || !meta.appName) return;
+
+    const appName = meta.appName;
+    const appPath = path.join(ARTURIA_APPS_DIR, `${appName}.app`);
+    if (!fs.existsSync(appPath)) return;
+
+    desiredRunning.set(appName, true);
+    const now = Date.now();
+    if (!foreground && now - (lastLaunchAttempt.get(appName) || 0) < LAUNCH_COOLDOWN_MS) {
+      return;
+    }
+    lastLaunchAttempt.set(appName, now);
+
+    execFile('pgrep', ['-x', appName], (err) => {
+      if (!err) {
+        knownRunningApps.add(appName);
+        if (!foreground) return;
+      }
+      if (!foreground && desiredRunning.get(appName) !== true) {
+        return;
+      }
+      if (err) {
+        ensureStandaloneMidiPref(meta);
+      }
+      const args = foreground ? ['-a', appPath] : ['-g', '-a', appPath];
+      execFile('open', args, (openErr) => {
+        if (openErr) {
+          console.error(`→ OS: failed to launch ${appPath}:`, openErr.message);
+          return;
+        }
+        knownRunningApps.add(appName);
+        lastStopCheck.delete(appName);
+        console.log(`→ OS: launched ${appName} (${foreground ? 'foreground' : 'background'})`);
+        if (err) {
+          setTimeout(() => {
+            if (desiredRunning.get(appName) !== true) return;
+            const devices = shared.lastState && Array.isArray(shared.lastState.devices)
+              ? shared.lastState.devices
+              : [];
+            for (const dev of devices) {
+              if (dev && dev.uiName === uiName) {
+                if (dev.patchName) {
+                  chuckClient.send('/cadenza/setPreset', parseInt(dev.index, 10), String(dev.patchName));
+                }
+                if (dev.volume != null && dev.volume >= 0) {
+                  chuckClient.send('/cadenza/volume', parseInt(dev.index, 10), parseInt(dev.volume, 10));
+                }
+              }
+            }
+          }, COLD_LAUNCH_SYNC_DELAY_MS);
+        }
+      });
+    });
+  }
+
+  function stopVirtualSynthIfRunning(appName) {
+    if (!appName || process.platform !== 'darwin') return;
+    desiredRunning.set(appName, false);
+    lastLaunchAttempt.delete(appName);
+
+    const now = Date.now();
+    if (!knownRunningApps.has(appName) && now - (lastStopCheck.get(appName) || 0) < STOP_CHECK_COOLDOWN_MS) {
+      return;
+    }
+    lastStopCheck.set(appName, now);
+
+    execFile('pgrep', ['-x', appName], (err) => {
+      if (err) {
+        knownRunningApps.delete(appName);
+        return;
+      }
+      if (desiredRunning.get(appName) !== false) {
+        return;
+      }
+      execFile('pkill', ['-x', appName], (killErr) => {
+        knownRunningApps.delete(appName);
+        if (!killErr) {
+          console.log(`→ OS: stopped ${appName} (unused)`);
+        }
+      });
+    });
+  }
+
+  function syncVirtualSynths(devices) {
+    if (process.platform !== 'darwin' || !Array.isArray(devices)) return;
+    const catalog = loadPresetCatalog();
+    const synthMeta = (catalog && catalog.synthMeta) || {};
+    const activeApps = new Map();
+
+    for (const dev of devices) {
+      if (!dev || !dev.uiName) continue;
+      const meta = synthMeta[dev.uiName];
+      if (meta && meta.appName && !activeApps.has(meta.appName)) {
+        activeApps.set(meta.appName, dev.uiName);
+      }
+    }
+
+    const handledApps = new Set();
+    for (const meta of Object.values(synthMeta)) {
+      if (!meta || !meta.appName || handledApps.has(meta.appName)) continue;
+      handledApps.add(meta.appName);
+      const activeUiName = activeApps.get(meta.appName);
+      if (activeUiName) {
+        desiredRunning.set(meta.appName, true);
+        ensureVirtualSynthRunning(activeUiName);
+      } else {
+        stopVirtualSynthIfRunning(meta.appName);
+      }
+    }
+  }
+
   oscServer.on('message', (msg) => {
     const address = msg[0];
     if (address === '/cadenza/state') {
@@ -55,6 +202,7 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
       try {
         const state = JSON.parse(jsonStr);
         shared.lastState = state;
+        syncVirtualSynths(state.devices);
         if (state.songName) {
           const info = patchSets.ensurePatchSetsDir(state.songName);
           if (!state.patchSetName) state.patchSetName = info.defaultPatchSet;
@@ -69,6 +217,8 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
         console.error('OSC: Failed to parse state JSON:', e.message);
         console.error('Raw:', jsonStr);
       }
+    } else if (address === '/cadenza/activateSynth') {
+      if (msg[1]) ensureVirtualSynthRunning(String(msg[1]));
     } else if (address === '/cadenza/noteOn') {
       broadcast({ type: 'noteOn', dev: msg[1], note: msg[2], vel: msg[3] });
     } else if (address === '/cadenza/noteOff') {
@@ -205,8 +355,25 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
       case 'setSynth': {
         const { devIdx, synthName } = cmd.value || cmd || {};
         if (devIdx != null && synthName) {
-          console.log(`→ ChucK: /cadenza/setSynth dev=${devIdx} synth="${synthName}"`);
-          chuckClient.send('/cadenza/setSynth', parseInt(devIdx, 10), String(synthName));
+          const targetIdx = parseInt(devIdx, 10);
+          const nextUiName = String(synthName);
+          console.log(`→ ChucK: /cadenza/setSynth dev=${targetIdx} synth="${nextUiName}"`);
+          chuckClient.send('/cadenza/setSynth', targetIdx, nextUiName);
+          if (shared.lastState && Array.isArray(shared.lastState.devices)) {
+            const updatedDevices = shared.lastState.devices.map(d =>
+              d && parseInt(d.index, 10) === targetIdx ? { ...d, uiName: nextUiName } : d
+            );
+            syncVirtualSynths(updatedDevices);
+          } else {
+            ensureVirtualSynthRunning(nextUiName);
+          }
+        }
+        break;
+      }
+      case 'openSynthApp': {
+        const { uiName } = cmd.value || cmd || {};
+        if (uiName) {
+          ensureVirtualSynthRunning(String(uiName), { foreground: true });
         }
         break;
       }

@@ -116,7 +116,13 @@ function buildYamlFromState(state) {
     lines.push(`      filterCutoff: ${d.filterCutoff}`);
     lines.push(`      filterResonance: ${d.filterResonance}`);
     lines.push(`      pan: ${(parseInt(d.pan, 10) || 0) + 64}`);
-    if (d.uiName === 'V3' || d.uiName === 'S-1' || d.uiName === 'Moog') {
+    if (
+      d.uiName === 'V3' ||
+      d.uiName === 'S-1' ||
+      d.uiName === 'Moog' ||
+      d.uiName === 'Acid V' ||
+      d.uiName === 'Augmented Mallets'
+    ) {
       lines.push(`      program: ${d.program}`);
       lines.push(`      bank: ${d.bank}`);
       if (d.uiName === 'V3') lines.push('      programChange: 1');

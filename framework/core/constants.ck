@@ -16,9 +16,12 @@ public class CadenzaConstants
     fun static int CC_BANK_LSB()       { return 32; }
     fun static int CC_RESONANCE()      { return 71; }
     fun static int CC_CUTOFF()         { return 74; }
+    fun static int CC_ALL_SOUND_OFF()  { return 120; }
     fun static int CC_ALL_NOTES_OFF()  { return 123; }
-    fun static int CC_MOOG_CUTOFF()    { return 19; }
-    fun static int CC_MOOG_RESONANCE() { return 21; }
+    fun static int CC_MOOG_CUTOFF()        { return 19; }
+    fun static int CC_MOOG_RESONANCE()     { return 21; }
+    fun static int CC_ACID_V_VOLUME()      { return 85; }
+    fun static int CC_AUG_MALLETS_VOLUME() { return 17; }
 
     // LaunchControl XL MIDI notes & LED colors
     fun static int LC_SELECT_BASE()    { return 41; }

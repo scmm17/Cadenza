@@ -21,15 +21,19 @@ function loadPresetCatalog() {
         });
       }
     }
-    return {
-      V3: (catalog.presets && catalog.presets.V3) || [],
-      Hydrasynth: (catalog.presets && catalog.presets.Hydrasynth) || [],
-      'SH-4d': (catalog.presets && catalog.presets['SH-4d']) || [],
-      Moog: moog,
-      synths: catalog.synths ? Object.keys(catalog.synths) : ['V3', 'Hydrasynth', 'SH-4d', 'S-1', 'Moog', 'RD-6'],
-      synthMeta: catalog.synths || {},
-      moogBanks,
-    };
+    return Object.assign(
+      {},
+      catalog.presets || {},
+      {
+        V3: (catalog.presets && catalog.presets.V3) || [],
+        Hydrasynth: (catalog.presets && catalog.presets.Hydrasynth) || [],
+        'SH-4d': (catalog.presets && catalog.presets['SH-4d']) || [],
+        Moog: moog,
+        synths: catalog.synths ? Object.keys(catalog.synths) : ['V3', 'Hydrasynth', 'SH-4d', 'S-1', 'Moog', 'RD-6'],
+        synthMeta: catalog.synths || {},
+        moogBanks,
+      }
+    );
   } catch (err) {
     console.error('Failed to load presets/catalog.json:', err.message);
     return {

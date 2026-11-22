@@ -184,6 +184,7 @@ export function openPresetModal(devIdx) {
       const label = dev.uiName === 'Hydrasynth' ? ('Bank ' + cat) : cat;
       return '<option value="' + esc(cat) + '"' + (cat === category ? ' selected' : '') + '>' + esc(label) + '</option>';
     }).join('');
+    catSelect.value = category;
   }
 
   const searchInput = document.getElementById('presetSearchInput');

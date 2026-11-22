@@ -49,7 +49,7 @@ All `devIdx` arguments are **1-based** (`1`–`16`). All MIDI `channel` argument
 | `/cadenza/cutoff` | `ii` | Set filter cutoff (`devIdx`, `0`–`127`, CC 74 or CC 19 on Moog). |
 | `/cadenza/resonance` | `ii` | Set filter resonance (`devIdx`, `0`–`127`, CC 71 or CC 21 on Moog). |
 | `/cadenza/pan` | `ii` | Set stereo pan (`devIdx`, `-64`–`63`; stored as `0`–`127` with `64` center, CC 10 except on Moog). |
-| `/cadenza/setSynth` | `is` | Replace device synth (`devIdx`, `uiName` e.g. `"V3"`, `"Hydrasynth"`, `"SH-4d"`, `"S-1"`, `"Moog"`, `"RD-6"`). |
+| `/cadenza/setSynth` | `is` | Replace device synth (`devIdx`, `uiName` e.g. `"V3"`, `"Hydrasynth"`, `"SH-4d"`, `"S-1"`, `"Moog"`, `"RD-6"`, `"Acid V"`, `"Augmented Mallets"`). |
 | `/cadenza/setChannel` | `ii` | Change device MIDI channel (`devIdx`, `1`–`16`). |
 
 ### Presets & Patch Sets
@@ -79,6 +79,7 @@ Sent via `framework/core/gui-link.ck` (`GuiLink`).
 | `/cadenza/noteOn` | `iii` | Note-on event for piano roll: `(devIndex, midiNote, velocity)`. |
 | `/cadenza/noteOff` | `ii` | Note-off event for piano roll: `(devIndex, midiNote)`. |
 | `/cadenza/allNotesOff` | `i` | All-notes-off for device: `(devIndex)`. |
+| `/cadenza/activateSynth` | `s` | Request Node.js bridge to ensure the macOS standalone app for `uiName` is running (`"Acid V"`, `"Augmented Mallets"`, etc.). |
 
 ### `/cadenza/state` JSON Payload
 
@@ -141,7 +142,7 @@ Sent via `framework/core/gui-link.ck` (`GuiLink`).
 
 | `type` | Payload | Description |
 |---|---|---|
-| `presets` | `data: { V3, Hydrasynth, 'SH-4d', Moog, synths, synthMeta, moogBanks }` | Full catalog from `presets/catalog.json` (sent on connect and `getPresets`). |
+| `presets` | `data: { V3, Hydrasynth, 'SH-4d', Moog, 'Acid V', 'Augmented Mallets', synths, synthMeta, moogBanks }` | Full catalog from `presets/catalog.json` (sent on connect and `getPresets`). |
 | `state` | `data: <state>` | Parsed `/cadenza/state` payload. |
 | `graph` | `fragments: <node[]>` | Reassembled fragment graph from `/cadenza/graphNode`. |
 | `patchSets` | `data: { songName, patchSets, defaultPatchSet }` | Patch-set list and default metadata from disk. |
@@ -155,4 +156,4 @@ Sent via `framework/core/gui-link.ck` (`GuiLink`).
 
 - **Simple OSC pass-throughs:** `device`, `golden`, `allMode`, `save`, `shutdown`, `play`, `pause`, `restart`, `nextFragment`, `loopFragment`, `muteDevice`, `soloDevice`, `prevPresetCat`, `prevPreset`, `nextPreset`, `nextPresetCat`, `setTempo`.
 - **Parameterized OSC commands:** `setParam` (`{ devIdx, param, value }`), `setPreset` (`{ devIdx, presetName }`), `setSynth` (`{ devIdx, synthName }`), `setChannel` (`{ devIdx, channel }`).
-- **Disk / Process commands:** `getSongs`, `loadSong` (`value: relPath`), `editSong`, `getPresets`, `getPatchSets`, `selectPatchSet`, `createPatchSet`, `renamePatchSet`, `setDefaultPatchSet`, `deletePatchSet`.
+- **Disk / Process commands:** `getSongs`, `loadSong` (`value: relPath`), `editSong`, `openSynthApp` (`{ uiName }`), `getPresets`, `getPatchSets`, `selectPatchSet`, `createPatchSet`, `renamePatchSet`, `setDefaultPatchSet`, `deletePatchSet`.

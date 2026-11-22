@@ -1,0 +1,109 @@
+song:
+  devices:
+    Augmented Mallets-1:
+      deviceName: "IAC Driver Augmented Mallets"
+      midiChannel: 1
+      patchName: "Reversed Percussive"
+      uiName: "Augmented Mallets"
+      muted: 0
+      volume: 127
+      filterCutoff: 84
+      filterResonance: 63
+      pan: 64
+      program: 18
+      bank: 3
+    Acid V-0:
+      deviceName: "IAC Driver Acid V"
+      midiChannel: 0
+      patchName: "Particule Pad"
+      uiName: "Acid V"
+      muted: 0
+      volume: 99
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 14
+      bank: 0
+    V3-2:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 2
+      patchName: "Strings PWM A"
+      uiName: "V3"
+      muted: 0
+      volume: 100
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 29
+      bank: 4
+      programChange: 1
+    SH-4d-1:
+      deviceName: "SH-4d"
+      midiChannel: 1
+      patchName: "Space Marimba"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 110
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 14
+      toneBank: 72
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "M12 XyloPad RA"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "E004"
+    SH-4d-2:
+      deviceName: "SH-4d"
+      midiChannel: 2
+      patchName: "Synth Pad/Str 1"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 116
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "tone"
+      toneProgram: 48
+      toneBank: 64
+    Moog-0:
+      deviceName: "Moog Messenger"
+      midiChannel: 0
+      patchName: "Classic Bass: 12"
+      uiName: "Moog"
+      muted: 0
+      volume: 92
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 11
+      bank: 1
+    SH-4d-9:
+      deviceName: "SH-4d"
+      midiChannel: 9
+      patchName: "Drums"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 76
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "channel"
+  bpm: 85.000000

@@ -11,6 +11,7 @@ public class MixerAndPresetsTests {
         testV3PresetCollection();
         testMoogPresetParsingAndStepping();
         testStateBroadcasterJson();
+        testArturiaSynths();
     }
 
     fun static void testMuteAndSolo() {
@@ -254,5 +255,76 @@ public class MixerAndPresetsTests {
         Assert.isTrue("stateJson_repeatIndex", json.find("\"repeatIndex\":1") >= 0);
         Assert.isTrue("stateJson_repeatCount", json.find("\"repeatCount\":2") >= 0);
         Assert.isTrue("stateJson_escapeQuotes", sb.escJson("A\"B\\C") == "A\\\"B\\\\C");
+    }
+
+    fun static void testArturiaSynths() {
+        // AcidVPresetCollection
+        AcidVPresetCollection avCol;
+        Assert.isTrue("acidv_hasPreset_fastTravel", avCol.hasPreset("Fast Travel"));
+        Assert.isTrue("acidv_hasPreset_acidMouth", avCol.hasPreset("Acid Mouth"));
+        Assert.isFalse("acidv_hasPreset_missing", avCol.hasPreset("NoSuchAcidPreset"));
+
+        avCol.setPresetState("Fast Travel");
+        Assert.equalString("acidv_init_cat", avCol.curPresetCategory, "Bass Line");
+        avCol.getNextCategory() @=> Preset avNextCat;
+        Assert.equalString("acidv_nextCat_pad", avNextCat.category, "Classic Synth Pad");
+        avCol.setPresetState("Acid Mouth");
+        Assert.equalString("acidv_acidMouth_cat", avCol.curPresetCategory, "Arpeggio");
+
+        // AugmentedMalletsPresetCollection
+        AugmentedMalletsPresetCollection amCol;
+        Assert.isTrue("augmallets_hasPreset_royal", amCol.hasPreset("A Royal Mallet"));
+        Assert.isTrue("augmallets_hasPreset_deep", amCol.hasPreset("Deep Hybridation"));
+
+        amCol.setPresetState("Deep Hybridation");
+        Assert.equalString("augmallets_init_cat", amCol.curPresetCategory, "Bass");
+        amCol.getNextCategory() @=> Preset amBellsCat;
+        Assert.equalString("augmallets_nextCat_bells", amBellsCat.category, "Bells");
+        amCol.getNextCategory() @=> Preset amClassicCat;
+        Assert.equalString("augmallets_nextCat_classic", amClassicCat.category, "Classic Synth Keys");
+
+        // SynthRegistry channel resolution & empty factory
+        MockSong song;
+        Assert.equalInt("registry_acidv_ch", SynthRegistry.resolveMidiChannel(song.devices, 0, "Acid V"), 0);
+        Assert.equalInt("registry_augmallets_ch", SynthRegistry.resolveMidiChannel(song.devices, 1, "Augmented Mallets"), 1);
+
+        SynthRegistry.createEmpty("Acid V") @=> Patch @ emptyAv;
+        Assert.isTrue("registry_createEmpty_acidv", emptyAv != null);
+        Assert.equalString("registry_empty_acidv_ui", emptyAv.uiName, "Acid V");
+        Assert.equalString("registry_empty_acidv_dev", emptyAv.deviceName, "IAC Driver Acid V");
+
+        SynthRegistry.createEmpty("Augmented Mallets") @=> Patch @ emptyAm;
+        Assert.isTrue("registry_createEmpty_augmallets", emptyAm != null);
+        Assert.equalString("registry_empty_augmallets_ui", emptyAm.uiName, "Augmented Mallets");
+        Assert.equalString("registry_empty_augmallets_dev", emptyAm.deviceName, "IAC Driver Augmented Mallets");
+        Assert.equalInt("constants_cc_all_sound_off", CadenzaConstants.CC_ALL_SOUND_OFF(), 120);
+
+        // Polymorphic Patch preset selection and stepping via MockSong
+        AcidV acid;
+        AugmentedMallets mallets;
+        acid @=> song.devices[0];
+        mallets @=> song.devices[1];
+
+        song.selectDevice(0);
+        song.setPresetByName("Acid Mouth", -1);
+        Assert.equalString("acidv_poly_select_name", acid.patchName, "Acid Mouth");
+        Assert.equalInt("acidv_poly_select_bank", acid.bank, 0);
+        Assert.equalInt("acidv_poly_select_prog", acid.program, 1);
+
+        song.setPresetByName("Fast Travel", -1);
+        song.setNextPreset(-1);
+        Assert.equalString("acidv_poly_stepNext", acid.patchName, "Formic Tail");
+        song.setNextPresetCategory(-1);
+        Assert.equalString("acidv_poly_stepNextCat", acid.patchName, "Thoughtful Day");
+
+        song.selectDevice(1);
+        song.setPresetByName("Deep Hybridation", -1);
+        Assert.equalString("augmallets_poly_select_name", mallets.patchName, "Deep Hybridation");
+        Assert.equalInt("augmallets_poly_select_bank", mallets.bank, 0);
+        Assert.equalInt("augmallets_poly_select_prog", mallets.program, 0);
+        song.setNextPresetCategory(-1);
+        Assert.equalString("augmallets_poly_stepNextCat", mallets.patchName, "Celestial Bells");
+        Assert.equalInt("augmallets_poly_bells_bank", mallets.bank, 1);
+        Assert.equalInt("augmallets_poly_bells_prog", mallets.program, 0);
     }
 }

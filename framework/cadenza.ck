@@ -14,6 +14,8 @@
 @import "devices/presets/generated/hydrasynth-presets.ck"
 @import "devices/presets/generated/sh4d-presets.ck"
 @import "devices/presets/generated/v3-presets.ck"
+@import "devices/presets/generated/acid-v-presets.ck"
+@import "devices/presets/generated/augmented-mallets-presets.ck"
 @import "devices/presets/generated/moog-banks.ck"
 @import "devices/presets/generated/synth-table.ck"
 @import "devices/patch.ck"
@@ -23,6 +25,8 @@
 @import "devices/roland-sh4d.ck"
 @import "devices/behringer-rd6.ck"
 @import "devices/v3-grand-piano.ck"
+@import "devices/acid-v.ck"
+@import "devices/augmented-mallets.ck"
 @import "devices/synth-registry.ck"
 
 // 3. Composition primitives

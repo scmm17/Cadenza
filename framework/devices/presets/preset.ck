@@ -44,3 +44,19 @@ public class V3Preset extends Preset
         Preset(p, b, "", n, cat);
     }
 }
+
+public class AcidVPreset extends Preset
+{
+    fun AcidVPreset(int p, int b, string n, string cat)
+    {
+        Preset(p, b, "", n, cat);
+    }
+}
+
+public class AugmentedMalletsPreset extends Preset
+{
+    fun AugmentedMalletsPreset(int p, int b, string n, string cat)
+    {
+        Preset(p, b, "", n, cat);
+    }
+}

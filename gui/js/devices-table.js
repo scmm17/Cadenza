@@ -115,7 +115,10 @@ export function renderDevicesTable() {
       + dev.index
       + '</button></td>';
 
-    const hasPresets = (dev.uiName === 'V3' || dev.uiName === 'Hydrasynth' || dev.uiName === 'SH-4d' || dev.uiName === 'Moog');
+    const hasPresets = Boolean(
+      (state.presetCatalog && Array.isArray(state.presetCatalog[dev.uiName]) && state.presetCatalog[dev.uiName].length > 0) ||
+      dev.uiName === 'V3' || dev.uiName === 'Hydrasynth' || dev.uiName === 'SH-4d' || dev.uiName === 'Moog'
+    );
     const patchTitleHtml = hasPresets
       ? '<div class="patch-title patch-title-clickable" data-action="openPresetModal" data-dev="' + dev.index + '" title="Click to choose preset (' + esc(dev.patchName) + ')">' + esc(dev.patchName) + '</div>'
       : '<div class="patch-title" title="' + esc(dev.patchName) + '">' + esc(dev.patchName) + '</div>';
@@ -157,9 +160,9 @@ export function renderDevicesTable() {
     + '<colgroup>'
     + '<col style="width:50px">'
     + '<col style="width:65px">'
-    + '<col style="width:105px">'
+    + '<col style="width:155px">'
     + '<col style="width:70px">'
-    + '<col style="width:250px">'
+    + '<col style="width:210px">'
     + '<col style="width:175px">'
     + '<col style="width:70px">'
     + '<col style="width:70px">'
@@ -271,6 +274,16 @@ function onSynthChange(selectEl, devIdx) {
     dev.program = 0;
   } else if (synthName === 'RD-6') {
     dev.patchName = 'RHYTHM DESIGNER RD-6';
+  } else {
+    const meta = state.presetCatalog && state.presetCatalog.synthMeta && state.presetCatalog.synthMeta[synthName];
+    const list = state.presetCatalog && Array.isArray(state.presetCatalog[synthName])
+      ? state.presetCatalog[synthName]
+      : [];
+    const defaultName = (meta && meta.defaultPreset) || (list[0] && list[0].name) || synthName;
+    const match = list.find(p => p && p.name === defaultName) || list[0];
+    dev.patchName = match ? match.name : defaultName;
+    dev.bank = match && match.bank != null ? match.bank : 0;
+    dev.program = match && match.program != null ? match.program : 0;
   }
   clearDrumCache();
 

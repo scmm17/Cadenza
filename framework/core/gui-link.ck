@@ -80,4 +80,12 @@ public class GuiLink
         total => GuiLink.xmit.addInt;
         json => GuiLink.xmit.addString;
     }
+
+    fun static void sendActivateSynth(string synthUiName)
+    {
+        if (GuiLink.disabled || synthUiName == "") return;
+        init();
+        GuiLink.xmit.startMsg("/cadenza/activateSynth", "s");
+        synthUiName => GuiLink.xmit.addString;
+    }
 }

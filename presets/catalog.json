@@ -41,6 +41,22 @@
       "fixedChannel": null,
       "maxChannels": 1,
       "defaultPreset": "RHYTHM DESIGNER RD-6"
+    },
+    "Acid V": {
+      "class": "AcidV",
+      "deviceName": "IAC Driver Acid V",
+      "appName": "Acid V",
+      "fixedChannel": 0,
+      "maxChannels": 1,
+      "defaultPreset": "Fast Travel"
+    },
+    "Augmented Mallets": {
+      "class": "AugmentedMallets",
+      "deviceName": "IAC Driver Augmented Mallets",
+      "appName": "Augmented MALLETS",
+      "fixedChannel": 1,
+      "maxChannels": 1,
+      "defaultPreset": "A Royal Mallet"
     }
   },
   "moogBanks": [
@@ -14206,6 +14222,2152 @@
         "bank": 5,
         "name": "Ullian Drone & Chords",
         "category": "Winds"
+      }
+    ],
+    "Acid V": [
+      {
+        "program": 0,
+        "bank": 0,
+        "name": "Acetic Arp",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 1,
+        "bank": 0,
+        "name": "Acid Mouth",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 2,
+        "bank": 0,
+        "name": "Backwards Bicycle Arpeggio",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 3,
+        "bank": 0,
+        "name": "Chopper",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 4,
+        "bank": 0,
+        "name": "Clean Arp",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 5,
+        "bank": 0,
+        "name": "Die Amour Bar",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 6,
+        "bank": 0,
+        "name": "Dry Bass",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 7,
+        "bank": 0,
+        "name": "Gentle Plucky",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 8,
+        "bank": 0,
+        "name": "Gluconic Arp",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 9,
+        "bank": 0,
+        "name": "Hypnosis",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 10,
+        "bank": 0,
+        "name": "It Bites",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 11,
+        "bank": 0,
+        "name": "Oceanic Datacenter",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 12,
+        "bank": 0,
+        "name": "Once Demon-T",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 13,
+        "bank": 0,
+        "name": "Overcast",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 14,
+        "bank": 0,
+        "name": "Particule Pad",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 15,
+        "bank": 0,
+        "name": "Phat Boi Bass",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 16,
+        "bank": 0,
+        "name": "Random Acid",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 17,
+        "bank": 0,
+        "name": "Squeaky Clean",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 18,
+        "bank": 0,
+        "name": "Tensor",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 19,
+        "bank": 0,
+        "name": "Trance Bass Arp",
+        "category": "Arpeggio"
+      },
+      {
+        "program": 0,
+        "bank": 1,
+        "name": "8 Bars Slope",
+        "category": "Bass Line"
+      },
+      {
+        "program": 1,
+        "bank": 1,
+        "name": "A Legend Is Reborn",
+        "category": "Bass Line"
+      },
+      {
+        "program": 2,
+        "bank": 1,
+        "name": "Acid Bass",
+        "category": "Bass Line"
+      },
+      {
+        "program": 3,
+        "bank": 1,
+        "name": "Acid Cream",
+        "category": "Bass Line"
+      },
+      {
+        "program": 4,
+        "bank": 1,
+        "name": "All Things Pass",
+        "category": "Bass Line"
+      },
+      {
+        "program": 5,
+        "bank": 1,
+        "name": "Avant Ginquoi",
+        "category": "Bass Line"
+      },
+      {
+        "program": 6,
+        "bank": 1,
+        "name": "Bass Runner",
+        "category": "Bass Line"
+      },
+      {
+        "program": 7,
+        "bank": 1,
+        "name": "Bassard",
+        "category": "Bass Line"
+      },
+      {
+        "program": 8,
+        "bank": 1,
+        "name": "Battle On The Dancefloor",
+        "category": "Bass Line"
+      },
+      {
+        "program": 9,
+        "bank": 1,
+        "name": "Citric Bassline",
+        "category": "Bass Line"
+      },
+      {
+        "program": 10,
+        "bank": 1,
+        "name": "Dangerous Game",
+        "category": "Bass Line"
+      },
+      {
+        "program": 11,
+        "bank": 1,
+        "name": "Deep Groove",
+        "category": "Bass Line"
+      },
+      {
+        "program": 12,
+        "bank": 1,
+        "name": "Down Beat Acid",
+        "category": "Bass Line"
+      },
+      {
+        "program": 13,
+        "bank": 1,
+        "name": "Downsample Bassline",
+        "category": "Bass Line"
+      },
+      {
+        "program": 14,
+        "bank": 1,
+        "name": "Dub Essence",
+        "category": "Bass Line"
+      },
+      {
+        "program": 15,
+        "bank": 1,
+        "name": "Elastic Bass",
+        "category": "Bass Line"
+      },
+      {
+        "program": 16,
+        "bank": 1,
+        "name": "Endless Corridor",
+        "category": "Bass Line"
+      },
+      {
+        "program": 17,
+        "bank": 1,
+        "name": "Fast Travel",
+        "category": "Bass Line"
+      },
+      {
+        "program": 18,
+        "bank": 1,
+        "name": "Formic Tail",
+        "category": "Bass Line"
+      },
+      {
+        "program": 19,
+        "bank": 1,
+        "name": "Fused",
+        "category": "Bass Line"
+      },
+      {
+        "program": 20,
+        "bank": 1,
+        "name": "Future Sports",
+        "category": "Bass Line"
+      },
+      {
+        "program": 21,
+        "bank": 1,
+        "name": "Goa Bassline",
+        "category": "Bass Line"
+      },
+      {
+        "program": 22,
+        "bank": 1,
+        "name": "Half Again",
+        "category": "Bass Line"
+      },
+      {
+        "program": 23,
+        "bank": 1,
+        "name": "Hypno Bass Line",
+        "category": "Bass Line"
+      },
+      {
+        "program": 24,
+        "bank": 1,
+        "name": "Let It Roll",
+        "category": "Bass Line"
+      },
+      {
+        "program": 25,
+        "bank": 1,
+        "name": "Look A Noise Knob",
+        "category": "Bass Line"
+      },
+      {
+        "program": 26,
+        "bank": 1,
+        "name": "Lysergic Is Clergy",
+        "category": "Bass Line"
+      },
+      {
+        "program": 27,
+        "bank": 1,
+        "name": "Mind Map",
+        "category": "Bass Line"
+      },
+      {
+        "program": 28,
+        "bank": 1,
+        "name": "Modern Acid Bass",
+        "category": "Bass Line"
+      },
+      {
+        "program": 29,
+        "bank": 1,
+        "name": "More Cocotte",
+        "category": "Bass Line"
+      },
+      {
+        "program": 30,
+        "bank": 1,
+        "name": "Motion Drive",
+        "category": "Bass Line"
+      },
+      {
+        "program": 31,
+        "bank": 1,
+        "name": "Next Door Neighbour",
+        "category": "Bass Line"
+      },
+      {
+        "program": 32,
+        "bank": 1,
+        "name": "Not Your Regular Printer",
+        "category": "Bass Line"
+      },
+      {
+        "program": 33,
+        "bank": 1,
+        "name": "Passive Aggressive",
+        "category": "Bass Line"
+      },
+      {
+        "program": 34,
+        "bank": 1,
+        "name": "Perchloric",
+        "category": "Bass Line"
+      },
+      {
+        "program": 35,
+        "bank": 1,
+        "name": "Petunia",
+        "category": "Bass Line"
+      },
+      {
+        "program": 36,
+        "bank": 1,
+        "name": "Pusher",
+        "category": "Bass Line"
+      },
+      {
+        "program": 37,
+        "bank": 1,
+        "name": "Risin Sec",
+        "category": "Bass Line"
+      },
+      {
+        "program": 38,
+        "bank": 1,
+        "name": "Stalker",
+        "category": "Bass Line"
+      },
+      {
+        "program": 39,
+        "bank": 1,
+        "name": "Subraum",
+        "category": "Bass Line"
+      },
+      {
+        "program": 40,
+        "bank": 1,
+        "name": "Synthwave Inside",
+        "category": "Bass Line"
+      },
+      {
+        "program": 41,
+        "bank": 1,
+        "name": "TIP Bass",
+        "category": "Bass Line"
+      },
+      {
+        "program": 42,
+        "bank": 1,
+        "name": "Taste",
+        "category": "Bass Line"
+      },
+      {
+        "program": 43,
+        "bank": 1,
+        "name": "Three Step",
+        "category": "Bass Line"
+      },
+      {
+        "program": 44,
+        "bank": 1,
+        "name": "Trance Bass",
+        "category": "Bass Line"
+      },
+      {
+        "program": 45,
+        "bank": 1,
+        "name": "Tranceport",
+        "category": "Bass Line"
+      },
+      {
+        "program": 0,
+        "bank": 2,
+        "name": "Thoughtful Day",
+        "category": "Classic Synth Pad"
+      },
+      {
+        "program": 0,
+        "bank": 3,
+        "name": "Build Down",
+        "category": "Creative SFX"
+      },
+      {
+        "program": 0,
+        "bank": 4,
+        "name": "Hangover",
+        "category": "Hard Bass"
+      },
+      {
+        "program": 1,
+        "bank": 4,
+        "name": "Overexposed",
+        "category": "Hard Bass"
+      },
+      {
+        "program": 2,
+        "bank": 4,
+        "name": "Paper Acid",
+        "category": "Hard Bass"
+      },
+      {
+        "program": 3,
+        "bank": 4,
+        "name": "Pump It",
+        "category": "Hard Bass"
+      },
+      {
+        "program": 4,
+        "bank": 4,
+        "name": "Shorti",
+        "category": "Hard Bass"
+      },
+      {
+        "program": 5,
+        "bank": 4,
+        "name": "Trance's Waves",
+        "category": "Hard Bass"
+      },
+      {
+        "program": 6,
+        "bank": 4,
+        "name": "Vampire Slayer",
+        "category": "Hard Bass"
+      },
+      {
+        "program": 0,
+        "bank": 5,
+        "name": "Acid Kick",
+        "category": "Kick"
+      },
+      {
+        "program": 1,
+        "bank": 5,
+        "name": "Gras Beurre",
+        "category": "Kick"
+      },
+      {
+        "program": 2,
+        "bank": 5,
+        "name": "Uptempo Killer",
+        "category": "Kick"
+      },
+      {
+        "program": 0,
+        "bank": 6,
+        "name": "Abyss",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 1,
+        "bank": 6,
+        "name": "Acceptance",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 2,
+        "bank": 6,
+        "name": "Acid Breakbeats",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 3,
+        "bank": 6,
+        "name": "Acid Core Synth",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 4,
+        "bank": 6,
+        "name": "Acid Destroyer",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 5,
+        "bank": 6,
+        "name": "Acid Floor",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 6,
+        "bank": 6,
+        "name": "Acid Land",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 7,
+        "bank": 6,
+        "name": "Acid Smack",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 8,
+        "bank": 6,
+        "name": "Afterburn",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 9,
+        "bank": 6,
+        "name": "Alaska",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 10,
+        "bank": 6,
+        "name": "All Around",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 11,
+        "bank": 6,
+        "name": "Allela Enabler",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 12,
+        "bank": 6,
+        "name": "Ambient World",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 13,
+        "bank": 6,
+        "name": "Arena Berlin",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 14,
+        "bank": 6,
+        "name": "As Long As It Takes",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 15,
+        "bank": 6,
+        "name": "Ascorbic Line",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 16,
+        "bank": 6,
+        "name": "Barkin Kitty",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 17,
+        "bank": 6,
+        "name": "Beacon",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 18,
+        "bank": 6,
+        "name": "Behind The Wall",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 19,
+        "bank": 6,
+        "name": "Bittersweet Symphony",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 20,
+        "bank": 6,
+        "name": "Bottomless Acid Pit",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 21,
+        "bank": 6,
+        "name": "Bring Back The Acid",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 22,
+        "bank": 6,
+        "name": "Carbon Based",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 23,
+        "bank": 6,
+        "name": "Centuri",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 24,
+        "bank": 6,
+        "name": "Chemistry",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 25,
+        "bank": 6,
+        "name": "Cloud Cover",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 26,
+        "bank": 6,
+        "name": "Corrosive Sword",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 27,
+        "bank": 6,
+        "name": "Crowd Control",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 28,
+        "bank": 6,
+        "name": "Dark Ambiance",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 29,
+        "bank": 6,
+        "name": "Designs",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 30,
+        "bank": 6,
+        "name": "Error 303",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 31,
+        "bank": 6,
+        "name": "Euphoria Room",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 32,
+        "bank": 6,
+        "name": "Everything",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 33,
+        "bank": 6,
+        "name": "Film Noir",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 34,
+        "bank": 6,
+        "name": "Full Force",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 35,
+        "bank": 6,
+        "name": "Gesaffed",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 36,
+        "bank": 6,
+        "name": "Go Fast RS6",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 37,
+        "bank": 6,
+        "name": "Grab It",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 38,
+        "bank": 6,
+        "name": "Hardcore Hype",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 39,
+        "bank": 6,
+        "name": "Heavy Set",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 40,
+        "bank": 6,
+        "name": "Hour By Hour",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 41,
+        "bank": 6,
+        "name": "Infected Leaders",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 42,
+        "bank": 6,
+        "name": "Judgement",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 43,
+        "bank": 6,
+        "name": "Lactic Acid",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 44,
+        "bank": 6,
+        "name": "Laser Mafia Gurus",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 45,
+        "bank": 6,
+        "name": "Leap Of The Angel",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 46,
+        "bank": 6,
+        "name": "Little Choo",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 47,
+        "bank": 6,
+        "name": "Madman Rib Tone",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 48,
+        "bank": 6,
+        "name": "Melancolia",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 49,
+        "bank": 6,
+        "name": "Melodic Journey",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 50,
+        "bank": 6,
+        "name": "Methanesulfonic",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 51,
+        "bank": 6,
+        "name": "Morning Routine",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 52,
+        "bank": 6,
+        "name": "Nasty Swinger",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 53,
+        "bank": 6,
+        "name": "Nitric Super S O",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 54,
+        "bank": 6,
+        "name": "Passenger",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 55,
+        "bank": 6,
+        "name": "Quiet PH Control",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 56,
+        "bank": 6,
+        "name": "Ready For Kicks",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 57,
+        "bank": 6,
+        "name": "Refinement",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 58,
+        "bank": 6,
+        "name": "Smooth Ride",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 59,
+        "bank": 6,
+        "name": "Space Digger",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 60,
+        "bank": 6,
+        "name": "Spherical Path",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 61,
+        "bank": 6,
+        "name": "Stomping On Acid",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 62,
+        "bank": 6,
+        "name": "Strange Funk",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 63,
+        "bank": 6,
+        "name": "Sulfuric",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 64,
+        "bank": 6,
+        "name": "Techno Square",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 65,
+        "bank": 6,
+        "name": "Tempest",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 66,
+        "bank": 6,
+        "name": "Three Oh What",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 67,
+        "bank": 6,
+        "name": "Transwave",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 68,
+        "bank": 6,
+        "name": "Traveller",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 69,
+        "bank": 6,
+        "name": "Ultra Gate",
+        "category": "Melodic Sequence"
+      },
+      {
+        "program": 0,
+        "bank": 7,
+        "name": "Ribonucleic Polymetric",
+        "category": "Noise Sequence"
+      },
+      {
+        "program": 0,
+        "bank": 8,
+        "name": "Aceed Labarta",
+        "category": "Rhythmic Sequence"
+      },
+      {
+        "program": 1,
+        "bank": 8,
+        "name": "Analog Bossa",
+        "category": "Rhythmic Sequence"
+      },
+      {
+        "program": 2,
+        "bank": 8,
+        "name": "Earth",
+        "category": "Rhythmic Sequence"
+      },
+      {
+        "program": 3,
+        "bank": 8,
+        "name": "Kicks On Accents",
+        "category": "Rhythmic Sequence"
+      },
+      {
+        "program": 4,
+        "bank": 8,
+        "name": "Less Is More",
+        "category": "Rhythmic Sequence"
+      },
+      {
+        "program": 5,
+        "bank": 8,
+        "name": "Overtones",
+        "category": "Rhythmic Sequence"
+      },
+      {
+        "program": 0,
+        "bank": 9,
+        "name": "Default",
+        "category": "Template"
+      }
+    ],
+    "Augmented Mallets": [
+      {
+        "program": 0,
+        "bank": 0,
+        "name": "Deep Hybridation",
+        "category": "Bass"
+      },
+      {
+        "program": 1,
+        "bank": 0,
+        "name": "Electric Trap",
+        "category": "Bass"
+      },
+      {
+        "program": 2,
+        "bank": 0,
+        "name": "Under Pressure",
+        "category": "Bass"
+      },
+      {
+        "program": 0,
+        "bank": 1,
+        "name": "Celestial Bells",
+        "category": "Bells"
+      },
+      {
+        "program": 1,
+        "bank": 1,
+        "name": "Eternia",
+        "category": "Bells"
+      },
+      {
+        "program": 2,
+        "bank": 1,
+        "name": "Gentle Bells",
+        "category": "Bells"
+      },
+      {
+        "program": 3,
+        "bank": 1,
+        "name": "Light Cave",
+        "category": "Bells"
+      },
+      {
+        "program": 0,
+        "bank": 2,
+        "name": "Dancing Forge",
+        "category": "Classic Synth Keys"
+      },
+      {
+        "program": 1,
+        "bank": 2,
+        "name": "Deluge",
+        "category": "Classic Synth Keys"
+      },
+      {
+        "program": 2,
+        "bank": 2,
+        "name": "Digital Mallet",
+        "category": "Classic Synth Keys"
+      },
+      {
+        "program": 3,
+        "bank": 2,
+        "name": "Dreamy Celesta",
+        "category": "Classic Synth Keys"
+      },
+      {
+        "program": 4,
+        "bank": 2,
+        "name": "Fragile Piano",
+        "category": "Classic Synth Keys"
+      },
+      {
+        "program": 5,
+        "bank": 2,
+        "name": "Soft and Fragile",
+        "category": "Classic Synth Keys"
+      },
+      {
+        "program": 6,
+        "bank": 2,
+        "name": "Up Up Up",
+        "category": "Classic Synth Keys"
+      },
+      {
+        "program": 7,
+        "bank": 2,
+        "name": "Warm Marimba",
+        "category": "Classic Synth Keys"
+      },
+      {
+        "program": 0,
+        "bank": 3,
+        "name": "Augmented Realms",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 1,
+        "bank": 3,
+        "name": "Beyond Reality",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 2,
+        "bank": 3,
+        "name": "Cavern Tales",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 3,
+        "bank": 3,
+        "name": "Damped Tape",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 4,
+        "bank": 3,
+        "name": "Eyes in the Trees",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 5,
+        "bank": 3,
+        "name": "Fading Impression",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 6,
+        "bank": 3,
+        "name": "Float Downstream",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 7,
+        "bank": 3,
+        "name": "Grime Time",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 8,
+        "bank": 3,
+        "name": "Haunted Ballroom",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 9,
+        "bank": 3,
+        "name": "Hot Velvet",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 10,
+        "bank": 3,
+        "name": "Hustle & Flow",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 11,
+        "bank": 3,
+        "name": "In the Night",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 12,
+        "bank": 3,
+        "name": "Light's Saga",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 13,
+        "bank": 3,
+        "name": "Lost in Echo",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 14,
+        "bank": 3,
+        "name": "Machine Interference",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 15,
+        "bank": 3,
+        "name": "Poly Axial",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 16,
+        "bank": 3,
+        "name": "Pure Drops",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 17,
+        "bank": 3,
+        "name": "Radiance",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 18,
+        "bank": 3,
+        "name": "Reversed Percussive",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 19,
+        "bank": 3,
+        "name": "Soft Breeze",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 20,
+        "bank": 3,
+        "name": "Warm Message",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 21,
+        "bank": 3,
+        "name": "Yesteryear",
+        "category": "Evolving Keys"
+      },
+      {
+        "program": 0,
+        "bank": 4,
+        "name": "Bells of Noise",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 1,
+        "bank": 4,
+        "name": "Blue Clouds",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 2,
+        "bank": 4,
+        "name": "Celeste On Vinyl",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 3,
+        "bank": 4,
+        "name": "Chateau",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 4,
+        "bank": 4,
+        "name": "Digital Love",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 5,
+        "bank": 4,
+        "name": "Dreaming Awake",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 6,
+        "bank": 4,
+        "name": "Drifting Away",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 7,
+        "bank": 4,
+        "name": "Hazy Vibes",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 8,
+        "bank": 4,
+        "name": "Late Night Voices",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 9,
+        "bank": 4,
+        "name": "Lofi Rattle Cloud",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 10,
+        "bank": 4,
+        "name": "Nature's Harmony",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 11,
+        "bank": 4,
+        "name": "Nebula Mallets",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 12,
+        "bank": 4,
+        "name": "Reflective Plateaux",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 13,
+        "bank": 4,
+        "name": "Shattered Dreams",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 14,
+        "bank": 4,
+        "name": "Silent Thoughts",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 15,
+        "bank": 4,
+        "name": "Soft Toy Kalimba",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 16,
+        "bank": 4,
+        "name": "Subway Piano",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 17,
+        "bank": 4,
+        "name": "Tape Vibraphone",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 18,
+        "bank": 4,
+        "name": "Vibraphone Mess",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 19,
+        "bank": 4,
+        "name": "Vitreaux",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 20,
+        "bank": 4,
+        "name": "Warped Marimba",
+        "category": "Lofi Keys"
+      },
+      {
+        "program": 0,
+        "bank": 5,
+        "name": "Beach Breeze",
+        "category": "Mallets"
+      },
+      {
+        "program": 1,
+        "bank": 5,
+        "name": "Before Times",
+        "category": "Mallets"
+      },
+      {
+        "program": 2,
+        "bank": 5,
+        "name": "Bow Reverser",
+        "category": "Mallets"
+      },
+      {
+        "program": 3,
+        "bank": 5,
+        "name": "Broken Life",
+        "category": "Mallets"
+      },
+      {
+        "program": 4,
+        "bank": 5,
+        "name": "Candy",
+        "category": "Mallets"
+      },
+      {
+        "program": 5,
+        "bank": 5,
+        "name": "Celestial Skyline",
+        "category": "Mallets"
+      },
+      {
+        "program": 6,
+        "bank": 5,
+        "name": "Circle Square Triangle",
+        "category": "Mallets"
+      },
+      {
+        "program": 7,
+        "bank": 5,
+        "name": "Clair de Lune",
+        "category": "Mallets"
+      },
+      {
+        "program": 8,
+        "bank": 5,
+        "name": "Coined",
+        "category": "Mallets"
+      },
+      {
+        "program": 9,
+        "bank": 5,
+        "name": "Cooler",
+        "category": "Mallets"
+      },
+      {
+        "program": 10,
+        "bank": 5,
+        "name": "Creation",
+        "category": "Mallets"
+      },
+      {
+        "program": 11,
+        "bank": 5,
+        "name": "Crystal Vibe",
+        "category": "Mallets"
+      },
+      {
+        "program": 12,
+        "bank": 5,
+        "name": "Dreamy Vibraphone",
+        "category": "Mallets"
+      },
+      {
+        "program": 13,
+        "bank": 5,
+        "name": "Enchanted Mallet",
+        "category": "Mallets"
+      },
+      {
+        "program": 14,
+        "bank": 5,
+        "name": "Felt Parade",
+        "category": "Mallets"
+      },
+      {
+        "program": 15,
+        "bank": 5,
+        "name": "Felt Vibe",
+        "category": "Mallets"
+      },
+      {
+        "program": 16,
+        "bank": 5,
+        "name": "Flipped On",
+        "category": "Mallets"
+      },
+      {
+        "program": 17,
+        "bank": 5,
+        "name": "Foggy Passage",
+        "category": "Mallets"
+      },
+      {
+        "program": 18,
+        "bank": 5,
+        "name": "Gentle E.Piano",
+        "category": "Mallets"
+      },
+      {
+        "program": 19,
+        "bank": 5,
+        "name": "Giants Causeway",
+        "category": "Mallets"
+      },
+      {
+        "program": 20,
+        "bank": 5,
+        "name": "Golden Ferns",
+        "category": "Mallets"
+      },
+      {
+        "program": 21,
+        "bank": 5,
+        "name": "Islander",
+        "category": "Mallets"
+      },
+      {
+        "program": 22,
+        "bank": 5,
+        "name": "Jade's Love",
+        "category": "Mallets"
+      },
+      {
+        "program": 23,
+        "bank": 5,
+        "name": "Krampus Politics",
+        "category": "Mallets"
+      },
+      {
+        "program": 24,
+        "bank": 5,
+        "name": "Light Fever",
+        "category": "Mallets"
+      },
+      {
+        "program": 25,
+        "bank": 5,
+        "name": "Linear Time",
+        "category": "Mallets"
+      },
+      {
+        "program": 26,
+        "bank": 5,
+        "name": "Lowkey Jazzy",
+        "category": "Mallets"
+      },
+      {
+        "program": 27,
+        "bank": 5,
+        "name": "Marimba Rainstick",
+        "category": "Mallets"
+      },
+      {
+        "program": 28,
+        "bank": 5,
+        "name": "Masquerade",
+        "category": "Mallets"
+      },
+      {
+        "program": 29,
+        "bank": 5,
+        "name": "Mostly",
+        "category": "Mallets"
+      },
+      {
+        "program": 30,
+        "bank": 5,
+        "name": "No Place",
+        "category": "Mallets"
+      },
+      {
+        "program": 31,
+        "bank": 5,
+        "name": "Ominous Vibes",
+        "category": "Mallets"
+      },
+      {
+        "program": 32,
+        "bank": 5,
+        "name": "Open System",
+        "category": "Mallets"
+      },
+      {
+        "program": 33,
+        "bank": 5,
+        "name": "Out in the Sticks",
+        "category": "Mallets"
+      },
+      {
+        "program": 34,
+        "bank": 5,
+        "name": "Paris Cold War",
+        "category": "Mallets"
+      },
+      {
+        "program": 35,
+        "bank": 5,
+        "name": "Patterning",
+        "category": "Mallets"
+      },
+      {
+        "program": 36,
+        "bank": 5,
+        "name": "Phased Alloy",
+        "category": "Mallets"
+      },
+      {
+        "program": 37,
+        "bank": 5,
+        "name": "Ploppy Marimba",
+        "category": "Mallets"
+      },
+      {
+        "program": 38,
+        "bank": 5,
+        "name": "Pure Tones",
+        "category": "Mallets"
+      },
+      {
+        "program": 39,
+        "bank": 5,
+        "name": "Rare Forge",
+        "category": "Mallets"
+      },
+      {
+        "program": 40,
+        "bank": 5,
+        "name": "Reach",
+        "category": "Mallets"
+      },
+      {
+        "program": 41,
+        "bank": 5,
+        "name": "Rest Assured",
+        "category": "Mallets"
+      },
+      {
+        "program": 42,
+        "bank": 5,
+        "name": "Sampled Marimba",
+        "category": "Mallets"
+      },
+      {
+        "program": 43,
+        "bank": 5,
+        "name": "Save Game",
+        "category": "Mallets"
+      },
+      {
+        "program": 44,
+        "bank": 5,
+        "name": "Sparkle Top Smoke",
+        "category": "Mallets"
+      },
+      {
+        "program": 45,
+        "bank": 5,
+        "name": "Spiky Affair",
+        "category": "Mallets"
+      },
+      {
+        "program": 46,
+        "bank": 5,
+        "name": "Starlight Eyes",
+        "category": "Mallets"
+      },
+      {
+        "program": 47,
+        "bank": 5,
+        "name": "Starlit Hideout",
+        "category": "Mallets"
+      },
+      {
+        "program": 48,
+        "bank": 5,
+        "name": "Starlit Mallets",
+        "category": "Mallets"
+      },
+      {
+        "program": 49,
+        "bank": 5,
+        "name": "Summer Vibes",
+        "category": "Mallets"
+      },
+      {
+        "program": 50,
+        "bank": 5,
+        "name": "The Greatest",
+        "category": "Mallets"
+      },
+      {
+        "program": 51,
+        "bank": 5,
+        "name": "The Sleeper",
+        "category": "Mallets"
+      },
+      {
+        "program": 52,
+        "bank": 5,
+        "name": "The Years Go",
+        "category": "Mallets"
+      },
+      {
+        "program": 53,
+        "bank": 5,
+        "name": "Tomatoes",
+        "category": "Mallets"
+      },
+      {
+        "program": 54,
+        "bank": 5,
+        "name": "Twilight Tones",
+        "category": "Mallets"
+      },
+      {
+        "program": 55,
+        "bank": 5,
+        "name": "Weymouth Pier",
+        "category": "Mallets"
+      },
+      {
+        "program": 0,
+        "bank": 6,
+        "name": "Abandoned Lighthouse",
+        "category": "Pad"
+      },
+      {
+        "program": 1,
+        "bank": 6,
+        "name": "Aero Marimba Swells",
+        "category": "Pad"
+      },
+      {
+        "program": 2,
+        "bank": 6,
+        "name": "Ambient Tides",
+        "category": "Pad"
+      },
+      {
+        "program": 3,
+        "bank": 6,
+        "name": "Angelic Sign",
+        "category": "Pad"
+      },
+      {
+        "program": 4,
+        "bank": 6,
+        "name": "Beginning",
+        "category": "Pad"
+      },
+      {
+        "program": 5,
+        "bank": 6,
+        "name": "Biomechanoiden",
+        "category": "Pad"
+      },
+      {
+        "program": 6,
+        "bank": 6,
+        "name": "Birds Paradise",
+        "category": "Pad"
+      },
+      {
+        "program": 7,
+        "bank": 6,
+        "name": "Blurred Around The Edges",
+        "category": "Pad"
+      },
+      {
+        "program": 8,
+        "bank": 6,
+        "name": "Bowed Mallets",
+        "category": "Pad"
+      },
+      {
+        "program": 9,
+        "bank": 6,
+        "name": "Bowed Wind",
+        "category": "Pad"
+      },
+      {
+        "program": 10,
+        "bank": 6,
+        "name": "Celestial Dreams",
+        "category": "Pad"
+      },
+      {
+        "program": 11,
+        "bank": 6,
+        "name": "Celestial Mystery",
+        "category": "Pad"
+      },
+      {
+        "program": 12,
+        "bank": 6,
+        "name": "Dark Matter",
+        "category": "Pad"
+      },
+      {
+        "program": 13,
+        "bank": 6,
+        "name": "Dark Swell",
+        "category": "Pad"
+      },
+      {
+        "program": 14,
+        "bank": 6,
+        "name": "Dawn of Time",
+        "category": "Pad"
+      },
+      {
+        "program": 15,
+        "bank": 6,
+        "name": "Deep Meditation",
+        "category": "Pad"
+      },
+      {
+        "program": 16,
+        "bank": 6,
+        "name": "Delicate to Void",
+        "category": "Pad"
+      },
+      {
+        "program": 17,
+        "bank": 6,
+        "name": "Digital Winter",
+        "category": "Pad"
+      },
+      {
+        "program": 18,
+        "bank": 6,
+        "name": "Dimensions",
+        "category": "Pad"
+      },
+      {
+        "program": 19,
+        "bank": 6,
+        "name": "Disturbance",
+        "category": "Pad"
+      },
+      {
+        "program": 20,
+        "bank": 6,
+        "name": "Empty Bliss",
+        "category": "Pad"
+      },
+      {
+        "program": 21,
+        "bank": 6,
+        "name": "Endless Chamber",
+        "category": "Pad"
+      },
+      {
+        "program": 22,
+        "bank": 6,
+        "name": "Ethereal Dream",
+        "category": "Pad"
+      },
+      {
+        "program": 23,
+        "bank": 6,
+        "name": "Fluorescent Echoes",
+        "category": "Pad"
+      },
+      {
+        "program": 24,
+        "bank": 6,
+        "name": "Flutter",
+        "category": "Pad"
+      },
+      {
+        "program": 25,
+        "bank": 6,
+        "name": "Frozen Marimba",
+        "category": "Pad"
+      },
+      {
+        "program": 26,
+        "bank": 6,
+        "name": "Frozen Marimba in Water",
+        "category": "Pad"
+      },
+      {
+        "program": 27,
+        "bank": 6,
+        "name": "Galaxy Attraction",
+        "category": "Pad"
+      },
+      {
+        "program": 28,
+        "bank": 6,
+        "name": "Ghost Type",
+        "category": "Pad"
+      },
+      {
+        "program": 29,
+        "bank": 6,
+        "name": "Hall of Mirrors",
+        "category": "Pad"
+      },
+      {
+        "program": 30,
+        "bank": 6,
+        "name": "Hypnotic Drone",
+        "category": "Pad"
+      },
+      {
+        "program": 31,
+        "bank": 6,
+        "name": "Infinity",
+        "category": "Pad"
+      },
+      {
+        "program": 32,
+        "bank": 6,
+        "name": "Inner Space",
+        "category": "Pad"
+      },
+      {
+        "program": 33,
+        "bank": 6,
+        "name": "Lost in Infinity",
+        "category": "Pad"
+      },
+      {
+        "program": 34,
+        "bank": 6,
+        "name": "Monolith Landing",
+        "category": "Pad"
+      },
+      {
+        "program": 35,
+        "bank": 6,
+        "name": "Morning Twilight",
+        "category": "Pad"
+      },
+      {
+        "program": 36,
+        "bank": 6,
+        "name": "New Orleans",
+        "category": "Pad"
+      },
+      {
+        "program": 37,
+        "bank": 6,
+        "name": "Pink Life",
+        "category": "Pad"
+      },
+      {
+        "program": 38,
+        "bank": 6,
+        "name": "Premonition",
+        "category": "Pad"
+      },
+      {
+        "program": 39,
+        "bank": 6,
+        "name": "Pulsating Souls",
+        "category": "Pad"
+      },
+      {
+        "program": 40,
+        "bank": 6,
+        "name": "Recollection",
+        "category": "Pad"
+      },
+      {
+        "program": 41,
+        "bank": 6,
+        "name": "Resolver",
+        "category": "Pad"
+      },
+      {
+        "program": 42,
+        "bank": 6,
+        "name": "Something in the Distance",
+        "category": "Pad"
+      },
+      {
+        "program": 43,
+        "bank": 6,
+        "name": "Stairway to Heavenly Sky",
+        "category": "Pad"
+      },
+      {
+        "program": 44,
+        "bank": 6,
+        "name": "Upside Down",
+        "category": "Pad"
+      },
+      {
+        "program": 45,
+        "bank": 6,
+        "name": "Water Garden",
+        "category": "Pad"
+      },
+      {
+        "program": 46,
+        "bank": 6,
+        "name": "Wayfinders",
+        "category": "Pad"
+      },
+      {
+        "program": 0,
+        "bank": 7,
+        "name": "A Royal Mallet",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 1,
+        "bank": 7,
+        "name": "Basic Nature",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 2,
+        "bank": 7,
+        "name": "Clicky Hustle",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 3,
+        "bank": 7,
+        "name": "Digital Island",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 4,
+        "bank": 7,
+        "name": "Early Vibe Texture",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 5,
+        "bank": 7,
+        "name": "Facades",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 6,
+        "bank": 7,
+        "name": "Fragrance",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 7,
+        "bank": 7,
+        "name": "Glock En Space",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 8,
+        "bank": 7,
+        "name": "Hedwig's Dream",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 9,
+        "bank": 7,
+        "name": "Last Air",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 10,
+        "bank": 7,
+        "name": "Little Moments",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 11,
+        "bank": 7,
+        "name": "Lofi Toys",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 12,
+        "bank": 7,
+        "name": "Mysterious Waves",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 13,
+        "bank": 7,
+        "name": "Silver Keys",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 14,
+        "bank": 7,
+        "name": "Spacey Keys",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 15,
+        "bank": 7,
+        "name": "Summer of You",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 16,
+        "bank": 7,
+        "name": "Toy Box",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 17,
+        "bank": 7,
+        "name": "Trap Fantasy",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 18,
+        "bank": 7,
+        "name": "VibraTone",
+        "category": "Percussive Keys"
+      },
+      {
+        "program": 0,
+        "bank": 8,
+        "name": "Astral Ride",
+        "category": "Sequence"
+      },
+      {
+        "program": 1,
+        "bank": 8,
+        "name": "Danger Drive",
+        "category": "Sequence"
+      },
+      {
+        "program": 2,
+        "bank": 8,
+        "name": "Ethereal Shadows",
+        "category": "Sequence"
+      },
+      {
+        "program": 3,
+        "bank": 8,
+        "name": "Far From Here",
+        "category": "Sequence"
+      },
+      {
+        "program": 4,
+        "bank": 8,
+        "name": "Games",
+        "category": "Sequence"
+      },
+      {
+        "program": 5,
+        "bank": 8,
+        "name": "Glocks and Glocks",
+        "category": "Sequence"
+      },
+      {
+        "program": 6,
+        "bank": 8,
+        "name": "Homework Vibes",
+        "category": "Sequence"
+      },
+      {
+        "program": 7,
+        "bank": 8,
+        "name": "Horror Story",
+        "category": "Sequence"
+      },
+      {
+        "program": 8,
+        "bank": 8,
+        "name": "Infinite Whimsy",
+        "category": "Sequence"
+      },
+      {
+        "program": 9,
+        "bank": 8,
+        "name": "Neon Lights",
+        "category": "Sequence"
+      },
+      {
+        "program": 10,
+        "bank": 8,
+        "name": "Penultimate Fantasy",
+        "category": "Sequence"
+      },
+      {
+        "program": 11,
+        "bank": 8,
+        "name": "Random Motion",
+        "category": "Sequence"
+      },
+      {
+        "program": 12,
+        "bank": 8,
+        "name": "Sphere",
+        "category": "Sequence"
+      },
+      {
+        "program": 13,
+        "bank": 8,
+        "name": "Stranger Mallets",
+        "category": "Sequence"
+      },
+      {
+        "program": 14,
+        "bank": 8,
+        "name": "The Magician",
+        "category": "Sequence"
+      },
+      {
+        "program": 0,
+        "bank": 9,
+        "name": "Burning Planet",
+        "category": "Sound Effects"
+      },
+      {
+        "program": 1,
+        "bank": 9,
+        "name": "Metal Impact",
+        "category": "Sound Effects"
+      },
+      {
+        "program": 2,
+        "bank": 9,
+        "name": "Mystery Lift",
+        "category": "Sound Effects"
+      },
+      {
+        "program": 3,
+        "bank": 9,
+        "name": "The Dark Side of Mars",
+        "category": "Sound Effects"
+      },
+      {
+        "program": 4,
+        "bank": 9,
+        "name": "The Future Is Now",
+        "category": "Sound Effects"
+      },
+      {
+        "program": 0,
+        "bank": 10,
+        "name": "Default",
+        "category": "Template"
       }
     ]
   }

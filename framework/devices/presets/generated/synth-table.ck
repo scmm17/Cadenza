@@ -10,7 +10,9 @@ public class SynthTableData
         "SH-4d",
         "S-1",
         "Moog",
-        "RD-6"
+        "RD-6",
+        "Acid V",
+        "Augmented Mallets"
     ] @=> static string UI_NAMES[];
 
     [
@@ -19,13 +21,17 @@ public class SynthTableData
         -1,
         2,
         0,
-        -1
+        -1,
+        0,
+        1
     ] @=> static int FIXED_CHANNELS[];
 
     [
         16,
         1,
         4,
+        1,
+        1,
         1,
         1,
         1
@@ -37,6 +43,8 @@ public class SynthTableData
         "",
         "Bank: 1 Program: 1",
         "Messenger: 1",
-        "RHYTHM DESIGNER RD-6"
+        "RHYTHM DESIGNER RD-6",
+        "Fast Travel",
+        "A Royal Mallet"
     ] @=> static string DEFAULT_PRESETS[];
 }

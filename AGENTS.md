@@ -30,9 +30,9 @@ External Hardware Synths
     - `yaml.ck`: `YamlNode`, `YamlParser` (custom in-ChucK YAML parser/writer).
   - `devices/`:
     - `patch.ck`: `Patch` base class, MIDI output/CC helpers, active-note tracking, and polymorphic preset hooks.
-    - `hydrasynth.ck` (`Hydrasynth`), `moog-messenger.ck` (`MoogMessenger`), `roland-s1.ck` (`RolandS1`), `roland-sh4d.ck` (`RolandSH4d`), `behringer-rd6.ck` (`BehringerRD6`), `v3-grand-piano.ck` (`V3GrandPiano`).
+    - `hydrasynth.ck` (`Hydrasynth`), `moog-messenger.ck` (`MoogMessenger`), `roland-s1.ck` (`RolandS1`), `roland-sh4d.ck` (`RolandSH4d`), `behringer-rd6.ck` (`BehringerRD6`), `v3-grand-piano.ck` (`V3GrandPiano`), `acid-v.ck` (`AcidV`), `augmented-mallets.ck` (`AugmentedMallets`).
     - `synth-registry.ck`: `SynthRegistry` central synth factory and MIDI channel auto-assignment rules.
-    - `presets/`: `preset.ck` (`Preset`, `V3Preset`, `HydraPreset`, `SH4dPreset`), `preset-collection.ck` (`PresetCollection`), and `generated/` (`hydrasynth-presets.ck`, `sh4d-presets.ck`, `v3-presets.ck`, `moog-banks.ck`, `synth-table.ck`).
+    - `presets/`: `preset.ck` (`Preset`, `V3Preset`, `HydraPreset`, `SH4dPreset`, `AcidVPreset`, `AugmentedMalletsPreset`), `preset-collection.ck` (`PresetCollection`), and `generated/` (`hydrasynth-presets.ck`, `sh4d-presets.ck`, `v3-presets.ck`, `acid-v-presets.ck`, `augmented-mallets-presets.ck`, `moog-banks.ck`, `synth-table.ck`).
   - `composition/`:
     - `song-context.ck`: `SongContext` (shared timing/tempo fields, static state flags, virtual hooks) breaking ChucK `@import` cycles.
     - `part.ck`: `Part` base class.
@@ -42,7 +42,7 @@ External Hardware Synths
     - `midi-mapper.ck` (`MidiMapper`), `terminal-display.ck` (`TerminalDisplay`), `state-broadcaster.ck` (`StateBroadcaster`), `launch-control.ck` (`LaunchControl`, `ControlChange`), `keyboard-control.ck` (`KeyboardControl`), `osc-control.ck` (`OscControl`).
   - `song/`:
     - `mixer.ck` (`Mixer`), `patch-set-store.ck` (`PatchSetStore`), `song.ck` (`Song extends SongState`).
-- `presets/catalog.json` & `tools/gen-presets.js`: Single source of truth for V3/Hydrasynth/SH-4d presets, Moog bank names, and synth metadata; `node tools/gen-presets.js` regenerates `framework/devices/presets/generated/*.ck` and `gui/js/catalog-data.js`.
+- `presets/catalog.json`, `tools/gen-presets.js`, & `tools/sync-arturia-presets.js`: Single source of truth for synth presets, Moog bank names, and synth metadata; `node tools/gen-presets.js` regenerates `framework/devices/presets/generated/*.ck` and `gui/js/catalog-data.js`, and `node tools/sync-arturia-presets.js` syncs Arturia `db.db3` playlists, CoreMIDI IAC setup, and `presets/catalog.json`.
 - `music/`: Runnable song scripts (`*.ck` importing `../framework/cadenza.ck`), L-system grammar files, and per-song patch sets (`<song>.patch-sets/*.yaml` + `.default`).
 - `gui/`: Live Dashboard and Node bridge:
   - `server.js`: Express + `ws` entrypoint wiring `gui/server/preset-catalog.js`, `gui/server/patch-sets.js`, and `gui/server/osc-bridge.js`.
@@ -127,6 +127,8 @@ Be explicit about which coordinate system you are touching:
   - **`S-1`**: Auto-assigns to channel **3** (`2` internal).
   - **`SH-4d`**: Synth channels span **1–4** (`0..3` internal; drums typically live on channel 10 / `9` internal). Auto-assignment picks the first unused channel in `0..3` among `SH-4d` devices, or aborts (and pops up `#warningModal` in the UI) if all 4 are taken.
   - **`V3`**: Supports channels **1–16** (`0..15` internal). Auto-assignment picks the first unused channel in `0..15` among `V3` devices, or aborts (and pops up `#warningModal` in the UI) if all 16 are taken.
+  - **`Acid V`**: Auto-assigns to channel **1** (`0` internal) over its dedicated CoreMIDI bus `"IAC Driver Acid V"`; Master Volume maps to CC 85 (`CadenzaConstants.CC_ACID_V_VOLUME()`) + CC 7, and preset changes send CC 0 = 0 (Cadenza playlist) + CC 32 = bank + PC = program.
+  - **`Augmented Mallets`**: Auto-assigns to channel **2** (`1` internal) over its dedicated CoreMIDI bus `"IAC Driver Augmented Mallets"`; Master Volume maps to CC 17 (`CadenzaConstants.CC_AUG_MALLETS_VOLUME()`) + CC 7, and preset changes use Cadenza playlist Bank/PC.
 
 ---
 
