@@ -1,0 +1,100 @@
+song:
+  devices:
+    Augmented Mallets-0:
+      deviceName: "IAC Driver Augmented Mallets"
+      midiChannel: 0
+      patchName: "Reversed Percussive"
+      uiName: "Augmented Mallets"
+      muted: 0
+      volume: 71
+      filterCutoff: 84
+      filterResonance: 63
+      pan: 64
+      program: 18
+      bank: 3
+    Acid V-0:
+      deviceName: "IAC Driver Acid V"
+      midiChannel: 0
+      patchName: "Particule Pad"
+      uiName: "Acid V"
+      muted: 0
+      volume: 101
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 14
+      bank: 0
+    Matrix-12 V2-0:
+      deviceName: "IAC Driver Matrix-12 V2"
+      midiChannel: 0
+      patchName: "M Ambrosia"
+      uiName: "Matrix-12 V2"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 31
+      bank: 3
+    CS-80 V4-0:
+      deviceName: "IAC Driver CS-80 V4"
+      midiChannel: 0
+      patchName: "Nostalgia"
+      uiName: "CS-80 V4"
+      muted: 0
+      volume: 68
+      filterCutoff: 61
+      filterResonance: -1
+      pan: 75
+      program: 11
+      bank: 11
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "M12 XyloPad RA"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 127
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "E004"
+    Augmented Strings-0:
+      deviceName: "IAC Driver Augmented Strings"
+      midiChannel: 0
+      patchName: "A New Gospel"
+      uiName: "Augmented Strings"
+      muted: 0
+      volume: 85
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+    Moog-0:
+      deviceName: "Moog Messenger"
+      midiChannel: 0
+      patchName: "Messenger: 1"
+      uiName: "Moog"
+      muted: 0
+      volume: 80
+      filterCutoff: 24
+      filterResonance: -1
+      pan: 62
+      program: 0
+      bank: 0
+    SH-4d-9:
+      deviceName: "SH-4d"
+      midiChannel: 9
+      patchName: "Drums"
+      uiName: "SH-4d"
+      muted: 0
+      volume: 76
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 0
+      programChange: 0
+      presetType: "channel"
+  bpm: 85.000000

@@ -45,6 +45,14 @@ public class V3Preset extends Preset
     }
 }
 
+public class ArturiaPreset extends Preset
+{
+    fun ArturiaPreset(int p, int b, string n, string cat)
+    {
+        Preset(p, b, "", n, cat);
+    }
+}
+
 public class AcidVPreset extends Preset
 {
     fun AcidVPreset(int p, int b, string n, string cat)

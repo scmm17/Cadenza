@@ -21,6 +21,7 @@ public class CadenzaConstants
     fun static int CC_MOOG_CUTOFF()        { return 19; }
     fun static int CC_MOOG_RESONANCE()     { return 21; }
     fun static int CC_ACID_V_VOLUME()      { return 85; }
+    fun static int CC_AUGMENTED_VOLUME()   { return 17; }
     fun static int CC_AUG_MALLETS_VOLUME() { return 17; }
 
     // LaunchControl XL MIDI notes & LED colors

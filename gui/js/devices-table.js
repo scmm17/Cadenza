@@ -198,6 +198,18 @@ function resolveChannelForSynthChange(devIdx, synthName) {
   const meta = metaMap && metaMap[synthName];
   if (meta) {
     if (meta.fixedChannel != null) {
+      if (meta.appName && meta.maxChannels === 1) {
+        const devices = (state.chuckState && Array.isArray(state.chuckState.devices)) ? state.chuckState.devices : [];
+        const targetKey = synthName.toLowerCase();
+        const existing = devices.find(d => d && d.index !== devIdx && d.uiName && d.uiName.toLowerCase() === targetKey);
+        if (existing) {
+          return {
+            channel: null,
+            internalChannel: null,
+            error: `${synthName} is monotimbral and is already assigned to Track ${existing.index}. Only one track can use ${synthName} at a time.`,
+          };
+        }
+      }
       return { channel: meta.fixedChannel + 1, internalChannel: meta.fixedChannel, error: null };
     }
     if (meta.maxChannels > 1) {

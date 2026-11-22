@@ -7,10 +7,24 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const CATALOG_PATH = path.join(ROOT, 'presets', 'catalog.json');
 const GEN_CK_DIR = path.join(ROOT, 'framework', 'devices', 'presets', 'generated');
+const GEN_DEV_DIR = path.join(ROOT, 'framework', 'devices', 'generated');
 const GUI_CATALOG_PATH = path.join(ROOT, 'gui', 'js', 'catalog-data.js');
 
+const HANDWRITTEN_ARTURIA = new Set([
+  'Acid V',
+  'Augmented Mallets',
+  'Augmented Brass',
+  'Augmented Grand Piano',
+  'Augmented Strings',
+  'Synclavier V',
+  'Synthi V',
+]);
+
 function escapeChuck(str) {
-  return String(str).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return String(str)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/[\r\n]+/g, ' ');
 }
 
 function header(sourceDesc) {
@@ -132,6 +146,12 @@ function genSynthTable(synths) {
   lines.push('    ] @=> static int MAX_CHANNELS[];', '', '    [');
   names.forEach((uiName, idx) => {
     const comma = idx < names.length - 1 ? ',' : '';
+    const isVirt = synths[uiName].appName ? 1 : 0;
+    lines.push(`        ${isVirt}${comma}`);
+  });
+  lines.push('    ] @=> static int IS_VIRTUAL[];', '', '    [');
+  names.forEach((uiName, idx) => {
+    const comma = idx < names.length - 1 ? ',' : '';
     const dp = synths[uiName].defaultPreset || '';
     lines.push(`        "${escapeChuck(dp)}"${comma}`);
   });
@@ -170,9 +190,141 @@ function genGuiCatalogModule(catalog) {
   ].join('\n');
 }
 
+function genArturiaExtraPresets(extraSynths, presetsMap) {
+  const lines = [
+    header('Auto-generated Arturia V Collection & Augmented preset catalogs.'),
+    '@import "../preset.ck"',
+    '@import "../preset-collection.ck"',
+    '',
+  ];
+  for (const [uiName, meta] of extraSynths) {
+    const cls = meta.class;
+    const dataClass = `${cls}PresetsData`;
+    const colClass = `${cls}PresetCollection`;
+    const entries = Array.isArray(presetsMap[uiName]) ? presetsMap[uiName] : [];
+    lines.push(`public class ${dataClass}`, '{', '    [');
+    entries.forEach((p, idx) => {
+      const comma = idx < entries.length - 1 ? ',' : '';
+      lines.push(
+        `        new ArturiaPreset(${p.program}, ${p.bank}, "${escapeChuck(p.name)}", "${escapeChuck(p.category)}")${comma}`
+      );
+    });
+    lines.push(
+      '    ] @=> static Preset @ items[];',
+      '}',
+      '',
+      `public class ${colClass} extends PresetCollection`,
+      '{',
+      `    fun ${colClass}()`,
+      '    {',
+      `        initItems(${dataClass}.items);`,
+      '        1 => preferCurrentCategory;',
+      '        0 => matchCode;',
+      '    }',
+      '}',
+      ''
+    );
+  }
+  return lines.join('\n');
+}
+
+function genArturiaExtraDevices(extraSynths) {
+  const lines = [
+    header('Auto-generated ArturiaSynth subclasses and ArturiaExtraRegistry.'),
+    '@import "../arturia-synth.ck"',
+    '@import "../presets/generated/arturia-extra-presets.ck"',
+    '',
+  ];
+  for (const [uiName, meta] of extraSynths) {
+    const cls = meta.class;
+    const varName = cls.charAt(0).toLowerCase() + cls.slice(1);
+    const colClass = `${cls}PresetCollection`;
+    const devName = escapeChuck(meta.deviceName || `IAC Driver ${uiName}`);
+    const uiEsc = escapeChuck(uiName);
+    const defPreset = escapeChuck(meta.defaultPreset || '');
+    const ch0 = meta.fixedChannel != null ? meta.fixedChannel : 0;
+    const volCc = meta.volumeCc != null ? meta.volumeCc : 7;
+    const maxCh = meta.maxChannels != null ? meta.maxChannels : 1;
+    const maxChLine = maxCh > 1 ? `\n        ${maxCh} => maxChannels;` : '';
+    lines.push(
+      `public class ${cls} extends ArturiaSynth`,
+      '{',
+      '    fun void initDefaults()',
+      '    {',
+      `        initArturia("${devName}", "${uiEsc}", ${ch0}, "${defPreset}", ${volCc}, "${cls}", "${varName}");${maxChLine}`,
+      '    }',
+      '',
+      `    fun ${cls}()`,
+      '    {',
+      '        initDefaults();',
+      `        resolvePreset("${defPreset}");`,
+      '    }',
+      '',
+      `    fun ${cls}(string presetName, int v)`,
+      '    {',
+      '        initDefaults();',
+      '        resolvePreset(presetName);',
+      '        GuiLink.sendActivateSynth(uiName);',
+      '        Patch(v);',
+      '    }',
+      '',
+      `    fun ${cls}(int channel, string presetName, int v)`,
+      '    {',
+      '        initDefaults();',
+      '        channel - 1 => midiChannel;',
+      '        resolvePreset(presetName);',
+      '        GuiLink.sendActivateSynth(uiName);',
+      '        Patch(v);',
+      '    }',
+      '',
+      '    fun PresetCollection presets()',
+      '    {',
+      '        if (presetCollection == null) {',
+      `            new ${colClass} @=> presetCollection;`,
+      '        }',
+      '        return presetCollection;',
+      '    }',
+      '}',
+      ''
+    );
+  }
+
+  lines.push(
+    'public class ArturiaExtraRegistry',
+    '{',
+    '    fun static Patch createEmpty(string synthUiName)',
+    '    {'
+  );
+  extraSynths.forEach(([uiName, meta], idx) => {
+    const kw = idx === 0 ? 'if' : '} else if';
+    lines.push(`        ${kw} (synthUiName == "${escapeChuck(uiName)}") {`);
+    lines.push(`            return new ${meta.class}();`);
+  });
+  if (extraSynths.length > 0) lines.push('        }');
+  lines.push(
+    '        return null;',
+    '    }',
+    '',
+    '    fun static Patch createDefault(string synthUiName, int ch1Based, int vol)',
+    '    {'
+  );
+  extraSynths.forEach(([uiName, meta], idx) => {
+    const kw = idx === 0 ? 'if' : '} else if';
+    const defPreset = escapeChuck(meta.defaultPreset || '');
+    lines.push(`        ${kw} (synthUiName == "${escapeChuck(uiName)}") {`);
+    lines.push(`            return new ${meta.class}(ch1Based, "${defPreset}", vol);`);
+  });
+  if (extraSynths.length > 0) lines.push('        }');
+  lines.push('        return null;', '    }', '}', '');
+  return lines.join('\n');
+}
+
 function main() {
   const checkOnly = process.argv.includes('--check');
   const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, 'utf8'));
+  const extraArturia = Object.entries(catalog.synths || {}).filter(
+    ([uiName, meta]) => meta && meta.appName && !HANDWRITTEN_ARTURIA.has(uiName)
+  );
 
   const outputs = [
     [path.join(GEN_CK_DIR, 'hydrasynth-presets.ck'), genHydrasynth(catalog.presets.Hydrasynth)],
@@ -215,6 +367,64 @@ function main() {
         collectionClass: 'AugmentedMalletsPresetCollection',
         entries: catalog.presets['Augmented Mallets'],
       }),
+    ],
+    [
+      path.join(GEN_CK_DIR, 'augmented-brass-presets.ck'),
+      genBankProgramPresetCollection({
+        desc: 'Arturia Augmented Brass preset catalog and AugmentedBrassPresetCollection.',
+        dataClass: 'AugmentedBrassPresetsData',
+        presetClass: 'ArturiaPreset',
+        collectionClass: 'AugmentedBrassPresetCollection',
+        entries: catalog.presets['Augmented Brass'],
+      }),
+    ],
+    [
+      path.join(GEN_CK_DIR, 'augmented-grand-piano-presets.ck'),
+      genBankProgramPresetCollection({
+        desc: 'Arturia Augmented Grand Piano preset catalog and AugmentedGrandPianoPresetCollection.',
+        dataClass: 'AugmentedGrandPianoPresetsData',
+        presetClass: 'ArturiaPreset',
+        collectionClass: 'AugmentedGrandPianoPresetCollection',
+        entries: catalog.presets['Augmented Grand Piano'],
+      }),
+    ],
+    [
+      path.join(GEN_CK_DIR, 'augmented-strings-presets.ck'),
+      genBankProgramPresetCollection({
+        desc: 'Arturia Augmented Strings preset catalog and AugmentedStringsPresetCollection.',
+        dataClass: 'AugmentedStringsPresetsData',
+        presetClass: 'ArturiaPreset',
+        collectionClass: 'AugmentedStringsPresetCollection',
+        entries: catalog.presets['Augmented Strings'],
+      }),
+    ],
+    [
+      path.join(GEN_CK_DIR, 'synclavier-v-presets.ck'),
+      genBankProgramPresetCollection({
+        desc: 'Arturia Synclavier V preset catalog and SynclavierVPresetCollection.',
+        dataClass: 'SynclavierVPresetsData',
+        presetClass: 'ArturiaPreset',
+        collectionClass: 'SynclavierVPresetCollection',
+        entries: catalog.presets['Synclavier V'],
+      }),
+    ],
+    [
+      path.join(GEN_CK_DIR, 'synthi-v-presets.ck'),
+      genBankProgramPresetCollection({
+        desc: 'Arturia Synthi V preset catalog and SynthiVPresetCollection.',
+        dataClass: 'SynthiVPresetsData',
+        presetClass: 'ArturiaPreset',
+        collectionClass: 'SynthiVPresetCollection',
+        entries: catalog.presets['Synthi V'],
+      }),
+    ],
+    [
+      path.join(GEN_CK_DIR, 'arturia-extra-presets.ck'),
+      genArturiaExtraPresets(extraArturia, catalog.presets || {}),
+    ],
+    [
+      path.join(GEN_DEV_DIR, 'arturia-extra-devices.ck'),
+      genArturiaExtraDevices(extraArturia),
     ],
     [path.join(GEN_CK_DIR, 'moog-banks.ck'), genMoogBanks(catalog.moogBanks)],
     [path.join(GEN_CK_DIR, 'synth-table.ck'), genSynthTable(catalog.synths)],

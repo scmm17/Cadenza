@@ -6,24 +6,18 @@ const path = require('path');
 const MUSIC_DIR = path.join(__dirname, '..', '..', 'music');
 const CATALOG_PATH = path.join(__dirname, '..', '..', 'presets', 'catalog.json');
 
-function loadDeviceNameMap() {
+function loadSynthMetaMap() {
   try {
     const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, 'utf8'));
-    const map = {};
-    if (catalog.synths) {
-      for (const [uiName, meta] of Object.entries(catalog.synths)) {
-        if (meta && meta.deviceName) map[uiName] = meta.deviceName;
-      }
-    }
-    return map;
+    return catalog.synths || {};
   } catch (_) {
     return {
-      V3: 'U2MIDI Pro',
-      Hydrasynth: 'HYDRASYNTH EXPLORER',
-      'SH-4d': 'SH-4d',
-      'S-1': 'S-1 MIDI IN',
-      Moog: 'Moog Messenger',
-      'RD-6': 'RHYTHM DESIGNER RD-6',
+      V3: { deviceName: 'U2MIDI Pro' },
+      Hydrasynth: { deviceName: 'HYDRASYNTH EXPLORER' },
+      'SH-4d': { deviceName: 'SH-4d' },
+      'S-1': { deviceName: 'S-1 MIDI IN' },
+      Moog: { deviceName: 'Moog Messenger' },
+      'RD-6': { deviceName: 'RHYTHM DESIGNER RD-6' },
     };
   }
 }
@@ -99,15 +93,16 @@ function buildYamlFromState(state) {
   const q = (s) => '"' + String(s == null ? '' : s).replace(/"/g, "'") + '"';
   const lines = ['song:', '  devices:'];
   const used = new Set();
-  const deviceNames = loadDeviceNameMap();
+  const synthMeta = loadSynthMetaMap();
   const devices = (state && Array.isArray(state.devices)) ? state.devices : [];
   for (const d of devices) {
+    const meta = synthMeta[d.uiName];
     const midiChannel = Math.max(0, Math.min(15, (parseInt(d.channel, 10) || 1) - 1));
     let key = `${d.uiName}-${midiChannel}`;
     if (used.has(key)) key += `-dev${d.index}`;
     used.add(key);
     lines.push(`    ${key}:`);
-    lines.push(`      deviceName: ${q(deviceNames[d.uiName] || d.uiName)}`);
+    lines.push(`      deviceName: ${q((meta && meta.deviceName) || d.uiName)}`);
     lines.push(`      midiChannel: ${midiChannel}`);
     lines.push(`      patchName: ${q(d.patchName)}`);
     lines.push(`      uiName: ${q(d.uiName)}`);
@@ -120,8 +115,7 @@ function buildYamlFromState(state) {
       d.uiName === 'V3' ||
       d.uiName === 'S-1' ||
       d.uiName === 'Moog' ||
-      d.uiName === 'Acid V' ||
-      d.uiName === 'Augmented Mallets'
+      Boolean(meta && meta.appName)
     ) {
       lines.push(`      program: ${d.program}`);
       lines.push(`      bank: ${d.bank}`);
@@ -254,11 +248,11 @@ function deletePatchSet(songName, name, lastState, chuckClient, broadcast) {
         chuckClient.send('/cadenza/loadPatchSet', newCurrent);
       } else {
         chuckClient.send('/cadenza/setPatchSetName', newCurrent, newDefault);
-      }
-      if (lastState) {
-        lastState.patchSetName = newCurrent;
-        lastState.defaultPatchSetName = newDefault;
-        broadcast({ type: 'state', data: lastState });
+        if (lastState) {
+          lastState.patchSetName = newCurrent;
+          lastState.defaultPatchSetName = newDefault;
+          broadcast({ type: 'state', data: lastState });
+        }
       }
     }
   } catch (err) {

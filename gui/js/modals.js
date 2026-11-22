@@ -8,6 +8,7 @@ import {
   computeYamlDiffs,
   resetYamlBaseline,
   beginPatchSetLoad,
+  beginSongLoad,
 } from './state.js';
 import { render } from './devices-table.js';
 import { updateGraph } from './fragment-graph.js';
@@ -69,7 +70,7 @@ export function closeSongModal() {
 function executeOpenSong(songToLoad) {
   state.isSongReset = true;
   state.lastTransition = null;
-  state.pendingBaselineReset = true;
+  beginSongLoad();
   send('loadSong', songToLoad);
   updateGraph(false);
   syncSongInfo();
@@ -439,7 +440,7 @@ function executeSelectPatchSet(name, closeModalAfter = false) {
   if (state.chuckState) state.chuckState.patchSetName = name;
   const input = document.getElementById('patchSetNameInput');
   if (input) input.value = name;
-  beginPatchSetLoad();
+  beginPatchSetLoad(name);
   syncPatchSetButton();
   renderPatchSetList(true);
   send('selectPatchSet', { name });
@@ -502,6 +503,7 @@ export function commitRenamePatchSet() {
   }
   state.activePatchSetName = newName;
   if (state.chuckState) state.chuckState.patchSetName = newName;
+  if (state.baselineState) state.baselineState.patchSetName = newName;
   const idx = existing.indexOf(oldName);
   if (idx >= 0) existing[idx] = newName;
   if (state.patchSetsState.defaultPatchSet === oldName) {

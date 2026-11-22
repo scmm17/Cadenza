@@ -29,8 +29,9 @@ export const state = {
   chuckGraph: [],
   lastTransition: null,
   baselineState: null,
-  pendingBaselineReset: false,
-  patchSetLoadStage: null,
+  pendingSongLoad: false,
+  songLoadingSpawned: false,
+  pendingPatchSetLoad: null,
   patchSetLoadTimer: null,
 };
 
@@ -132,6 +133,8 @@ const YAML_DEVICE_FIELDS = [
 export function createYamlSnapshot(s) {
   if (!s || !Array.isArray(s.devices)) return null;
   return {
+    songName: s.songName || '',
+    patchSetName: s.patchSetName || '',
     bpm: s.bpm != null ? Math.round(Number(s.bpm)) : 120,
     devices: s.devices.map(d => {
       const copy = {
@@ -206,13 +209,27 @@ export function resetYamlBaseline(s = state.chuckState) {
   syncPatchSetButton();
 }
 
-export function beginPatchSetLoad() {
+export function beginPatchSetLoad(targetName = null) {
   clearTimeout(state.patchSetLoadTimer);
-  state.patchSetLoadStage = 'waitingForPatchSets';
-  state.baselineState = createYamlSnapshot(state.chuckState);
+  state.pendingPatchSetLoad = { targetName: targetName || null };
+  state.baselineState = null;
+  syncPatchSetButton();
   state.patchSetLoadTimer = setTimeout(() => {
-    state.patchSetLoadStage = null;
-  }, 800);
+    state.pendingPatchSetLoad = null;
+    if (!state.baselineState && state.chuckState) {
+      state.baselineState = createYamlSnapshot(state.chuckState);
+      syncPatchSetButton();
+    }
+  }, 5000);
+}
+
+export function beginSongLoad() {
+  clearTimeout(state.patchSetLoadTimer);
+  state.pendingPatchSetLoad = null;
+  state.pendingSongLoad = true;
+  state.songLoadingSpawned = false;
+  state.baselineState = null;
+  syncPatchSetButton();
 }
 
 export function syncPatchSetButton() {
@@ -335,20 +352,48 @@ export function connect() {
   state.ws.addEventListener('message', ({ data }) => {
     try {
       const msg = JSON.parse(data);
-      if (msg.type === 'state') {
-        const songChanged = state.chuckState && msg.data && state.chuckState.songName !== msg.data.songName;
+      if (msg.type === 'songLoading') {
+        clearTimeout(state.patchSetLoadTimer);
+        state.pendingPatchSetLoad = null;
+        state.pendingSongLoad = true;
+        state.songLoadingSpawned = true;
+        state.baselineState = null;
+        syncPatchSetButton();
+      } else if (msg.type === 'state') {
+        const prevSongName = state.chuckState ? (state.chuckState.songName || '') : '';
+        const nextSongName = msg.data ? (msg.data.songName || '') : '';
+        const songChanged = Boolean(prevSongName && nextSongName && prevSongName !== nextSongName);
+        const nextPatchSetName = msg.data ? (msg.data.patchSetName || '') : '';
+        const baselineSongChanged = Boolean(
+          state.baselineState && nextSongName && state.baselineState.songName && state.baselineState.songName !== nextSongName
+        );
+        const baselinePatchSetChanged = Boolean(
+          state.baselineState && nextPatchSetName && state.baselineState.patchSetName && state.baselineState.patchSetName !== nextPatchSetName
+        );
         state.chuckState = msg.data;
         if (state.chuckState && Array.isArray(state.chuckState.devices)) {
           state.chuckState.devices.forEach(normalizeMoogDevicePatchName);
         }
-        if (!state.baselineState || songChanged || state.pendingBaselineReset) {
-          state.baselineState = createYamlSnapshot(state.chuckState);
-          state.pendingBaselineReset = false;
-        } else if (state.patchSetLoadStage === 'waitingForPatchSets') {
-          state.baselineState = createYamlSnapshot(state.chuckState);
-        } else if (state.patchSetLoadStage === 'waitingForChuckState') {
-          state.patchSetLoadStage = null;
-          clearTimeout(state.patchSetLoadTimer);
+        if (state.pendingSongLoad) {
+          if (state.songLoadingSpawned || songChanged || !prevSongName) {
+            state.pendingSongLoad = false;
+            state.songLoadingSpawned = false;
+            state.baselineState = createYamlSnapshot(state.chuckState);
+          } else {
+            // Ignore trailing state messages from the old ChucK process while shutting down
+            state.baselineState = null;
+          }
+        } else if (state.pendingPatchSetLoad) {
+          const expected = state.pendingPatchSetLoad.targetName;
+          if (!expected || nextPatchSetName === expected) {
+            state.pendingPatchSetLoad = null;
+            clearTimeout(state.patchSetLoadTimer);
+            state.baselineState = createYamlSnapshot(state.chuckState);
+          } else {
+            // Wait for ChucK's post-load state for the requested patch set
+            state.baselineState = null;
+          }
+        } else if (!state.baselineState || songChanged || baselineSongChanged || baselinePatchSetChanged) {
           state.baselineState = createYamlSnapshot(state.chuckState);
         }
         if (!state.initialStateReceived) {
@@ -381,9 +426,6 @@ export function connect() {
         }
       } else if (msg.type === 'patchSets') {
         if (msg.data) {
-          if (state.patchSetLoadStage === 'waitingForPatchSets') {
-            state.patchSetLoadStage = 'waitingForChuckState';
-          }
           state.patchSetsState = {
             songName: msg.data.songName || '',
             patchSets: Array.isArray(msg.data.patchSets) ? msg.data.patchSets : [],

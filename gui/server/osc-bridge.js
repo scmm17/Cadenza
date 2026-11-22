@@ -307,6 +307,8 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
         broadcast({ type: 'patchSets', data: info });
 
         const startNewProcess = () => {
+          shared.lastState = null;
+          broadcast({ type: 'songLoading', songName: patchSets.normalizeSongName(cmd.value) });
           const songPath = path.join('music', cmd.value);
           console.log(`Spawning: chuck --dac:6 --in:0 ${songPath}`);
           const proc = spawn('chuck', ['--dac:6', '--in:0', songPath], {
@@ -400,10 +402,6 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
         if (name && songName) {
           console.log(`→ ChucK: /cadenza/loadPatchSet "${name}"`);
           chuckClient.send('/cadenza/loadPatchSet', String(name));
-          if (shared.lastState) {
-            shared.lastState.patchSetName = String(name);
-            broadcast({ type: 'state', data: shared.lastState });
-          }
           broadcast({ type: 'patchSets', data: patchSets.ensurePatchSetsDir(songName) });
         }
         break;

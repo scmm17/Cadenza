@@ -283,10 +283,10 @@ public class MixerAndPresetsTests {
         amCol.getNextCategory() @=> Preset amClassicCat;
         Assert.equalString("augmallets_nextCat_classic", amClassicCat.category, "Classic Synth Keys");
 
-        // SynthRegistry channel resolution & empty factory
+        // SynthRegistry channel resolution & empty factory (all Arturia synths use ch 0 / MIDI ch 1 on dedicated IAC buses)
         MockSong song;
         Assert.equalInt("registry_acidv_ch", SynthRegistry.resolveMidiChannel(song.devices, 0, "Acid V"), 0);
-        Assert.equalInt("registry_augmallets_ch", SynthRegistry.resolveMidiChannel(song.devices, 1, "Augmented Mallets"), 1);
+        Assert.equalInt("registry_augmallets_ch", SynthRegistry.resolveMidiChannel(song.devices, 1, "Augmented Mallets"), 0);
 
         SynthRegistry.createEmpty("Acid V") @=> Patch @ emptyAv;
         Assert.isTrue("registry_createEmpty_acidv", emptyAv != null);
@@ -326,5 +326,75 @@ public class MixerAndPresetsTests {
         Assert.equalString("augmallets_poly_stepNextCat", mallets.patchName, "Celestial Bells");
         Assert.equalInt("augmallets_poly_bells_bank", mallets.bank, 1);
         Assert.equalInt("augmallets_poly_bells_prog", mallets.program, 0);
+
+        // Additional Arturia virtual instruments
+        Assert.equalInt("registry_augbrass_ch", SynthRegistry.resolveMidiChannel(song.devices, 2, "Augmented Brass"), 0);
+        Assert.equalInt("registry_augpiano_ch", SynthRegistry.resolveMidiChannel(song.devices, 3, "Augmented Grand Piano"), 0);
+        Assert.equalInt("registry_augstrings_ch", SynthRegistry.resolveMidiChannel(song.devices, 4, "Augmented Strings"), 0);
+        Assert.equalInt("registry_synclavier_ch", SynthRegistry.resolveMidiChannel(song.devices, 5, "Synclavier V"), 0);
+        Assert.equalInt("registry_synthi_ch", SynthRegistry.resolveMidiChannel(song.devices, 6, "Synthi V"), 0);
+
+        SynthRegistry.createEmpty("Augmented Brass") @=> Patch @ emptyAb;
+        Assert.isTrue("registry_createEmpty_augbrass", emptyAb != null);
+        Assert.equalString("registry_empty_augbrass_dev", emptyAb.deviceName, "IAC Driver Augmented Brass");
+        Assert.isTrue("augbrass_hasPreset_default", emptyAb.presets().hasPreset("Wide and Proud"));
+
+        SynthRegistry.createEmpty("Augmented Grand Piano") @=> Patch @ emptyAgp;
+        Assert.isTrue("registry_createEmpty_augpiano", emptyAgp != null);
+        Assert.equalString("registry_empty_augpiano_dev", emptyAgp.deviceName, "IAC Driver Augmented Grand Piano");
+        Assert.isTrue("augpiano_hasPreset_default", emptyAgp.presets().hasPreset("Kairos"));
+
+        SynthRegistry.createEmpty("Augmented Strings") @=> Patch @ emptyAs;
+        Assert.isTrue("registry_createEmpty_augstrings", emptyAs != null);
+        Assert.equalString("registry_empty_augstrings_dev", emptyAs.deviceName, "IAC Driver Augmented Strings");
+        Assert.isTrue("augstrings_hasPreset_default", emptyAs.presets().hasPreset("Baited Breath"));
+
+        SynthRegistry.createEmpty("Synclavier V") @=> Patch @ emptySync;
+        Assert.isTrue("registry_createEmpty_synclavier", emptySync != null);
+        Assert.equalString("registry_empty_synclavier_dev", emptySync.deviceName, "IAC Driver Synclavier V");
+        Assert.isTrue("synclavier_hasPreset_default", emptySync.presets().hasPreset("Naked Planet"));
+
+        SynthRegistry.createEmpty("Synthi V") @=> Patch @ emptySynthi;
+        Assert.isTrue("registry_createEmpty_synthi", emptySynthi != null);
+        Assert.equalString("registry_empty_synthi_dev", emptySynthi.deviceName, "IAC Driver Synthi V");
+        Assert.isTrue("synthi_hasPreset_default", emptySynthi.presets().hasPreset("On The Run"));
+
+        // Monotimbral Arturia synths reject duplicate assignment on another track, but allow self-index
+        Assert.equalInt("registry_acidv_dup_blocked", SynthRegistry.resolveMidiChannel(song.devices, 2, "Acid V"), -1);
+        Assert.equalInt("registry_acidv_self_ok", SynthRegistry.resolveMidiChannel(song.devices, 0, "Acid V"), 0);
+
+        // Multi-manual Arturia synths auto-assign unused channels (B-3 V2: 1..3, Solina V2: 1..2)
+        MockSong multiSong;
+        Assert.equalInt("registry_b3_ch0", SynthRegistry.resolveMidiChannel(multiSong.devices, 0, "B-3 V2"), 0);
+        SynthRegistry.createEmpty("B-3 V2") @=> Patch @ b3_0;
+        0 => b3_0.midiChannel;
+        b3_0 @=> multiSong.devices[0];
+        Assert.equalInt("registry_b3_ch1", SynthRegistry.resolveMidiChannel(multiSong.devices, 1, "B-3 V2"), 1);
+        SynthRegistry.createEmpty("B-3 V2") @=> Patch @ b3_1;
+        1 => b3_1.midiChannel;
+        b3_1 @=> multiSong.devices[1];
+        Assert.equalInt("registry_b3_ch2", SynthRegistry.resolveMidiChannel(multiSong.devices, 2, "B-3 V2"), 2);
+        SynthRegistry.createEmpty("B-3 V2") @=> Patch @ b3_2;
+        2 => b3_2.midiChannel;
+        b3_2 @=> multiSong.devices[2];
+        Assert.equalInt("registry_b3_full", SynthRegistry.resolveMidiChannel(multiSong.devices, 3, "B-3 V2"), -1);
+
+        Assert.equalInt("registry_solina_ch0", SynthRegistry.resolveMidiChannel(multiSong.devices, 3, "Solina V2"), 0);
+        SynthRegistry.createEmpty("Solina V2") @=> Patch @ sol_0;
+        0 => sol_0.midiChannel;
+        sol_0 @=> multiSong.devices[3];
+        Assert.equalInt("registry_solina_ch1", SynthRegistry.resolveMidiChannel(multiSong.devices, 4, "Solina V2"), 1);
+        SynthRegistry.createEmpty("Solina V2") @=> Patch @ sol_1;
+        1 => sol_1.midiChannel;
+        sol_1 @=> multiSong.devices[4];
+        Assert.equalInt("registry_solina_full", SynthRegistry.resolveMidiChannel(multiSong.devices, 5, "Solina V2"), -1);
+
+        // Verify every synth in SynthTableData instantiates cleanly via SynthRegistry.createEmpty
+        for (0 => int i; i < SynthTableData.UI_NAMES.cap(); i++) {
+            SynthTableData.UI_NAMES[i] => string nm;
+            SynthRegistry.createEmpty(nm) @=> Patch @ p;
+            Assert.isTrue("registry_all_createEmpty_" + nm, p != null);
+            Assert.equalString("registry_all_uiName_" + nm, p.uiName, nm);
+        }
     }
 }

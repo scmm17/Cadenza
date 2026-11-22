@@ -127,8 +127,7 @@ Be explicit about which coordinate system you are touching:
   - **`S-1`**: Auto-assigns to channel **3** (`2` internal).
   - **`SH-4d`**: Synth channels span **1–4** (`0..3` internal; drums typically live on channel 10 / `9` internal). Auto-assignment picks the first unused channel in `0..3` among `SH-4d` devices, or aborts (and pops up `#warningModal` in the UI) if all 4 are taken.
   - **`V3`**: Supports channels **1–16** (`0..15` internal). Auto-assignment picks the first unused channel in `0..15` among `V3` devices, or aborts (and pops up `#warningModal` in the UI) if all 16 are taken.
-  - **`Acid V`**: Auto-assigns to channel **1** (`0` internal) over its dedicated CoreMIDI bus `"IAC Driver Acid V"`; Master Volume maps to CC 85 (`CadenzaConstants.CC_ACID_V_VOLUME()`) + CC 7, and preset changes send CC 0 = 0 (Cadenza playlist) + CC 32 = bank + PC = program.
-  - **`Augmented Mallets`**: Auto-assigns to channel **2** (`1` internal) over its dedicated CoreMIDI bus `"IAC Driver Augmented Mallets"`; Master Volume maps to CC 17 (`CadenzaConstants.CC_AUG_MALLETS_VOLUME()`) + CC 7, and preset changes use Cadenza playlist Bank/PC.
+  - **Arturia synths (45 instruments via `ArturiaSynth`, core 7 + generated `ArturiaExtraRegistry`)**: All auto-assign to channel **1** (`0` internal) over their own dedicated CoreMIDI IAC buses (`"IAC Driver <Synth>"`) so MIDI CCs match Arturia's factory `Default` MIDI config (`channel="0"`). `ArturiaSynth.setVolume()` sends each synth's `volumeCc` (e.g., CC 17 for Augmented series, CC 85 for Acid V / CS-80 V4 / Jun-6 V / Jup-8 V4 / Prophet-5 V / etc., CC 11 for B-3 V2, CC 90 for Buchla Easel V & MiniFreak V, CC 7 for Synclavier V / Synthi V / DX7 V / etc.) on MIDI Channel 1 (`0xB0`, plus `midiChannel` if non-zero), and preset changes send CC 0 = 0 (Cadenza playlist) + CC 32 = bank + 2-byte MIDI 1.0 PC.
 
 ---
 

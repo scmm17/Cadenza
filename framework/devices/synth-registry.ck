@@ -13,6 +13,12 @@
 @import "v3-grand-piano.ck"
 @import "acid-v.ck"
 @import "augmented-mallets.ck"
+@import "augmented-brass.ck"
+@import "augmented-grand-piano.ck"
+@import "augmented-strings.ck"
+@import "synclavier-v.ck"
+@import "synthi-v.ck"
+@import "generated/arturia-extra-devices.ck"
 
 public class SynthRegistry
 {
@@ -44,8 +50,18 @@ public class SynthRegistry
             return new AcidV();
         } else if (synthUiName == "Augmented Mallets") {
             return new AugmentedMallets();
+        } else if (synthUiName == "Augmented Brass") {
+            return new AugmentedBrass();
+        } else if (synthUiName == "Augmented Grand Piano") {
+            return new AugmentedGrandPiano();
+        } else if (synthUiName == "Augmented Strings") {
+            return new AugmentedStrings();
+        } else if (synthUiName == "Synclavier V") {
+            return new SynclavierV();
+        } else if (synthUiName == "Synthi V") {
+            return new SynthiV();
         }
-        return null;
+        return ArturiaExtraRegistry.createEmpty(synthUiName);
     }
 
     fun static Patch createDefault(string synthUiName, int midiChan, int vol)
@@ -69,8 +85,18 @@ public class SynthRegistry
             return new AcidV(ch1Based, "Fast Travel", vol);
         } else if (synthUiName == "Augmented Mallets") {
             return new AugmentedMallets(ch1Based, "A Royal Mallet", vol);
+        } else if (synthUiName == "Augmented Brass") {
+            return new AugmentedBrass(ch1Based, "Wide and Proud", vol);
+        } else if (synthUiName == "Augmented Grand Piano") {
+            return new AugmentedGrandPiano(ch1Based, "Kairos", vol);
+        } else if (synthUiName == "Augmented Strings") {
+            return new AugmentedStrings(ch1Based, "Baited Breath", vol);
+        } else if (synthUiName == "Synclavier V") {
+            return new SynclavierV(ch1Based, "Naked Planet", vol);
+        } else if (synthUiName == "Synthi V") {
+            return new SynthiV(ch1Based, "On The Run", vol);
         }
-        return null;
+        return ArturiaExtraRegistry.createDefault(synthUiName, ch1Based, vol);
     }
 
     fun static int findFirstUnusedChannel(Patch devices[], int excludeIdx, string synthUiName, int maxChannels)
@@ -93,10 +119,17 @@ public class SynthRegistry
         findSynthIndex(synthUiName) => int entryIdx;
         if (entryIdx >= 0) {
             SynthTableData.FIXED_CHANNELS[entryIdx] => int fixedCh;
+            SynthTableData.MAX_CHANNELS[entryIdx] => int maxCh;
             if (fixedCh >= 0) {
+                if (SynthTableData.IS_VIRTUAL[entryIdx] == 1 && maxCh == 1) {
+                    for (0 => int i; i < devices.cap(); i++) {
+                        if (i != idx && devices[i] != null && devices[i].uiName == synthUiName) {
+                            return -1;
+                        }
+                    }
+                }
                 return fixedCh;
             }
-            SynthTableData.MAX_CHANNELS[entryIdx] => int maxCh;
             if (maxCh > 1) {
                 return findFirstUnusedChannel(devices, idx, synthUiName, maxCh);
             }
