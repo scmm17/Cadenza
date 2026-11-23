@@ -46,12 +46,13 @@ export function isDrumDevice(devIdx) {
   const dev = state.chuckState.devices.find(d => d.index === devIdx);
   let result = false;
   if (dev) {
-    const isV3 = Boolean(dev.uiName && dev.uiName.toLowerCase() === 'v3');
+    const uiLower = dev.uiName ? dev.uiName.toLowerCase() : '';
+    const isV3 = uiLower === 'v3';
     const isSteelDrums = [dev.uiName, dev.patchName]
       .some(n => n && n.toLowerCase().includes('steel drum'));
     if (isSteelDrums) result = false;
-    else if (dev.channel === 10) result = true;
-    else if (dev.uiName && (dev.uiName.toLowerCase().includes('drum') || dev.uiName.toLowerCase().includes('kit') || dev.uiName.toLowerCase().includes(' kick'))) result = true;
+    else if (dev.channel === 10 || uiLower === 'rd-6') result = true;
+    else if (uiLower && (uiLower.includes('drum') || uiLower.includes('kit') || uiLower.includes(' kick'))) result = true;
     else if (isV3 && dev.patchName && (dev.patchName.toLowerCase().includes('drum') || dev.patchName.toLowerCase().includes('kit') || dev.patchName.toLowerCase().includes(' kick'))) result = true;
   }
   drumDeviceCache.set(devIdx, result);

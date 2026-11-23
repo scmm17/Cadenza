@@ -14,7 +14,6 @@ export const state = {
   reconnect: null,
   songs: [],
   selectedSongIdx: -1,
-  selectedDevIdx: null,
   presetCatalog: Object.assign({ V3: [], Hydrasynth: [], 'SH-4d': [], Moog: [] }, PRESET_CATALOG),
   presetModalState: null,
   patchSetsState: { songName: '', patchSets: ['Default'], defaultPatchSet: 'Default' },
@@ -481,6 +480,7 @@ export function connect() {
 
   state.ws.addEventListener('close', () => {
     setConnected(false);
+    ui.onAllNotesOff(0);
     state.reconnect = setTimeout(connect, 2000);
   });
   state.ws.addEventListener('error', () => state.ws.close());

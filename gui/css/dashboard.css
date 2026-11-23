@@ -262,27 +262,59 @@ button {
   transition-delay: 1s; /* 1 second delay */
 }
 
-/* Device selector buttons */
-.btn-device {
-  width: 26px; height: 26px;
+/* Device number indicator badges (highlight while notes are playing) */
+.device-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
   border-radius: var(--radius-btn);
-  background: rgba(110,70,240,.09);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
+  background: var(--dev-bg, rgba(110,70,240,.09));
+  border: 1px solid var(--dev-border, var(--border));
+  color: var(--dev-color, var(--text-secondary));
   font-size: 12px;
+  font-weight: 600;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
 }
-.btn-device:hover {
-  background: rgba(124,58,237,.22); border-color: var(--accent);
+.device-badge-bg {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--dev-color, var(--accent)) 55%, #221f36);
+  border: 1px solid color-mix(in srgb, var(--dev-color, var(--accent)) 68%, #2a2642);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--dev-color, var(--accent)) 35%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease-out;
+}
+.device-badge.note-active .device-badge-bg {
+  opacity: 1;
+  transition: opacity 50ms ease-out;
+}
+.device-badge-num {
+  position: relative;
+  z-index: 1;
+  transition: color 140ms ease-out;
+}
+.device-badge.note-active .device-badge-num {
   color: var(--text-primary);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px var(--accent-glow);
+  transition: color 50ms ease-out;
 }
-.btn-device.active {
-  background: linear-gradient(135deg, var(--accent) 0%, #4f46e5 100%);
-  border-color: transparent; color: #fff;
-  box-shadow: 0 3px 14px var(--accent-glow);
+.device-badge.is-drum .device-badge-bg {
+  transition: opacity 90ms ease-out;
 }
-.btn-device:disabled { opacity: .22; cursor: default; pointer-events: none; }
+.device-badge.is-drum.note-active .device-badge-bg {
+  transition: opacity 35ms ease-out;
+}
+.device-badge.is-drum .device-badge-num {
+  transition: color 90ms ease-out;
+}
+.device-badge.is-drum.note-active .device-badge-num {
+  transition: color 35ms ease-out;
+}
 
 #devicesWrap { overflow-x: auto; }
 .devices-table {

@@ -7,11 +7,25 @@ import {
   syncModeButtons,
   syncPatchSetButton,
 } from './state.js';
-import { DEVICE_COLORS, clearDrumCache } from './piano-roll.js';
+import { DEVICE_COLORS, clearDrumCache, isDrumDevice } from './piano-roll.js';
 
 let activeDrag = null;
 let activeInlineEdit = null;
 let volSliderTimer = null;
+
+const NOTE_SAFETY_TIMEOUT_MS = 15000;
+const DRUM_HIGHLIGHT_MS = 60;
+const CHORD_COALESCE_MS = 25;
+const RETRIGGER_WINDOW_MS = 140;
+// Map<devIdx, Map<midiNote, number[]>> — FIFO queues of safety timeout IDs per (dev, note)
+// so overlapping notes (both polyphonic and same-pitch retriggers) stay lit until all end.
+const activeDeviceNotes = new Map();
+// Map<devIdx, number> — short auto-off timers for drum machine devices (independent of noteOff).
+const activeDrumTimers = new Map();
+// Timestamps and active WAAPI re-articulation animations for contiguous/overlapping note onsets.
+const lastNoteOnTime = new Map();
+const lastNoteOffTime = new Map();
+const activeRetriggerAnims = new Map();
 
 const modalCallbacks = {
   openPresetModal: () => {},
@@ -22,14 +36,165 @@ export function registerDeviceModalCallbacks(cbs) {
   Object.assign(modalCallbacks, cbs);
 }
 
-export function toggleDeviceSelect(idx) {
-  if (state.selectedDevIdx === idx) {
-    state.selectedDevIdx = null;
-  } else {
-    state.selectedDevIdx = idx;
-    send('device', idx);
+function isDeviceNoteActive(devIdx) {
+  if (activeDrumTimers.has(devIdx)) return true;
+  const notes = activeDeviceNotes.get(devIdx);
+  return Boolean(notes && notes.size > 0);
+}
+
+function cancelRetriggerAnim(devIdx) {
+  const anim = activeRetriggerAnims.get(devIdx);
+  if (anim) {
+    anim.cancel();
+    activeRetriggerAnims.delete(devIdx);
   }
-  render();
+}
+
+function triggerBadgeRearticulate(devIdx, isDrum) {
+  const badge = document.getElementById('dev-badge-' + devIdx);
+  const bg = badge && badge.querySelector('.device-badge-bg');
+  if (!bg || typeof bg.animate !== 'function') return;
+  cancelRetriggerAnim(devIdx);
+  const anim = bg.animate(
+    [
+      { opacity: 0.14 },
+      { opacity: 0.14, offset: 0.25 },
+      { opacity: 1 },
+    ],
+    {
+      duration: isDrum ? 75 : 100,
+      easing: 'ease-out',
+    }
+  );
+  activeRetriggerAnims.set(devIdx, anim);
+  anim.onfinish = () => {
+    if (activeRetriggerAnims.get(devIdx) === anim) {
+      activeRetriggerAnims.delete(devIdx);
+    }
+  };
+}
+
+function syncDeviceNoteHighlight(devIdx) {
+  const badge = document.getElementById('dev-badge-' + devIdx);
+  const isActive = isDeviceNoteActive(devIdx);
+  if (!isActive) {
+    cancelRetriggerAnim(devIdx);
+    lastNoteOffTime.set(devIdx, performance.now());
+  }
+  if (badge) {
+    badge.classList.toggle('is-drum', isDrumDevice(devIdx));
+    badge.classList.toggle('note-active', isActive);
+  }
+}
+
+export function onDeviceNoteOn(devIdx, note) {
+  if (devIdx == null || note == null) return;
+  const now = performance.now();
+  const wasActive = isDeviceNoteActive(devIdx);
+  const prevOn = lastNoteOnTime.get(devIdx) ?? -Infinity;
+  const prevOff = lastNoteOffTime.get(devIdx) ?? -Infinity;
+  const isChordPeer = (now - prevOn) <= CHORD_COALESCE_MS;
+  const shouldRearticulate = !isChordPeer && (wasActive || (now - prevOff) <= RETRIGGER_WINDOW_MS);
+  lastNoteOnTime.set(devIdx, now);
+
+  if (isDrumDevice(devIdx)) {
+    const prevTimer = activeDrumTimers.get(devIdx);
+    if (prevTimer != null) clearTimeout(prevTimer);
+    const timerId = setTimeout(() => {
+      if (activeDrumTimers.get(devIdx) === timerId) {
+        activeDrumTimers.delete(devIdx);
+        syncDeviceNoteHighlight(devIdx);
+      }
+    }, DRUM_HIGHLIGHT_MS);
+    activeDrumTimers.set(devIdx, timerId);
+    syncDeviceNoteHighlight(devIdx);
+    if (shouldRearticulate) triggerBadgeRearticulate(devIdx, true);
+    return;
+  }
+  let notes = activeDeviceNotes.get(devIdx);
+  if (!notes) {
+    notes = new Map();
+    activeDeviceNotes.set(devIdx, notes);
+  }
+  let queue = notes.get(note);
+  if (!queue) {
+    queue = [];
+    notes.set(note, queue);
+  }
+  const timerId = setTimeout(() => {
+    const idx = queue.indexOf(timerId);
+    if (idx !== -1) queue.splice(idx, 1);
+    if (queue.length === 0) {
+      notes.delete(note);
+      if (notes.size === 0) {
+        activeDeviceNotes.delete(devIdx);
+      }
+    }
+    syncDeviceNoteHighlight(devIdx);
+  }, NOTE_SAFETY_TIMEOUT_MS);
+  queue.push(timerId);
+  syncDeviceNoteHighlight(devIdx);
+  if (shouldRearticulate) triggerBadgeRearticulate(devIdx, false);
+}
+
+export function onDeviceNoteOff(devIdx, note) {
+  if (devIdx == null || note == null) return;
+  const notes = activeDeviceNotes.get(devIdx);
+  if (!notes) return;
+  const queue = notes.get(note);
+  if (!queue || queue.length === 0) return;
+  const timerId = queue.shift();
+  clearTimeout(timerId);
+  if (queue.length === 0) {
+    notes.delete(note);
+    if (notes.size === 0) {
+      activeDeviceNotes.delete(devIdx);
+    }
+  }
+  syncDeviceNoteHighlight(devIdx);
+}
+
+export function onDeviceAllNotesOff(devIdx) {
+  if (!devIdx) {
+    clearDeviceNotes();
+    return;
+  }
+  cancelRetriggerAnim(devIdx);
+  const drumTimer = activeDrumTimers.get(devIdx);
+  if (drumTimer != null) {
+    clearTimeout(drumTimer);
+    activeDrumTimers.delete(devIdx);
+  }
+  const notes = activeDeviceNotes.get(devIdx);
+  if (notes) {
+    for (const queue of notes.values()) {
+      for (const timerId of queue) clearTimeout(timerId);
+    }
+    activeDeviceNotes.delete(devIdx);
+  }
+  syncDeviceNoteHighlight(devIdx);
+}
+
+export function clearDeviceNotes() {
+  for (const anim of activeRetriggerAnims.values()) {
+    anim.cancel();
+  }
+  activeRetriggerAnims.clear();
+  lastNoteOnTime.clear();
+  lastNoteOffTime.clear();
+  for (const timerId of activeDrumTimers.values()) {
+    clearTimeout(timerId);
+  }
+  activeDrumTimers.clear();
+  for (const notes of activeDeviceNotes.values()) {
+    for (const queue of notes.values()) {
+      for (const timerId of queue) clearTimeout(timerId);
+    }
+  }
+  activeDeviceNotes.clear();
+  for (const el of document.querySelectorAll('.device-badge.note-active')) {
+    el.classList.remove('note-active');
+  }
 }
 
 export function render() {
@@ -100,20 +265,21 @@ export function renderDevicesTable() {
       dev.muted === 1 ? 'row-muted' : '',
     ].filter(Boolean).join(' ');
 
-    const isSelected = state.selectedDevIdx === dev.index;
-    const selectedCls = isSelected ? ' active' : '';
     const devColor = DEVICE_COLORS[(dev.index - 1) % DEVICE_COLORS.length];
-    const btnStyle = isSelected
-      ? 'width:26px;height:26px;font-size:12px;background:' + devColor + ';border-color:' + devColor + ';color:#fff;box-shadow:0 0 10px ' + devColor + '88;'
-      : 'width:26px;height:26px;font-size:12px;background:' + devColor + '22;border-color:' + devColor + '66;color:' + devColor + ';';
+    const badgeCls = [
+      'device-badge',
+      isDrumDevice(dev.index) ? 'is-drum' : '',
+      isDeviceNoteActive(dev.index) ? 'note-active' : '',
+    ].filter(Boolean).join(' ');
 
     const btnCell = '<td style="padding:4px 6px">'
-      + '<button class="btn-device' + selectedCls + '" '
-      + 'data-action="toggleDeviceSelect" data-dev="' + dev.index + '" '
-      + 'title="Select ' + esc(dev.uiName) + ': ' + esc(dev.patchName) + '" '
-      + 'style="' + btnStyle + '">'
-      + dev.index
-      + '</button></td>';
+      + '<span class="' + badgeCls + '" '
+      + 'id="dev-badge-' + dev.index + '" '
+      + 'title="' + esc(dev.uiName) + ': ' + esc(dev.patchName) + '" '
+      + 'style="--dev-color:' + devColor + ';--dev-bg:' + devColor + '22;--dev-border:' + devColor + '66;--dev-glow:' + devColor + '88">'
+      + '<span class="device-badge-bg" aria-hidden="true"></span>'
+      + '<span class="device-badge-num">' + dev.index + '</span>'
+      + '</span></td>';
 
     const hasPresets = Boolean(
       (state.presetCatalog && Array.isArray(state.presetCatalog[dev.uiName]) && state.presetCatalog[dev.uiName].length > 0) ||
@@ -141,7 +307,7 @@ export function renderDevicesTable() {
       + chanOptionsHtml
       + '</select>';
 
-    return '<tr class="' + cls + '" data-dev="' + dev.index + '" style="cursor: pointer;">'
+    return '<tr class="' + cls + '" data-dev="' + dev.index + '">'
       + btnCell
       + '<td style="text-align:center"><span class="status-icons">' + (icons || '&nbsp;') + '</span></td>'
       + '<td class="cell-synth">' + synthSelectHtml + '</td>'
@@ -194,57 +360,66 @@ function findFirstUnusedChannelForSynth(devIdx, targetName, maxChannels) {
 }
 
 function resolveChannelForSynthChange(devIdx, synthName) {
+  const devices = (state.chuckState && Array.isArray(state.chuckState.devices)) ? state.chuckState.devices : [];
+  const targetKey = synthName ? synthName.toLowerCase() : '';
   const metaMap = state.presetCatalog && state.presetCatalog.synthMeta;
   const meta = metaMap && metaMap[synthName];
+
   if (meta) {
     if (meta.fixedChannel != null) {
-      if (meta.appName && meta.maxChannels === 1) {
-        const devices = (state.chuckState && Array.isArray(state.chuckState.devices)) ? state.chuckState.devices : [];
-        const targetKey = synthName.toLowerCase();
-        const existing = devices.find(d => d && d.index !== devIdx && d.uiName && d.uiName.toLowerCase() === targetKey);
-        if (existing) {
-          return {
-            channel: null,
-            internalChannel: null,
-            error: `${synthName} is monotimbral and is already assigned to Track ${existing.index}. Only one track can use ${synthName} at a time.`,
-          };
-        }
-      }
-      return { channel: meta.fixedChannel + 1, internalChannel: meta.fixedChannel, error: null };
+      const ch = meta.fixedChannel + 1;
+      const existing = devices.find(d => d && d.index !== devIdx && d.uiName && d.uiName.toLowerCase() === targetKey);
+      const info = existing
+        ? `${synthName} is already in use on Device ${existing.index}. Assigned to channel ${ch}, sharing the synth and patch.`
+        : null;
+      return { channel: ch, internalChannel: meta.fixedChannel, info };
     }
     if (meta.maxChannels > 1) {
       const found = findFirstUnusedChannelForSynth(devIdx, synthName, meta.maxChannels);
-      if (found) return found;
+      if (found) return { channel: found.channel, internalChannel: found.internalChannel, info: null };
       return {
-        channel: null,
-        internalChannel: null,
-        error: `All MIDI channels for ${synthName} (channels 1–${meta.maxChannels}) are already in use.`,
+        channel: 1,
+        internalChannel: 0,
+        info: `All MIDI channels for ${synthName} (channels 1–${meta.maxChannels}) are already in use. Assigned to channel 1, sharing the synth and patch.`,
       };
     }
+    if (meta.maxChannels === 1) {
+      const existing = devices.find(d => d && d.index !== devIdx && d.uiName && d.uiName.toLowerCase() === targetKey);
+      const info = existing
+        ? `${synthName} is already in use on Device ${existing.index}. Assigned to channel 1, sharing the synth and patch.`
+        : null;
+      return { channel: 1, internalChannel: 0, info };
+    }
   } else {
-    const key = synthName ? synthName.toLowerCase() : '';
-    if (key === 'moog' || key === 'hydrasynth') {
-      return { channel: 1, internalChannel: 0, error: null };
+    if (targetKey === 'moog' || targetKey === 'hydrasynth') {
+      const existing = devices.find(d => d && d.index !== devIdx && d.uiName && d.uiName.toLowerCase() === targetKey);
+      const info = existing
+        ? `${synthName} is already in use on Device ${existing.index}. Assigned to channel 1, sharing the synth and patch.`
+        : null;
+      return { channel: 1, internalChannel: 0, info };
     }
-    if (key === 's-1') {
-      return { channel: 3, internalChannel: 2, error: null };
+    if (targetKey === 's-1') {
+      const existing = devices.find(d => d && d.index !== devIdx && d.uiName && d.uiName.toLowerCase() === targetKey);
+      const info = existing
+        ? `${synthName} is already in use on Device ${existing.index}. Assigned to channel 3, sharing the synth and patch.`
+        : null;
+      return { channel: 3, internalChannel: 2, info };
     }
-    if (key === 'sh-4d' || key === 'v3') {
-      const max = key === 'sh-4d' ? 4 : 16;
-      const label = key === 'sh-4d' ? 'SH-4d' : 'V3';
+    if (targetKey === 'sh-4d' || targetKey === 'v3') {
+      const max = targetKey === 'sh-4d' ? 4 : 16;
+      const label = targetKey === 'sh-4d' ? 'SH-4d' : 'V3';
       const found = findFirstUnusedChannelForSynth(devIdx, label, max);
-      if (found) return found;
+      if (found) return { channel: found.channel, internalChannel: found.internalChannel, info: null };
       return {
-        channel: null,
-        internalChannel: null,
-        error: `All MIDI channels for ${label} (channels 1–${max}) are already in use.`,
+        channel: 1,
+        internalChannel: 0,
+        info: `All MIDI channels for ${label} (channels 1–${max}) are already in use. Assigned to channel 1, sharing the synth and patch.`,
       };
     }
   }
-  const devices = (state.chuckState && Array.isArray(state.chuckState.devices)) ? state.chuckState.devices : [];
   const dev = devices.find(d => d && d.index === devIdx);
   const currentChannel = (dev && dev.channel >= 1 && dev.channel <= 16) ? dev.channel : 1;
-  return { channel: currentChannel, internalChannel: currentChannel - 1, error: null };
+  return { channel: currentChannel, internalChannel: currentChannel - 1, info: null };
 }
 
 function onSynthChange(selectEl, devIdx) {
@@ -255,16 +430,17 @@ function onSynthChange(selectEl, devIdx) {
   if (!dev || dev.uiName === synthName) return;
 
   const res = resolveChannelForSynthChange(devIdx, synthName);
-  if (res.error) {
-    selectEl.value = dev.uiName;
-    renderDevicesTable();
-    modalCallbacks.openWarningModal(res.error);
-    return;
-  }
+  const sharedDev = state.chuckState.devices.find(
+    d => d && d.index !== devIdx && d.uiName === synthName && d.channel === res.channel
+  );
 
   dev.channel = res.channel;
   dev.uiName = synthName;
-  if (synthName === 'V3') {
+  if (sharedDev) {
+    dev.patchName = sharedDev.patchName;
+    dev.bank = sharedDev.bank;
+    dev.program = sharedDev.program;
+  } else if (synthName === 'V3') {
     dev.patchName = 'Grand Piano Vienna';
     dev.bank = 0;
     dev.program = 0;
@@ -303,6 +479,9 @@ function onSynthChange(selectEl, devIdx) {
   send('setChannel', { devIdx, channel: res.channel });
   renderDevicesTable();
   syncPatchSetButton();
+  if (res.info) {
+    modalCallbacks.openWarningModal(res.info, { title: 'ℹ️ Shared Channel', color: 'var(--cyan)' });
+  }
 }
 
 function onChannelChange(selectEl, devIdx) {
@@ -503,10 +682,6 @@ export function initDevicesEvents() {
           send('muteDevice', devIdx);
           return;
         }
-        if (action === 'toggleDeviceSelect') {
-          toggleDeviceSelect(devIdx);
-          return;
-        }
         if (action === 'openPresetModal') {
           e.stopPropagation();
           modalCallbacks.openPresetModal(devIdx);
@@ -519,12 +694,6 @@ export function initDevicesEvents() {
           editParamInline(actionEl, devIdx, param, min, max);
           return;
         }
-      }
-
-      if (e.target.closest('input, button, select, .cell-select, .editable-num, .patch-title-clickable')) return;
-      const row = e.target.closest('tr[data-dev]');
-      if (row) {
-        toggleDeviceSelect(parseInt(row.dataset.dev, 10));
       }
     });
 

@@ -193,8 +193,14 @@ public class Song extends SongState
         }
         resolveMidiChannelForSynth(idx, synthUiName) => int targetMidiChannel;
         if (targetMidiChannel < 0) {
-            notifyStateChanged();
-            return;
+            0 => targetMidiChannel;
+        }
+        null @=> Patch @ sharedPatch;
+        for (0 => int i; i < devices.cap(); i++) {
+            if (i != idx && devices[i] != null && devices[i].uiName == synthUiName && devices[i].midiChannel == targetMidiChannel) {
+                devices[i] @=> sharedPatch;
+                break;
+            }
         }
         oldPatch.sendAllNotesOff();
         createDefaultPatchForSynth(synthUiName, targetMidiChannel, oldPatch.volume) @=> Patch @ newPatch;
@@ -206,6 +212,9 @@ public class Song extends SongState
         oldPatch.pan => newPatch.pan;
         oldPatch.userMuted => newPatch.userMuted;
         oldPatch.muted => newPatch.muted;
+        if (sharedPatch != null && sharedPatch.patchName != "") {
+            newPatch.selectPresetByName(sharedPatch.patchName, newPatch.volume);
+        }
         replaceDevice(idx, newPatch);
         selectDevice(idx);
         newPatch.updateControllers();
@@ -387,17 +396,32 @@ public class Song extends SongState
     }
 
     // ── Preset delegates ─────────────────────────────────────────────────────
+    fun void syncSharedPatchMetadata(Patch @ source)
+    {
+        if (source == null) return;
+        for (0 => int i; i < devices.cap(); i++) {
+            devices[i] @=> Patch @ other;
+            if (other != null && other != source
+                && other.uiName == source.uiName
+                && other.midiChannel == source.midiChannel) {
+                other.copyPresetMetadataFrom(source);
+            }
+        }
+    }
+
     fun void applyMoogPreset(int b, int p, int volume)
     {
         if (currentDevice == null || currentDevice.uiName != "Moog") return;
         currentDevice $ MoogMessenger @=> MoogMessenger @ moog;
         moog.applyBankProgram(b, p, volume);
+        syncSharedPatchMetadata(currentDevice);
     }
 
     fun setNextPreset(int volume)
     {
         if (currentDevice != null) {
             currentDevice.stepPreset(1, volume);
+            syncSharedPatchMetadata(currentDevice);
         }
     }
 
@@ -405,6 +429,7 @@ public class Song extends SongState
     {
         if (currentDevice != null) {
             currentDevice.stepPresetCategory(1, volume);
+            syncSharedPatchMetadata(currentDevice);
         }
     }
 
@@ -412,6 +437,7 @@ public class Song extends SongState
     {
         if (currentDevice != null) {
             currentDevice.stepPreset(-1, volume);
+            syncSharedPatchMetadata(currentDevice);
         }
     }
 
@@ -419,6 +445,7 @@ public class Song extends SongState
     {
         if (currentDevice != null) {
             currentDevice.stepPresetCategory(-1, volume);
+            syncSharedPatchMetadata(currentDevice);
         }
     }
 
@@ -428,6 +455,7 @@ public class Song extends SongState
         if (!currentDevice.selectPresetByName(presetName, volume)) {
             currentDevice.refreshSiblingPresets(devices);
         }
+        syncSharedPatchMetadata(currentDevice);
     }
 
     // ── Mixer delegates ──────────────────────────────────────────────────────

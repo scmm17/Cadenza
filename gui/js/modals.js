@@ -30,8 +30,13 @@ export function confirmShutdown() {
   send('shutdown');
 }
 
-// ─── Warning Modal ────────────────────────────────────────────────────────────
-export function openWarningModal(message) {
+// ─── Warning / Info Modal ─────────────────────────────────────────────────────
+export function openWarningModal(message, { title = '⚠️ Warning', color = 'var(--amber)' } = {}) {
+  const titleEl = document.getElementById('warningModalTitle');
+  if (titleEl) {
+    titleEl.textContent = title;
+    titleEl.style.color = color;
+  }
   const msgEl = document.getElementById('warningModalMessage');
   if (msgEl) msgEl.textContent = message || '';
   const modal = document.getElementById('warningModal');
@@ -139,11 +144,7 @@ export function openPresetModal(devIdx) {
     : [];
   if (list.length === 0) return;
 
-  if (state.selectedDevIdx !== devIdx) {
-    state.selectedDevIdx = devIdx;
-    send('device', devIdx);
-    render();
-  }
+  send('device', devIdx);
 
   const normPatchName = dev.patchName ? String(dev.patchName).replace(/"/g, "'") : '';
   const hasValidBankProg = (dev.bank != null && dev.program != null && dev.bank >= 0 && dev.program >= 0);
@@ -222,6 +223,20 @@ export function closePresetModal() {
   document.body.focus();
 }
 
+function syncLocalDevicePreset(devIdx, patchName, bank, program) {
+  if (!state.chuckState || !Array.isArray(state.chuckState.devices)) return;
+  const dev = state.chuckState.devices.find(d => d.index === devIdx);
+  if (!dev) return;
+  for (const d of state.chuckState.devices) {
+    if (d && (d.index === devIdx || (d.uiName === dev.uiName && d.channel === dev.channel))) {
+      d.patchName = patchName;
+      d.bank = bank;
+      d.program = program;
+    }
+  }
+  render();
+}
+
 export function cancelPresetModal() {
   if (state.presetModalState) {
     if (state.presetModalState.initialPreset) {
@@ -229,15 +244,7 @@ export function cancelPresetModal() {
     } else if (state.presetModalState.currentPreset !== null && state.presetModalState.initialPatchName != null) {
       const { devIdx, initialPatchName, initialBank, initialProgram } = state.presetModalState;
       send('setPreset', { devIdx, presetName: initialPatchName });
-      if (state.chuckState && state.chuckState.devices) {
-        const dev = state.chuckState.devices.find(d => d.index === devIdx);
-        if (dev) {
-          dev.patchName = initialPatchName;
-          dev.bank = initialBank;
-          dev.program = initialProgram;
-          render();
-        }
-      }
+      syncLocalDevicePreset(devIdx, initialPatchName, initialBank, initialProgram);
     }
   }
   closePresetModal();
@@ -317,15 +324,7 @@ function applyPresetSelection(targetPreset) {
   send('setPreset', { devIdx, presetName: wirePresetName });
 
   state.presetModalState.currentPreset = targetPreset;
-  if (state.chuckState && state.chuckState.devices) {
-    const dev = state.chuckState.devices.find(d => d.index === devIdx);
-    if (dev) {
-      dev.patchName = targetPreset.name;
-      dev.bank = targetPreset.bank;
-      dev.program = targetPreset.program;
-      render();
-    }
-  }
+  syncLocalDevicePreset(devIdx, targetPreset.name, targetPreset.bank, targetPreset.program);
 }
 
 export function movePresetSelection(delta) {

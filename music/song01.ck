@@ -29,7 +29,7 @@ Chord bVII_High(NoteCollection.bVII_notes(), 0);
 [1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.5] @=> float probabilities1[];
 [124, 70] @=> int velocities1[];
 ChordProgression prog(sh4d_1, chordsH, progression, true, 16, 4, probabilities1);
-0.4 => prog.mutateProbabilityRange;
+0.0 => prog.mutateProbabilityRange;
 velocities1 @=> prog.velocities;
 
 ChordProgression prog4(s1, chordsH, progression, true, 16, 4, probabilities1);
@@ -63,7 +63,7 @@ velocities6 @=> melody2.velocities;
 [127,0,120,120,127,0,120,0] @=>  int velocities4[];
 [
  DrumMachine.BassDrum(),
- 0, 
+ 0,
  DrumMachine.HiTom(),
  DrumMachine.HiTom(),
  DrumMachine.BassDrum(),

@@ -6,7 +6,7 @@ song:
       patchName: "Space Clav"
       uiName: "SH-4d"
       muted: 0
-      volume: 106
+      volume: 82
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -22,7 +22,7 @@ song:
       patchName: "Dripper EP"
       uiName: "SH-4d"
       muted: 0
-      volume: 97
+      volume: 75
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -32,38 +32,22 @@ song:
       presetType: "tone"
       toneProgram: 9
       toneBank: 72
-    S-1-2:
-      deviceName: "S-1 MIDI IN"
-      midiChannel: 2
-      patchName: "Bank: 2 Program: 10"
-      uiName: "S-1"
+    Augmented Mallets-0:
+      deviceName: "IAC Driver Augmented Mallets"
+      midiChannel: 0
+      patchName: "Celeste On Vinyl"
+      uiName: "Augmented Mallets"
       muted: 0
-      volume: 127
+      volume: 88
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 10
-      bank: 2
+      program: 2
+      bank: 4
     SH-4d-2:
       deviceName: "SH-4d"
       midiChannel: 2
       patchName: "Space Clav"
-      uiName: "SH-4d"
-      muted: 0
-      volume: 120
-      filterCutoff: -1
-      filterResonance: -1
-      pan: 64
-      program: 0
-      bank: 0
-      programChange: 0
-      presetType: "tone"
-      toneProgram: 49
-      toneBank: 69
-    SH-4d-3:
-      deviceName: "SH-4d"
-      midiChannel: 3
-      patchName: "Channel 4"
       uiName: "SH-4d"
       muted: 0
       volume: 100
@@ -73,14 +57,28 @@ song:
       program: 0
       bank: 0
       programChange: 0
-      presetType: "channel"
+      presetType: "tone"
+      toneProgram: 49
+      toneBank: 69
+    Emulator II V-0:
+      deviceName: "IAC Driver Emulator II V"
+      midiChannel: 0
+      patchName: "Breathy Lowtone Keys"
+      uiName: "Emulator II V"
+      muted: 0
+      volume: 78
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 0
+      bank: 13
     SH-4d-9:
       deviceName: "SH-4d"
       midiChannel: 9
-      patchName: "Drums"
+      patchName: "Channel 10"
       uiName: "SH-4d"
       muted: 0
-      volume: 43
+      volume: 42
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -88,15 +86,16 @@ song:
       bank: 0
       programChange: 0
       presetType: "channel"
-    Hydrasynth-0:
-      deviceName: "HYDRASYNTH EXPLORER"
+    Augmented Yangtze-0:
+      deviceName: "IAC Driver Augmented Yangtze"
       midiChannel: 0
-      patchName: "Tubular FP"
-      uiName: "Hydrasynth"
+      patchName: "Bright Moons"
+      uiName: "Augmented Yangtze"
       muted: 0
       volume: 127
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      presetName: "A043"
+      program: 1
+      bank: 0
   bpm: 60.000000

@@ -121,17 +121,15 @@ public class SynthRegistry
             SynthTableData.FIXED_CHANNELS[entryIdx] => int fixedCh;
             SynthTableData.MAX_CHANNELS[entryIdx] => int maxCh;
             if (fixedCh >= 0) {
-                if (SynthTableData.IS_VIRTUAL[entryIdx] == 1 && maxCh == 1) {
-                    for (0 => int i; i < devices.cap(); i++) {
-                        if (i != idx && devices[i] != null && devices[i].uiName == synthUiName) {
-                            return -1;
-                        }
-                    }
-                }
                 return fixedCh;
             }
             if (maxCh > 1) {
-                return findFirstUnusedChannel(devices, idx, synthUiName, maxCh);
+                findFirstUnusedChannel(devices, idx, synthUiName, maxCh) => int unusedCh;
+                if (unusedCh >= 0) return unusedCh;
+                return 0;
+            }
+            if (maxCh == 1) {
+                return 0;
             }
         }
         if (idx >= 0 && idx < devices.cap() && devices[idx] != null) {

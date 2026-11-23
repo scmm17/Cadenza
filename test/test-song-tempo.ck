@@ -57,12 +57,17 @@ public class SongTempoTests {
         Assert.equalInt("testResolveChannel_S1", chanSong.resolveMidiChannelForSynth(0, "S-1"), 2);
         Assert.equalInt("testResolveChannel_SH4d_firstUnused", chanSong.resolveMidiChannelForSynth(3, "SH-4d"), 1);
 
-        // Fill remaining SH-4d channels (0..3) and verify -1 when exhausted
+        // Fill remaining SH-4d channels (0..3) and verify fallback to lowest channel (0) when exhausted
         MockPatch d4; "SH-4d" => d4.uiName; 1 => d4.midiChannel;
         MockPatch d5; "SH-4d" => d5.uiName; 3 => d5.midiChannel;
         d4 @=> chanSong.devices[4];
         d5 @=> chanSong.devices[5];
-        Assert.equalInt("testResolveChannel_SH4d_allUsed", chanSong.resolveMidiChannelForSynth(3, "SH-4d"), -1);
+        Assert.equalInt("testResolveChannel_SH4d_allUsed", chanSong.resolveMidiChannelForSynth(3, "SH-4d"), 0);
+
+        // Monotimbral virtual synth already in use falls back to its lowest/fixed channel (0)
+        MockPatch acidDev; "Acid V" => acidDev.uiName; 0 => acidDev.midiChannel;
+        acidDev @=> chanSong.devices[6];
+        Assert.equalInt("testResolveChannel_AcidV_alreadyUsed", chanSong.resolveMidiChannelForSynth(3, "Acid V"), 0);
 
         // Test V3 picks first unused channel in 0..15
         MockSong v3Song;
@@ -80,11 +85,11 @@ public class SongTempoTests {
         "Hydrasynth" => v3Song.devices[3].uiName;
         Assert.equalInt("testResolveChannel_V3_firstUnusedGap", v3Song.resolveMidiChannelForSynth(15, "V3"), 3);
 
-        // Fill all 16 channels 0..15 with V3 and verify -1 when all 16 are used
+        // Fill all 16 channels 0..15 with V3 and verify fallback to lowest channel (0) when all 16 are used
         "V3" => v3Song.devices[3].uiName;
         MockPatch vp15; "V3" => vp15.uiName; 15 => vp15.midiChannel;
         vp15 @=> v3Song.devices[15];
-        Assert.equalInt("testResolveChannel_V3_allUsed", v3Song.resolveMidiChannelForSynth(-1, "V3"), -1);
+        Assert.equalInt("testResolveChannel_V3_allUsed", v3Song.resolveMidiChannelForSynth(-1, "V3"), 0);
 
         // 6. MoogMessenger.formatPatchName omits "Program"
         Assert.equalString("testMoogFormatPatchName_0_0", MoogMessenger.formatPatchName(0, 0), "Messenger: 1");

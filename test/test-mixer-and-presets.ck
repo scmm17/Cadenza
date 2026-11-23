@@ -359,11 +359,11 @@ public class MixerAndPresetsTests {
         Assert.equalString("registry_empty_synthi_dev", emptySynthi.deviceName, "IAC Driver Synthi V");
         Assert.isTrue("synthi_hasPreset_default", emptySynthi.presets().hasPreset("On The Run"));
 
-        // Monotimbral Arturia synths reject duplicate assignment on another track, but allow self-index
-        Assert.equalInt("registry_acidv_dup_blocked", SynthRegistry.resolveMidiChannel(song.devices, 2, "Acid V"), -1);
+        // Monotimbral Arturia synths allow duplicate assignment on another track, falling back to channel 0
+        Assert.equalInt("registry_acidv_dup_fallback", SynthRegistry.resolveMidiChannel(song.devices, 2, "Acid V"), 0);
         Assert.equalInt("registry_acidv_self_ok", SynthRegistry.resolveMidiChannel(song.devices, 0, "Acid V"), 0);
 
-        // Multi-manual Arturia synths auto-assign unused channels (B-3 V2: 1..3, Solina V2: 1..2)
+        // Multi-manual Arturia synths auto-assign unused channels (B-3 V2: 1..3, Solina V2: 1..2), falling back to 0 when full
         MockSong multiSong;
         Assert.equalInt("registry_b3_ch0", SynthRegistry.resolveMidiChannel(multiSong.devices, 0, "B-3 V2"), 0);
         SynthRegistry.createEmpty("B-3 V2") @=> Patch @ b3_0;
@@ -377,7 +377,7 @@ public class MixerAndPresetsTests {
         SynthRegistry.createEmpty("B-3 V2") @=> Patch @ b3_2;
         2 => b3_2.midiChannel;
         b3_2 @=> multiSong.devices[2];
-        Assert.equalInt("registry_b3_full", SynthRegistry.resolveMidiChannel(multiSong.devices, 3, "B-3 V2"), -1);
+        Assert.equalInt("registry_b3_full_fallback", SynthRegistry.resolveMidiChannel(multiSong.devices, 3, "B-3 V2"), 0);
 
         Assert.equalInt("registry_solina_ch0", SynthRegistry.resolveMidiChannel(multiSong.devices, 3, "Solina V2"), 0);
         SynthRegistry.createEmpty("Solina V2") @=> Patch @ sol_0;
@@ -387,7 +387,27 @@ public class MixerAndPresetsTests {
         SynthRegistry.createEmpty("Solina V2") @=> Patch @ sol_1;
         1 => sol_1.midiChannel;
         sol_1 @=> multiSong.devices[4];
-        Assert.equalInt("registry_solina_full", SynthRegistry.resolveMidiChannel(multiSong.devices, 5, "Solina V2"), -1);
+        Assert.equalInt("registry_solina_full_fallback", SynthRegistry.resolveMidiChannel(multiSong.devices, 5, "Solina V2"), 0);
+
+        // Shared synth + channel preset sync updates sibling patch metadata without touching other channels/synths
+        MockSong sharedSong;
+        MockPatch shA; "Acid V" => shA.uiName; 0 => shA.midiChannel; "Fast Travel" => shA.patchName; 0 => shA.bank; 1 => shA.program;
+        MockPatch shB; "Acid V" => shB.uiName; 0 => shB.midiChannel; "Old Patch" => shB.patchName; 0 => shB.bank; 0 => shB.program;
+        MockPatch shDiffCh; "Acid V" => shDiffCh.uiName; 1 => shDiffCh.midiChannel; "Other Channel" => shDiffCh.patchName;
+        MockPatch shDiffSynth; "V3" => shDiffSynth.uiName; 0 => shDiffSynth.midiChannel; "Grand Piano Vienna" => shDiffSynth.patchName;
+        shA @=> sharedSong.devices[0];
+        shB @=> sharedSong.devices[1];
+        shDiffCh @=> sharedSong.devices[2];
+        shDiffSynth @=> sharedSong.devices[3];
+        "Thoughtful Day" => shA.patchName;
+        2 => shA.bank;
+        7 => shA.program;
+        sharedSong.syncSharedPatchMetadata(shA);
+        Assert.equalString("shared_sync_sibling_name", shB.patchName, "Thoughtful Day");
+        Assert.equalInt("shared_sync_sibling_bank", shB.bank, 2);
+        Assert.equalInt("shared_sync_sibling_program", shB.program, 7);
+        Assert.equalString("shared_sync_diff_ch_untouched", shDiffCh.patchName, "Other Channel");
+        Assert.equalString("shared_sync_diff_synth_untouched", shDiffSynth.patchName, "Grand Piano Vienna");
 
         // Verify every synth in SynthTableData instantiates cleanly via SynthRegistry.createEmpty
         for (0 => int i; i < SynthTableData.UI_NAMES.cap(); i++) {

@@ -17,7 +17,7 @@ song:
       patchName: "Organ 776555678 slow 4"
       uiName: "V3"
       muted: 0
-      volume: 55
+      volume: 62
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -30,7 +30,7 @@ song:
       patchName: "Lost Soul"
       uiName: "Augmented Grand Piano"
       muted: 0
-      volume: 46
+      volume: 50
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -42,7 +42,7 @@ song:
       patchName: "Baited Breath"
       uiName: "Augmented Strings"
       muted: 0
-      volume: 63
+      volume: 65
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -51,34 +51,34 @@ song:
     Synclavier V-0:
       deviceName: "IAC Driver Synclavier V"
       midiChannel: 0
-      patchName: "One Complete Revolution"
+      patchName: "Orange Aurora"
       uiName: "Synclavier V"
       muted: 0
-      volume: 127
+      volume: 100
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 26
+      program: 27
       bank: 0
     Augmented Woodwinds-0:
       deviceName: "IAC Driver Augmented Woodwinds"
       midiChannel: 0
-      patchName: "Baked Clarinet"
+      patchName: "Elevation"
       uiName: "Augmented Woodwinds"
       muted: 0
-      volume: 31
+      volume: 35
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 5
-      bank: 8
+      program: 11
+      bank: 4
     Synthi V-0:
       deviceName: "IAC Driver Synthi V"
       midiChannel: 0
       patchName: "Bladelores"
       uiName: "Synthi V"
       muted: 0
-      volume: 50
+      volume: 45
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -90,7 +90,7 @@ song:
       patchName: "Under The Sea"
       uiName: "Analog Lab V"
       muted: 0
-      volume: 50
+      volume: 55
       filterCutoff: -1
       filterResonance: -1
       pan: 64

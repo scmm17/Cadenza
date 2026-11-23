@@ -159,6 +159,20 @@ public class RolandSH4d extends Patch
         }
     }
 
+    fun void copyPresetMetadataFrom(Patch @ source)
+    {
+        if (source == null) return;
+        source.patchName => patchName;
+        source.stateBank() => toneBank;
+        source.stateProgram() => toneProgram;
+        source.stateBank() => bank;
+        source.stateProgram() => program;
+        if (toneBank >= 0 && toneProgram >= 0) {
+            "tone" => presetType;
+        }
+        syncPresetCursor();
+    }
+
     fun void refreshSiblingPresets(Patch @ devices[])
     {
         if (devices == null) return;

@@ -335,6 +335,14 @@ public class Patch
 
     fun int stateBank() { return bank; }
     fun int stateProgram() { return program; }
+    fun void copyPresetMetadataFrom(Patch @ source)
+    {
+        if (source == null) return;
+        source.patchName => patchName;
+        source.stateBank() => bank;
+        source.stateProgram() => program;
+        syncPresetCursor();
+    }
     fun void onChannelChanged(int channel1Based) {}
     fun void reapplyLoadedPreset() {}
     fun void refreshSiblingPresets(Patch @ devices[]) {}

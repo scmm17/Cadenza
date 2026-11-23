@@ -27,6 +27,10 @@ import {
   editTempoInline,
   registerDeviceModalCallbacks,
   initDevicesEvents,
+  onDeviceNoteOn,
+  onDeviceNoteOff,
+  onDeviceAllNotesOff,
+  clearDeviceNotes,
 } from './devices-table.js';
 import {
   openShutdown,
@@ -58,11 +62,23 @@ import { initKeyboard } from './keyboard.js';
 registerUiCallbacks({
   render,
   updateGraph,
-  clearNotes,
+  clearNotes: () => {
+    clearNotes();
+    clearDeviceNotes();
+  },
   clearDrumCache,
-  onNoteOn,
-  onNoteOff,
-  onAllNotesOff,
+  onNoteOn: (dev, note, vel) => {
+    onNoteOn(dev, note, vel);
+    onDeviceNoteOn(dev, note);
+  },
+  onNoteOff: (dev, note) => {
+    onNoteOff(dev, note);
+    onDeviceNoteOff(dev, note);
+  },
+  onAllNotesOff: (dev) => {
+    onAllNotesOff(dev);
+    onDeviceAllNotesOff(dev);
+  },
   flashTransition,
   renderSongList,
   renderPatchSetList,
