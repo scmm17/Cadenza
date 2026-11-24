@@ -861,6 +861,7 @@ body.graph-resizing { cursor: col-resize; user-select: none; }
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   opacity: 0;
+  pointer-events: none;
   transition-property: opacity, transform, display, overlay;
   transition-duration: 0.16s;
   transition-timing-function: ease-out;
@@ -881,6 +882,7 @@ body.graph-resizing { cursor: col-resize; user-select: none; }
 
 .graph-node-tooltip:is(:popover-open, .\:popover-open, .is-open) {
   opacity: 1;
+  pointer-events: auto;
 
   @starting-style {
     opacity: 0;

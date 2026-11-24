@@ -3,22 +3,22 @@ song:
     Augmented Grand Piano-0:
       deviceName: "IAC Driver Augmented Grand Piano"
       midiChannel: 0
-      patchName: "Echo Dust"
+      patchName: "Lost Soul"
       uiName: "Augmented Grand Piano"
       muted: 0
-      volume: 86
+      volume: 36
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 28
-      bank: 4
+      program: 9
+      bank: 0
     Augmented Grand Piano-0-dev2:
       deviceName: "IAC Driver Augmented Grand Piano"
       midiChannel: 0
       patchName: "Lost Soul"
       uiName: "Augmented Grand Piano"
       muted: 0
-      volume: 127
+      volume: 35
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -30,7 +30,7 @@ song:
       patchName: "Lost Soul"
       uiName: "Augmented Grand Piano"
       muted: 0
-      volume: 109
+      volume: 42
       filterCutoff: -1
       filterResonance: -1
       pan: 64

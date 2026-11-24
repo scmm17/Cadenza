@@ -340,6 +340,33 @@ export function doSave() {
   btn.addEventListener('animationend', () => btn.classList.remove('btn-flash-save'), { once: true });
 }
 
+let uiFlushRafId = null;
+let uiFlushNeedsRender = false;
+let uiFlushNeedsGraph = false;
+
+function scheduleUiFlush({ render = false, graph = false } = {}) {
+  if (render) uiFlushNeedsRender = true;
+  if (graph) uiFlushNeedsGraph = true;
+  if (uiFlushRafId !== null) return;
+  uiFlushRafId = requestAnimationFrame(() => {
+    uiFlushRafId = null;
+    const doRender = uiFlushNeedsRender;
+    const doGraph = uiFlushNeedsGraph;
+    uiFlushNeedsRender = false;
+    uiFlushNeedsGraph = false;
+    if (doRender) {
+      ui.render();
+      const patchSetModal = document.getElementById('patchSetModal');
+      if (patchSetModal && patchSetModal.classList.contains('open')) {
+        ui.renderPatchSetList();
+      }
+    }
+    if (doGraph) {
+      ui.updateGraph(false);
+    }
+  });
+}
+
 export function connect() {
   state.ws = new WebSocket('ws://localhost:3000');
 
@@ -417,12 +444,7 @@ export function connect() {
           send('getPatchSets', { songName: state.chuckState.songName });
         }
         ui.clearDrumCache();
-        ui.render();
-        ui.updateGraph(false);
-        const patchSetModal = document.getElementById('patchSetModal');
-        if (patchSetModal && patchSetModal.classList.contains('open')) {
-          ui.renderPatchSetList();
-        }
+        scheduleUiFlush({ render: true, graph: true });
       } else if (msg.type === 'patchSets') {
         if (msg.data) {
           state.patchSetsState = {
@@ -454,7 +476,7 @@ export function connect() {
         }
       } else if (msg.type === 'graph') {
         state.chuckGraph = msg.fragments || [];
-        ui.updateGraph(false);
+        scheduleUiFlush({ graph: true });
       } else if (msg.type === 'transition') {
         if (!state.isSongReset && !(state.chuckState && state.chuckState.isPaused) && performance.now() - state.playFromResetTime >= 150) {
           ui.flashTransition(msg.from, msg.to);

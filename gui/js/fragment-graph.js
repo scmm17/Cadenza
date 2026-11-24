@@ -240,6 +240,69 @@ function fmtProb(p) {
   return Math.round(p * 100) + '%';
 }
 
+function findNodeAtClientPoint(clientX, clientY) {
+  if (!cy || !graphVisible()) return null;
+  const canvas = document.getElementById('graphCanvas');
+  if (!canvas) return null;
+  const rect = canvas.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
+
+  const hitPad = 4;
+  let best = null;
+  let bestScore = Infinity;
+  cy.nodes().forEach((n) => {
+    const bb = n.renderedBoundingBox({ includeLabels: true });
+    if (x >= bb.x1 - hitPad && x <= bb.x2 + hitPad && y >= bb.y1 - hitPad && y <= bb.y2 + hitPad) {
+      const cx = (bb.x1 + bb.x2) / 2;
+      const cyPos = (bb.y1 + bb.y2) / 2;
+      const distSq = (x - cx) * (x - cx) + (y - cyPos) * (y - cyPos);
+      // Slightly prioritize highlighted nodes if padded boxes overlap
+      const priorityBias = (n.hasClass('current') || n.hasClass('looping') || n.hasClass('queued')) ? -1 : 0;
+      const score = distSq + priorityBias;
+      if (score < bestScore) {
+        bestScore = score;
+        best = n;
+      }
+    }
+  });
+  return best;
+}
+
+function handleHoveredNode(node) {
+  const el = document.getElementById('graphCanvas');
+  const nodeId = node && !node.empty() ? node.id() : null;
+  if (el) el.style.cursor = nodeId ? 'pointer' : '';
+
+  if (nodeId) {
+    clearTimeout(hideTimer);
+    hideTimer = null;
+    if (hoveredNodeId === nodeId) return;
+    hoveredNodeId = nodeId;
+    if (shownNodeId === nodeId) return;
+    clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(() => {
+      hoverTimer = null;
+      if (hoveredNodeId === nodeId && graphVisible() && cy) {
+        const liveNode = cy.getElementById(nodeId);
+        if (liveNode && !liveNode.empty()) {
+          showNodeTooltip(liveNode);
+        }
+      }
+    }, HOVER_DELAY_MS);
+  } else {
+    if (hoveredNodeId !== null) {
+      hoveredNodeId = null;
+      clearTimeout(hoverTimer);
+      hoverTimer = null;
+    }
+    if (shownNodeId) {
+      scheduleHideTooltip();
+    }
+  }
+}
+
 function initCy() {
   if (cy) return;
   cy = cytoscape({
@@ -250,7 +313,8 @@ function initCy() {
           'label': 'data(label)', 'text-wrap': 'wrap', 'text-valign': 'center', 'text-halign': 'center',
           'color': '#ede9ff', 'font-size': 'data(fs)', 'font-family': 'JetBrains Mono, monospace',
           'background-color': '#1a1535', 'border-width': 1.5, 'border-color': '#4a4070',
-          'shape': 'round-rectangle', 'width': 'label', 'height': 'label', 'padding': 'data(pad)' } },
+          'shape': 'round-rectangle', 'width': 'label', 'height': 'label', 'padding': 'data(pad)',
+          'z-index': 20 } },
       { selector: 'node.current', style: {
           'background-color': '#7c3aed', 'border-color': '#c4b5fd', 'border-width': 2.5, 'color': '#fff',
           'underlay-color': '#a78bfa', 'underlay-opacity': 0.45, 'underlay-padding': 6, 'z-index': 999 } },
@@ -268,7 +332,8 @@ function initCy() {
           'width': 'data(w)', 'line-color': '#5b4a9a', 'target-arrow-color': '#5b4a9a', 'target-arrow-shape': 'triangle',
           'arrow-scale': 1.1, 'label': 'data(label)', 'font-size': 'data(fs)', 'color': '#c9bff0', 'min-zoomed-font-size': 5,
           'font-family': 'JetBrains Mono, monospace', 'text-background-color': '#090614',
-          'text-background-opacity': 0.9, 'text-background-padding': 2 } },
+          'text-background-opacity': 0.9, 'text-background-padding': 2,
+          'events': 'no', 'text-events': 'no', 'z-index': 1 } },
       { selector: 'edge.taken', style: {
           'line-color': '#22d3ee', 'target-arrow-color': '#22d3ee', 'width': 6, 'color': '#22d3ee', 'z-index': 10 } },
     ],
@@ -276,9 +341,9 @@ function initCy() {
 
   let tapTimer = null;
   let lastTapNodeId = null;
-  cy.on('tap', 'node', (evt) => {
-    const fragName = evt.target.id();
+  function handleNodeClick(fragName) {
     if (!fragName) return;
+    hideNodeTooltip();
     if (tapTimer && lastTapNodeId === fragName) {
       clearTimeout(tapTimer);
       tapTimer = null;
@@ -304,43 +369,35 @@ function initCy() {
       send('nextFragment', nextVal);
       updateGraph(false);
     }, 240);
-  });
+  }
 
-  cy.on('mouseover', 'node', (evt) => {
-    const el = document.getElementById('graphCanvas');
-    if (el) el.style.cursor = 'pointer';
-    const node = evt.target;
-    const nodeId = node.id();
-    if (!nodeId) return;
-    clearTimeout(hideTimer);
-    hideTimer = null;
-    hoveredNodeId = nodeId;
-    if (shownNodeId === nodeId) return;
-    clearTimeout(hoverTimer);
-    hoverTimer = setTimeout(() => {
-      hoverTimer = null;
-      if (hoveredNodeId === nodeId && graphVisible() && cy) {
-        const liveNode = cy.getElementById(nodeId);
-        if (liveNode && !liveNode.empty()) {
-          showNodeTooltip(liveNode);
-        }
+  const canvas = document.getElementById('graphCanvas');
+  if (canvas) {
+    let downPos = null;
+    canvas.addEventListener('pointermove', (e) => {
+      if (e.buttons !== 0) return;
+      handleHoveredNode(findNodeAtClientPoint(e.clientX, e.clientY));
+    });
+    canvas.addEventListener('pointerleave', () => {
+      handleHoveredNode(null);
+    });
+    canvas.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      downPos = { x: e.clientX, y: e.clientY };
+    });
+    canvas.addEventListener('pointerup', (e) => {
+      if (e.button !== 0 || !downPos) return;
+      const dx = e.clientX - downPos.x;
+      const dy = e.clientY - downPos.y;
+      downPos = null;
+      if (dx * dx + dy * dy <= 36) {
+        const node = findNodeAtClientPoint(e.clientX, e.clientY);
+        if (node) handleNodeClick(node.id());
       }
-    }, HOVER_DELAY_MS);
-  });
-  cy.on('mouseout', 'node', (evt) => {
-    const el = document.getElementById('graphCanvas');
-    if (el) el.style.cursor = '';
-    const nodeId = evt.target && evt.target.id();
-    if (hoveredNodeId === nodeId) {
-      hoveredNodeId = null;
-      clearTimeout(hoverTimer);
-      hoverTimer = null;
-    }
-    if (shownNodeId) {
-      scheduleHideTooltip();
-    }
-  });
-  cy.on('tap pan zoom drag', () => {
+    });
+  }
+
+  cy.on('pan zoom drag', () => {
     hideNodeTooltip();
   });
 }

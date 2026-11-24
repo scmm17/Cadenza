@@ -9,6 +9,9 @@
 
 public class StateBroadcaster
 {
+    int graphSent;
+    Fragment @ lastGraphStart;
+
     fun int isPlaying(SongState @ song, Patch @ p)
     {
         if (song.currentParts == null) return false;
@@ -101,7 +104,13 @@ public class StateBroadcaster
         if (GuiLink.disabled) return;
         buildStateJson(song) => string j;
         GuiLink.sendState(j);
-        broadcastGraph(song);
+        // Only broadcast the full fragment graph when needed (first broadcast, startFragment changed,
+        // or while paused) so live fragment transitions never stall noteOn delivery behind N graphNode packets.
+        if (!graphSent || song.startFragment != lastGraphStart || SongContext.isPaused) {
+            broadcastGraph(song);
+            1 => graphSent;
+            song.startFragment @=> lastGraphStart;
+        }
     }
 
     fun int fragmentUsesPatch(Fragment @ fr, Patch @ p)

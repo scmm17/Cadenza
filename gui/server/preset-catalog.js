@@ -5,8 +5,15 @@ const path = require('path');
 
 const CATALOG_PATH = path.join(__dirname, '..', '..', 'presets', 'catalog.json');
 
+let cachedCatalog = null;
+let cachedMtimeMs = -1;
+
 function loadPresetCatalog() {
   try {
+    const stat = fs.statSync(CATALOG_PATH);
+    if (cachedCatalog && stat.mtimeMs === cachedMtimeMs) {
+      return cachedCatalog;
+    }
     const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, 'utf8'));
     const moogBanks = Array.isArray(catalog.moogBanks) ? catalog.moogBanks : [];
     const moog = [];
@@ -21,7 +28,7 @@ function loadPresetCatalog() {
         });
       }
     }
-    return Object.assign(
+    cachedCatalog = Object.assign(
       {},
       catalog.presets || {},
       {
@@ -34,6 +41,8 @@ function loadPresetCatalog() {
         moogBanks,
       }
     );
+    cachedMtimeMs = stat.mtimeMs;
+    return cachedCatalog;
   } catch (err) {
     console.error('Failed to load presets/catalog.json:', err.message);
     return {

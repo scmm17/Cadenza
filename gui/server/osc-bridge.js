@@ -54,6 +54,8 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
     currentChuckProc: null,
     lastLoadedSong: null,
     lastBroadcastSong: null,
+    lastPatchSetInfo: null,
+    lastSyncedSynthSig: '',
   };
 
   const lastLaunchAttempt = new Map();
@@ -243,14 +245,24 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
       try {
         const state = JSON.parse(jsonStr);
         shared.lastState = state;
-        syncVirtualSynths(state.devices);
+        const synthSig = Array.isArray(state.devices)
+          ? state.devices.map(d => (d && d.uiName) || '').join('|')
+          : '';
+        if (synthSig !== shared.lastSyncedSynthSig) {
+          shared.lastSyncedSynthSig = synthSig;
+          syncVirtualSynths(state.devices);
+        }
         if (state.songName) {
-          const info = patchSets.ensurePatchSetsDir(state.songName);
-          if (!state.patchSetName) state.patchSetName = info.defaultPatchSet;
-          if (!state.defaultPatchSetName) state.defaultPatchSetName = info.defaultPatchSet;
           if (shared.lastBroadcastSong !== state.songName) {
             shared.lastBroadcastSong = state.songName;
-            broadcast({ type: 'patchSets', data: info });
+            shared.lastPatchSetInfo = patchSets.ensurePatchSetsDir(state.songName);
+            broadcast({ type: 'patchSets', data: shared.lastPatchSetInfo });
+          } else if ((!state.patchSetName || !state.defaultPatchSetName) && !shared.lastPatchSetInfo) {
+            shared.lastPatchSetInfo = patchSets.ensurePatchSetsDir(state.songName);
+          }
+          if (shared.lastPatchSetInfo) {
+            if (!state.patchSetName) state.patchSetName = shared.lastPatchSetInfo.defaultPatchSet;
+            if (!state.defaultPatchSetName) state.defaultPatchSetName = shared.lastPatchSetInfo.defaultPatchSet;
           }
         }
         broadcast({ type: 'state', data: state });
@@ -349,6 +361,7 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
 
         const startNewProcess = () => {
           shared.lastState = null;
+          shared.lastSyncedSynthSig = '';
           broadcast({ type: 'songLoading', songName: patchSets.normalizeSongName(cmd.value) });
           const songPath = path.join('music', cmd.value);
           console.log(`Spawning: chuck --dac:6 --in:0 ${songPath}`);
