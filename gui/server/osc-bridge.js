@@ -11,6 +11,8 @@ const ARTURIA_LIB_ROOT = '/Library/Arturia';
 const LAUNCH_COOLDOWN_MS = 10000;
 const STOP_CHECK_COOLDOWN_MS = 10000;
 const COLD_LAUNCH_SYNC_DELAY_MS = 3000;
+const COLD_LAUNCH_SETTLE_DELAY_MS = 6500;
+const COLD_LAUNCH_FINAL_DELAY_MS = 10000;
 
 const SIMPLE_OSC_COMMANDS = {
   device:        { addr: '/cadenza/device',        type: 'int' },
@@ -80,6 +82,35 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
     }
   }
 
+  function ensureStandalonePluginPref(meta) {
+    if (!meta || !meta.appName) return;
+    const prefPath = path.join(ARTURIA_LIB_ROOT, meta.appName, 'tmp', 'plugin.pref.xml');
+    try {
+      if (!fs.existsSync(prefPath)) return;
+      const xml = fs.readFileSync(prefPath, 'utf8');
+      let updated = xml;
+      const multicoreRe = /(<param\s+name="Multi[- ]?Core\d*"\s+value=")([^"]*)("\s*\/>)/gi;
+      if (multicoreRe.test(updated)) {
+        updated = updated.replace(multicoreRe, '$10.000000$3');
+      } else if (meta.appName.startsWith('Augmented ') && updated.includes('</rootnode>')) {
+        updated = updated.replace('</rootnode>', '\t<param name="Multicore" value="0.000000"/>\n</rootnode>');
+      }
+      // Force Fader Mode = Jump (0.000000) instead of Scale (1.000000) / Pick-Up (0.500000)
+      // so incoming volume/CC messages from Cadenza jump directly to the exact target value.
+      const takeoverRe = /(<param\s+name="MIDITakeOverMode"\s+value=")([^"]*)("\s*\/>)/g;
+      if (takeoverRe.test(updated)) {
+        updated = updated.replace(takeoverRe, '$10.000000$3');
+      } else if (updated.includes('</rootnode>')) {
+        updated = updated.replace('</rootnode>', '\t<param name="MIDITakeOverMode" value="0.000000"/>\n</rootnode>');
+      }
+      if (updated !== xml) {
+        fs.writeFileSync(prefPath, updated, 'utf8');
+      }
+    } catch (err) {
+      console.warn(`→ OS: could not update ${prefPath}:`, err.message);
+    }
+  }
+
   function ensureVirtualSynthRunning(uiName, { foreground = false } = {}) {
     if (!uiName || process.platform !== 'darwin') return;
     const catalog = loadPresetCatalog();
@@ -107,6 +138,7 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
       }
       if (err) {
         ensureStandaloneMidiPref(meta);
+        ensureStandalonePluginPref(meta);
       }
       const args = foreground ? ['-a', appPath] : ['-g', '-a', appPath];
       execFile('open', args, (openErr) => {
@@ -118,22 +150,31 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
         lastStopCheck.delete(appName);
         console.log(`→ OS: launched ${appName} (${foreground ? 'foreground' : 'background'})`);
         if (err) {
-          setTimeout(() => {
+          const syncLaunchedDevices = ({ allowPresetReload }) => {
             if (desiredRunning.get(appName) !== true) return;
             const devices = shared.lastState && Array.isArray(shared.lastState.devices)
               ? shared.lastState.devices
               : [];
             for (const dev of devices) {
               if (dev && dev.uiName === uiName) {
-                if (dev.patchName) {
+                if (allowPresetReload && dev.patchName) {
+                  // setPreset in ChucK applies the preset, sends volume immediately,
+                  // and schedules post-preset delayed volume re-syncs.
                   chuckClient.send('/cadenza/setPreset', parseInt(dev.index, 10), String(dev.patchName));
-                }
-                if (dev.volume != null && dev.volume >= 0) {
+                } else if (dev.volume != null && dev.volume >= 0) {
                   chuckClient.send('/cadenza/volume', parseInt(dev.index, 10), parseInt(dev.volume, 10));
                 }
               }
             }
-          }, COLD_LAUNCH_SYNC_DELAY_MS);
+          };
+          setTimeout(() => syncLaunchedDevices({ allowPresetReload: true }), COLD_LAUNCH_SYNC_DELAY_MS);
+          setTimeout(() => {
+            const isPaused = Boolean(shared.lastState && shared.lastState.isPaused);
+            syncLaunchedDevices({ allowPresetReload: isPaused });
+          }, COLD_LAUNCH_SETTLE_DELAY_MS);
+          setTimeout(() => {
+            syncLaunchedDevices({ allowPresetReload: false });
+          }, COLD_LAUNCH_FINAL_DELAY_MS);
         }
       });
     });

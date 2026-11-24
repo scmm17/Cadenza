@@ -17,7 +17,7 @@ song:
       patchName: "Organ 776555678 slow 4"
       uiName: "V3"
       muted: 0
-      volume: 62
+      volume: 96
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -30,7 +30,7 @@ song:
       patchName: "Lost Soul"
       uiName: "Augmented Grand Piano"
       muted: 0
-      volume: 50
+      volume: 80
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -42,7 +42,7 @@ song:
       patchName: "Baited Breath"
       uiName: "Augmented Strings"
       muted: 0
-      volume: 65
+      volume: 76
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -54,7 +54,7 @@ song:
       patchName: "Orange Aurora"
       uiName: "Synclavier V"
       muted: 0
-      volume: 100
+      volume: 84
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -66,7 +66,7 @@ song:
       patchName: "Elevation"
       uiName: "Augmented Woodwinds"
       muted: 0
-      volume: 35
+      volume: 57
       filterCutoff: -1
       filterResonance: -1
       pan: 64

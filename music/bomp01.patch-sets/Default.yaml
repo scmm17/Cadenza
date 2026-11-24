@@ -13,6 +13,7 @@ song:
       program: 1
       bank: 3
       programChange: 1
+      presetType: "bank"
     SH-4d-1:
       deviceName: "SH-4d"
       midiChannel: 1
@@ -26,6 +27,7 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
     S-1-2:
       deviceName: "S-1 MIDI IN"
       midiChannel: 2
@@ -51,6 +53,7 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
     SH-4d-3:
       deviceName: "SH-4d"
       midiChannel: 3
@@ -64,6 +67,7 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
     SH-4d-9:
       deviceName: "SH-4d"
       midiChannel: 9
@@ -77,3 +81,5 @@ song:
       program: 0
       bank: 0
       programChange: 0
+      presetType: "channel"
+  bpm: 70.000000

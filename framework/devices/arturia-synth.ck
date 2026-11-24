@@ -14,6 +14,8 @@ public class ArturiaSynth extends Patch
     string varDeclName;
     int volumeCc;
     1 => int maxChannels;
+    int volumeSyncGen;
+    int pendingVolumeOnNote;
 
     fun void initArturia(
         string devName,
@@ -81,23 +83,111 @@ public class ArturiaSynth extends Patch
         }
     }
 
+    fun void sendVolumeMidi(int val)
+    {
+        if (val == -1) return;
+        CadenzaConstants.CC_VOLUME() => int cc;
+        if (volumeCc >= 0) {
+            volumeCc => cc;
+        }
+        // Arturia Default MIDI configs bind MasterVolume on channel 0 (MIDI ch 1).
+        MidiMsg msg;
+        0xB0 => msg.data1;
+        cc => msg.data2;
+        val => msg.data3;
+        gma.send(msg);
+        if (midiChannel != 0) {
+            sendControllerChange(cc, val);
+        }
+    }
+
+    fun void forceVolumeMidi(int val)
+    {
+        if (val == -1) return;
+        // Nudge by 1 step before the target value so Arturia's MIDI engine
+        // cannot ignore a repeated identical CC value (same effect as moving the slider).
+        (val > 0 ? val - 1 : val + 1) => int nudge;
+        sendVolumeMidi(nudge);
+        sendVolumeMidi(val);
+    }
+
+    fun void cancelPendingControllers()
+    {
+        volumeSyncGen++;
+        0 => pendingVolumeOnNote;
+    }
+
+    fun void onFragmentStart()
+    {
+        if (volume != -1) {
+            0 => pendingVolumeOnNote;
+            forceVolumeMidi(volume);
+        }
+    }
+
+    fun void beforeNoteOn()
+    {
+        if (pendingVolumeOnNote && volume != -1) {
+            0 => pendingVolumeOnNote;
+            forceVolumeMidi(volume);
+        }
+    }
+
+    fun void delayedVolumeSync(int gen)
+    {
+        // Arturia standalone apps load presets asynchronously after a Program Change
+        // (sample-based Augmented presets can take 1-2s+) and reset MasterVolume to
+        // the preset's saved value when loading finishes. Re-send the current volume
+        // across settle windows unless superseded by a newer change or teardown.
+        250::ms => now;
+        if (gen != volumeSyncGen) return;
+        if (volume != -1) { forceVolumeMidi(volume); }
+
+        500::ms => now; // 750ms total
+        if (gen != volumeSyncGen) return;
+        if (volume != -1) { forceVolumeMidi(volume); }
+
+        750::ms => now; // 1500ms total
+        if (gen != volumeSyncGen) return;
+        if (volume != -1) { forceVolumeMidi(volume); }
+
+        1500::ms => now; // 3000ms total
+        if (gen != volumeSyncGen) return;
+        if (volume != -1) { forceVolumeMidi(volume); }
+    }
+
+    fun void schedulePostPresetVolumeSync()
+    {
+        1 => pendingVolumeOnNote;
+        if (GuiLink.disabled) return;
+        volumeSyncGen++;
+        spork ~ delayedVolumeSync(volumeSyncGen);
+    }
+
     fun void setVolume(int val)
     {
         val => volume;
+        volumeSyncGen++;
+        0 => pendingVolumeOnNote;
+        sendVolumeMidi(volume);
+    }
+
+    fun void updateControllers()
+    {
+        setPreset();
+
+        if (filterCutoff != -1) {
+            setCutoff(filterCutoff);
+        }
+        if (filterResonance != -1) {
+            setResonance(filterResonance);
+        }
+        if (pan != -1) {
+            setPan(pan);
+        }
         if (volume != -1) {
-            CadenzaConstants.CC_VOLUME() => int cc;
-            if (volumeCc >= 0) {
-                volumeCc => cc;
-            }
-            // Arturia Default MIDI configs bind MasterVolume on channel 0 (MIDI ch 1).
-            MidiMsg msg;
-            0xB0 => msg.data1;
-            cc => msg.data2;
-            volume => msg.data3;
-            gma.send(msg);
-            if (midiChannel != 0) {
-                sendControllerChange(cc, volume);
-            }
+            setVolume(volume);
+            schedulePostPresetVolumeSync();
         }
     }
 
@@ -115,12 +205,13 @@ public class ArturiaSynth extends Patch
     {
         if (preset == null) return;
         sendProgramChange(0, preset.bank, preset.program);
-        if (vol != -1) {
-            setVolume(vol);
-        }
         preset.name => patchName;
         preset.program => program;
         preset.bank => bank;
+        if (vol != -1) {
+            setVolume(vol);
+            schedulePostPresetVolumeSync();
+        }
         <<< declaration(), "" >>>;
     }
 

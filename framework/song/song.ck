@@ -573,10 +573,24 @@ public class Song extends SongState
                 part.totalDuration(this) => total;
             }
         }
+        Patch @ syncedPatches[0];
         for (Part part : parts) {
             if (!allMode && !containsPart(part)) {
                 partIndex++;
                 continue;
+            }
+            if (part.patch != null) {
+                false => int alreadySynced;
+                for (0 => int s; s < syncedPatches.cap(); s++) {
+                    if (syncedPatches[s] == part.patch) {
+                        true => alreadySynced;
+                        break;
+                    }
+                }
+                if (!alreadySynced) {
+                    syncedPatches << part.patch;
+                    part.patch.onFragmentStart();
+                }
             }
             spork ~ playPart(part, maxBars) @=> shreds[partIndex];
             partIndex++;

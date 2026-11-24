@@ -203,8 +203,13 @@ public class Patch
         gma.send(msg);
     }
 
+    fun void cancelPendingControllers()
+    {
+    }
+
     fun void sendAllNotesOff()
     {
+        cancelPendingControllers();
         for (0 => int n; n < 128; n++) {
             while (activeNotes[n] > 0) {
                 noteOff(n);
@@ -215,11 +220,20 @@ public class Patch
         sendControllerChange(CadenzaConstants.CC_ALL_NOTES_OFF(), 0);
     }
 
+    fun void onFragmentStart()
+    {
+    }
+
+    fun void beforeNoteOn()
+    {
+    }
+
     fun void noteOn(int note, int velocity, dur duration)
     {
         if (muted) {
             return;
         }
+        beforeNoteOn();
         if (note >= 0 && note < 128) {
             activeNotes[note]++;
         }
