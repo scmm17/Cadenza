@@ -6,7 +6,7 @@ song:
       patchName: "Bank: 3 Program: 7"
       uiName: "SH-4d"
       muted: 0
-      volume: 87
+      volume: 103
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -46,7 +46,7 @@ song:
       patchName: "Marimba & Xylophon"
       uiName: "V3"
       muted: 0
-      volume: 90
+      volume: 117
       filterCutoff: -1
       filterResonance: -1
       pan: 64

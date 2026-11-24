@@ -127,6 +127,7 @@ Sent via `framework/core/gui-link.ck` (`GuiLink`).
 {
   "name": "Verse 1",
   "repeat": 2,
+  "devices": [1, 3],
   "edges": [
     { "to": "Chorus 1", "p": 0.7 },
     { "to": "Bridge", "p": 0.3 }

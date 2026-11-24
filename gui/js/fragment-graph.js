@@ -1,13 +1,145 @@
-import { state, send } from './state.js';
+import { state, send, esc } from './state.js';
+import { DEVICE_COLORS } from './piano-roll.js';
 
 const GRAPH_WIDTH_KEY = 'cadenza.graphWidth';
+const HOVER_DELAY_MS = 1000;
+const HIDE_GRACE_MS = 160;
+const SUPPORTS_POPOVER = Object.hasOwn(HTMLElement.prototype, 'popover');
+
 let cy = null;
 let graphSignature = '';
 let cachedNormPos = new Map();
 let relayoutTimer = null;
 
+let hoverTimer = null;
+let hideTimer = null;
+let hoveredNodeId = null;
+let shownNodeId = null;
+let isPointerOverTooltip = false;
+
 function mainRow() { return document.getElementById('mainRow'); }
 function graphWin() { return document.getElementById('graphWindow'); }
+function nodeTooltipEl() { return document.getElementById('graphNodeTooltip'); }
+
+function isTooltipOpen(tip) {
+  if (!tip) return false;
+  if (SUPPORTS_POPOVER) {
+    try { return tip.matches(':popover-open'); } catch (_) { return false; }
+  }
+  return tip.classList.contains('is-open');
+}
+
+function hideNodeTooltip() {
+  clearTimeout(hoverTimer);
+  hoverTimer = null;
+  clearTimeout(hideTimer);
+  hideTimer = null;
+  hoveredNodeId = null;
+  shownNodeId = null;
+  const tip = nodeTooltipEl();
+  if (!tip) return;
+  if (SUPPORTS_POPOVER) {
+    if (isTooltipOpen(tip)) {
+      try { tip.hidePopover(); } catch (_) {}
+    }
+  } else {
+    tip.classList.remove('is-open');
+  }
+}
+
+function renderTooltipContent(tip, fragName) {
+  const frag = state.chuckGraph.find(f => f && f.name === fragName);
+  const devices = (state.chuckState && Array.isArray(state.chuckState.devices))
+    ? state.chuckState.devices
+    : [];
+  const devByIdx = new Map(devices.map(d => [d.index, d]));
+
+  const hasList = frag && Array.isArray(frag.devices);
+  const countLabel = hasList
+    ? `${frag.devices.length} ${frag.devices.length === 1 ? 'device' : 'devices'}`
+    : '';
+
+  let bodyHtml = '';
+  if (!hasList) {
+    bodyHtml = '<div class="graph-tooltip-empty">Device list unavailable (reload song)</div>';
+  } else if (frag.devices.length === 0) {
+    bodyHtml = '<div class="graph-tooltip-empty">No devices used</div>';
+  } else {
+    const items = frag.devices.map((devIdx) => {
+      const dev = devByIdx.get(devIdx);
+      const color = DEVICE_COLORS[(devIdx - 1) % DEVICE_COLORS.length];
+      const synth = dev && dev.uiName ? dev.uiName : '—';
+      const patch = dev && dev.patchName ? dev.patchName : '—';
+      return `<li class="graph-tooltip-item">
+        <button type="button" class="graph-tooltip-item-btn" data-action="soloAndLoop" data-dev="${esc(devIdx)}" data-frag="${esc(fragName)}" title="Solo device ${esc(devIdx)} and loop ${esc(fragName)}">
+          <span class="graph-tooltip-badge" style="color:${color};border-color:${color}66;background:${color}1f;">${esc(devIdx)}</span>
+          <span class="graph-tooltip-synth">${esc(synth)}</span>
+          <span class="graph-tooltip-patch">${esc(patch)}</span>
+        </button>
+      </li>`;
+    }).join('');
+    bodyHtml = `<ul class="graph-tooltip-list">${items}</ul>`;
+  }
+
+  tip.innerHTML = `<div class="graph-tooltip-header">
+    <span>${esc(fragName)}</span>
+    ${countLabel ? `<span class="graph-tooltip-count">${esc(countLabel)}</span>` : ''}
+  </div>${bodyHtml}`;
+}
+
+function positionTooltip(tip, node) {
+  const canvas = document.getElementById('graphCanvas');
+  if (!canvas || !node || node.empty()) return;
+  const canvasRect = canvas.getBoundingClientRect();
+  const bb = node.renderedBoundingBox({ includeLabels: true });
+  const nodeLeft = canvasRect.left + bb.x1;
+  const nodeRight = canvasRect.left + bb.x2;
+  const nodeTop = canvasRect.top + bb.y1;
+  const nodeBottom = canvasRect.top + bb.y2;
+  const nodeCenterX = (nodeLeft + nodeRight) / 2;
+
+  const tipRect = tip.getBoundingClientRect();
+  const margin = 8;
+  const gap = 6;
+
+  let left = nodeCenterX - tipRect.width / 2;
+  left = Math.max(margin, Math.min(window.innerWidth - tipRect.width - margin, left));
+
+  let top = nodeTop - tipRect.height - gap;
+  if (top < margin) {
+    top = nodeBottom + gap;
+  }
+  top = Math.max(margin, Math.min(window.innerHeight - tipRect.height - margin, top));
+
+  tip.style.left = `${Math.round(left)}px`;
+  tip.style.top = `${Math.round(top)}px`;
+}
+
+function showNodeTooltip(node) {
+  const tip = nodeTooltipEl();
+  if (!tip || !node || node.empty() || !graphVisible()) return;
+  const fragName = node.id();
+  renderTooltipContent(tip, fragName);
+  shownNodeId = fragName;
+  if (SUPPORTS_POPOVER) {
+    if (!isTooltipOpen(tip)) {
+      try { tip.showPopover(); } catch (_) {}
+    }
+  } else {
+    tip.classList.add('is-open');
+  }
+  positionTooltip(tip, node);
+}
+
+function scheduleHideTooltip() {
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => {
+    hideTimer = null;
+    if (!hoveredNodeId && !isPointerOverTooltip) {
+      hideNodeTooltip();
+    }
+  }, HIDE_GRACE_MS);
+}
 
 export function graphVisible() {
   const row = mainRow();
@@ -41,6 +173,7 @@ export function setGraphVisible(on) {
   const btn = document.getElementById('btnGraph');
   if (btn) btn.classList.toggle('active', on);
   if (on) updateGraph(true);
+  else hideNodeTooltip();
 }
 
 export function toggleGraphWindow() {
@@ -173,13 +306,42 @@ function initCy() {
     }, 240);
   });
 
-  cy.on('mouseover', 'node', () => {
+  cy.on('mouseover', 'node', (evt) => {
     const el = document.getElementById('graphCanvas');
     if (el) el.style.cursor = 'pointer';
+    const node = evt.target;
+    const nodeId = node.id();
+    if (!nodeId) return;
+    clearTimeout(hideTimer);
+    hideTimer = null;
+    hoveredNodeId = nodeId;
+    if (shownNodeId === nodeId) return;
+    clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(() => {
+      hoverTimer = null;
+      if (hoveredNodeId === nodeId && graphVisible() && cy) {
+        const liveNode = cy.getElementById(nodeId);
+        if (liveNode && !liveNode.empty()) {
+          showNodeTooltip(liveNode);
+        }
+      }
+    }, HOVER_DELAY_MS);
   });
-  cy.on('mouseout', 'node', () => {
+  cy.on('mouseout', 'node', (evt) => {
     const el = document.getElementById('graphCanvas');
     if (el) el.style.cursor = '';
+    const nodeId = evt.target && evt.target.id();
+    if (hoveredNodeId === nodeId) {
+      hoveredNodeId = null;
+      clearTimeout(hoverTimer);
+      hoverTimer = null;
+    }
+    if (shownNodeId) {
+      scheduleHideTooltip();
+    }
+  });
+  cy.on('tap pan zoom drag', () => {
+    hideNodeTooltip();
   });
 }
 
@@ -220,6 +382,7 @@ export function updateGraph(forceLayout) {
   const looping = (s && s.loopFragmentName) ? s.loopFragmentName : null;
   const sig = JSON.stringify(frags);
   if (forceLayout || sig !== graphSignature) {
+    hideNodeTooltip();
     graphSignature = sig;
     cy.elements().remove();
     const fs = Math.min(14, Math.max(7, 16 - 0.35 * frags.length));
@@ -303,6 +466,16 @@ export function updateGraph(forceLayout) {
     if (n.data('label') !== nextLbl) n.data('label', nextLbl);
   }
   applyTakenEdge();
+  if (shownNodeId) {
+    const tip = nodeTooltipEl();
+    const liveNode = cy.getElementById(shownNodeId);
+    if (tip && isTooltipOpen(tip) && liveNode && !liveNode.empty()) {
+      renderTooltipContent(tip, shownNodeId);
+      positionTooltip(tip, liveNode);
+    } else {
+      hideNodeTooltip();
+    }
+  }
 }
 
 export function flashTransition(from, to) {
@@ -316,6 +489,7 @@ export function initFragmentGraph() {
 
   syncMainRowHeight();
   window.addEventListener('resize', () => {
+    hideNodeTooltip();
     syncMainRowHeight();
     if (graphVisible()) {
       const win = graphWin();
@@ -323,6 +497,54 @@ export function initFragmentGraph() {
         const cur = parseInt(getComputedStyle(win).width, 10);
         setGraphWidth(cur, false);
       }
+    }
+  });
+
+  const tip = nodeTooltipEl();
+  if (tip) {
+    tip.addEventListener('pointerenter', () => {
+      isPointerOverTooltip = true;
+      clearTimeout(hideTimer);
+      hideTimer = null;
+    });
+    tip.addEventListener('pointerleave', () => {
+      isPointerOverTooltip = false;
+      if (!hoveredNodeId) {
+        scheduleHideTooltip();
+      }
+    });
+    tip.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action="soloAndLoop"]');
+      if (!btn || !tip.contains(btn)) return;
+      const devIdx = parseInt(btn.dataset.dev, 10);
+      const fragName = btn.dataset.frag;
+      if (!Number.isInteger(devIdx) || !fragName) return;
+
+      const dev = state.chuckState && Array.isArray(state.chuckState.devices)
+        ? state.chuckState.devices.find(d => d.index === devIdx)
+        : null;
+      if (!dev || !dev.soloed) {
+        send('soloDevice', devIdx);
+      }
+
+      const curLoop = state.chuckState && state.chuckState.loopFragmentName;
+      if (curLoop !== fragName) {
+        if (state.chuckState) {
+          state.chuckState.loopFragmentName = fragName;
+          state.chuckState.nextFragmentName = '';
+        }
+        send('loopFragment', fragName);
+        updateGraph(false);
+      }
+
+      isPointerOverTooltip = false;
+      hideNodeTooltip();
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && shownNodeId) {
+      hideNodeTooltip();
     }
   });
 

@@ -255,6 +255,32 @@ public class MixerAndPresetsTests {
         Assert.isTrue("stateJson_repeatIndex", json.find("\"repeatIndex\":1") >= 0);
         Assert.isTrue("stateJson_repeatCount", json.find("\"repeatCount\":2") >= 0);
         Assert.isTrue("stateJson_escapeQuotes", sb.escJson("A\"B\\C") == "A\\\"B\\\\C");
+
+        // Graph node JSON: empty parts -> empty devices list
+        sb.buildGraphNodeJson(song, frag) => string emptyNodeJson;
+        Assert.isTrue("graphNodeJson_emptyDevices", emptyNodeJson.find("\"devices\":[]") >= 0);
+
+        // Graph node JSON: multiple parts (including duplicate device and reverse order) -> sorted deduplicated 1-based device indices
+        MockPatch p1;
+        "V3" => p1.uiName;
+        "Grand Piano" => p1.patchName;
+        1 => p0.devIndex;
+        2 => p1.devIndex;
+        p1 @=> song.devices[1];
+
+        Part partA(p1);
+        Part partB(p0);
+        Part partC(p1);
+        [partA, partB, partC] @=> Part fragParts[];
+        Fragment frag2("Chorus", 1, fragParts);
+        FragmentTransition trans[0];
+        trans << new FragmentTransition(frag, 1.0);
+        trans @=> frag2.nextFragments;
+
+        sb.buildGraphNodeJson(song, frag2) => string nodeJson;
+        Assert.isTrue("graphNodeJson_name", nodeJson.find("\"name\":\"Chorus\"") >= 0);
+        Assert.isTrue("graphNodeJson_devicesSortedDeduped", nodeJson.find("\"devices\":[1,2]") >= 0);
+        Assert.isTrue("graphNodeJson_edges", nodeJson.find("\"to\":\"Verse 1\"") >= 0);
     }
 
     fun static void testArturiaSynths() {

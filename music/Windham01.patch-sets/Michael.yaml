@@ -6,7 +6,7 @@ song:
       patchName: "Etherpad RJ"
       uiName: "Hydrasynth"
       muted: 0
-      volume: 59
+      volume: 107
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -30,7 +30,7 @@ song:
       patchName: "Lost Soul"
       uiName: "Augmented Grand Piano"
       muted: 0
-      volume: 80
+      volume: 45
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -42,7 +42,7 @@ song:
       patchName: "Baited Breath"
       uiName: "Augmented Strings"
       muted: 0
-      volume: 76
+      volume: 66
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -54,7 +54,7 @@ song:
       patchName: "Orange Aurora"
       uiName: "Synclavier V"
       muted: 0
-      volume: 84
+      volume: 110
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -63,14 +63,14 @@ song:
     Augmented Woodwinds-0:
       deviceName: "IAC Driver Augmented Woodwinds"
       midiChannel: 0
-      patchName: "Elevation"
+      patchName: "Dark to Light"
       uiName: "Augmented Woodwinds"
       muted: 0
-      volume: 57
+      volume: 37
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 11
+      program: 6
       bank: 4
     Synthi V-0:
       deviceName: "IAC Driver Synthi V"
@@ -90,7 +90,7 @@ song:
       patchName: "Under The Sea"
       uiName: "Analog Lab V"
       muted: 0
-      volume: 55
+      volume: 118
       filterCutoff: -1
       filterResonance: -1
       pan: 64

@@ -104,6 +104,44 @@ public class StateBroadcaster
         broadcastGraph(song);
     }
 
+    fun int fragmentUsesPatch(Fragment @ fr, Patch @ p)
+    {
+        if (fr == null || fr.parts == null || p == null) return false;
+        for (Part part : fr.parts) {
+            if (part != null && (part.patch == p || (part.patch != null && p.devIndex > 0 && part.patch.devIndex == p.devIndex))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    fun string buildGraphNodeJson(SongState @ song, Fragment @ fr)
+    {
+        "{\"name\":\"" + escJson(fr.name) + "\",\"repeat\":" + fr.repeatCount + ",\"devices\":[" => string g;
+        0 => int firstDev;
+        if (song != null && song.devices != null) {
+            for (0 => int d; d < song.devices.cap(); d++) {
+                if (song.devices[d] != null && fragmentUsesPatch(fr, song.devices[d])) {
+                    if (firstDev) { g + "," => g; }
+                    1 => firstDev;
+                    g + (d + 1) => g;
+                }
+            }
+        }
+        g + "],\"edges\":[" => g;
+        0 => int firstEdge;
+        if (fr.nextFragments != null) {
+            for (FragmentTransition t : fr.nextFragments) {
+                if (t == null || t.nextFragment == null) { continue; }
+                if (firstEdge) { g + "," => g; }
+                1 => firstEdge;
+                g + "{\"to\":\"" + escJson(t.nextFragment.name) + "\",\"p\":" + t.probability + "}" => g;
+            }
+        }
+        g + "]}" => g;
+        return g;
+    }
+
     // Fragment graph, sent as one small OSC message per fragment.
     // Breadth-first from the start fragment; cycle-safe.
     fun void broadcastGraph(SongState @ song)
@@ -118,18 +156,7 @@ public class StateBroadcaster
 
         for (0 => int i; i < queue.size(); i++) {
             queue[i] @=> Fragment fr;
-            "{\"name\":\"" + escJson(fr.name) + "\",\"repeat\":" + fr.repeatCount + ",\"edges\":[" => string g;
-            0 => int firstEdge;
-            if (fr.nextFragments != null) {
-                for (FragmentTransition t : fr.nextFragments) {
-                    if (t == null || t.nextFragment == null) { continue; }
-                    if (firstEdge) { g + "," => g; }
-                    1 => firstEdge;
-                    g + "{\"to\":\"" + escJson(t.nextFragment.name) + "\",\"p\":" + t.probability + "}" => g;
-                }
-            }
-            g + "]}" => g;
-            GuiLink.sendGraphNode(i, queue.size(), g);
+            GuiLink.sendGraphNode(i, queue.size(), buildGraphNodeJson(song, fr));
         }
     }
 
