@@ -7,6 +7,7 @@ const { WebSocketServer } = require('ws');
 const { loadPresetCatalog } = require('./server/preset-catalog');
 const { ensurePatchSetsDir } = require('./server/patch-sets');
 const { createOscBridge } = require('./server/osc-bridge');
+const { ensureAuHostRunning, stopAuHost } = require('./server/au-host-bridge');
 
 const HTTP_PORT = 3000;
 const CHUCK_HOST = '127.0.0.1';
@@ -77,4 +78,16 @@ server.listen(HTTP_PORT, () => {
   console.log(`  ║  OSC → ChucK on UDP :${CHUCK_OSC_IN}       ║`);
   console.log('  ╚══════════════════════════════════╝');
   console.log('');
+  ensureAuHostRunning().catch((err) => {
+    console.warn('AU Host startup skipped:', err.message);
+  });
+});
+
+process.on('SIGINT', () => {
+  stopAuHost();
+  process.exit(0);
+});
+process.on('SIGTERM', () => {
+  stopAuHost();
+  process.exit(0);
 });

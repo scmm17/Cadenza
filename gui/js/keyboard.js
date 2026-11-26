@@ -24,6 +24,7 @@ import {
   saveDiffModal,
 } from './modals.js';
 import { toggleGraphWindow } from './fragment-graph.js';
+import { selectDeviceForSynthUi, synthUiVisible } from './synth-ui.js';
 
 export function initKeyboard() {
   document.addEventListener('keydown', e => {
@@ -130,7 +131,11 @@ export function initKeyboard() {
     }
 
     if (k >= '1' && k <= '8') {
-      send('device', parseInt(k, 10));
+      const devIdx = parseInt(k, 10);
+      send('device', devIdx);
+      if (synthUiVisible()) {
+        selectDeviceForSynthUi(devIdx);
+      }
       return;
     }
 

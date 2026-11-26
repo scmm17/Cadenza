@@ -47,6 +47,7 @@ const ui = {
   renderPatchSetList: () => {},
   renderDiffModal: () => {},
   syncTempoSlider: () => {},
+  onSynthUiStatus: () => {},
 };
 
 export function registerUiCallbacks(cbs) {
@@ -494,6 +495,8 @@ export function connect() {
         if (msg.data) {
           mergePresetCatalog(msg.data);
         }
+      } else if (msg.type === 'synthUiStatus') {
+        ui.onSynthUiStatus(msg.data);
       }
     } catch (e) {
       console.error('Parse error:', e);

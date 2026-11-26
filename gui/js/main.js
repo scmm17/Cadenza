@@ -58,6 +58,13 @@ import {
   initModals,
 } from './modals.js';
 import { initKeyboard } from './keyboard.js';
+import {
+  initSynthUi,
+  onSynthUiStatus,
+  toggleSynthUiAudio,
+  popoutSynthUi,
+  closeSynthUi,
+} from './synth-ui.js';
 
 registerUiCallbacks({
   render,
@@ -84,6 +91,7 @@ registerUiCallbacks({
   renderPatchSetList,
   renderDiffModal,
   syncTempoSlider,
+  onSynthUiStatus,
 });
 
 registerDeviceModalCallbacks({
@@ -115,6 +123,9 @@ const ACTIONS = {
   openDiffModal: () => openDiffModal(),
   closeDiffModal: () => closeDiffModal(),
   saveDiffModal: () => saveDiffModal(),
+  toggleSynthUiAudio: () => toggleSynthUiAudio(),
+  popoutSynthUi: () => popoutSynthUi(),
+  closeSynthUi: () => closeSynthUi(),
 };
 
 document.addEventListener('click', (e) => {
@@ -129,5 +140,6 @@ initModals();
 initKeyboard();
 initScrollCanvas();
 initFragmentGraph();
+initSynthUi();
 connect();
 setGraphVisible(true);

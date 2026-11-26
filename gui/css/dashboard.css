@@ -801,11 +801,16 @@ button {
   box-sizing: border-box;
 }
 #mainCol {
-  flex: 1 1 0; min-width: 0;
+  flex: 1 1 0; min-width: 0; min-height: 0; height: 100%;
   display: flex; flex-direction: column; gap: 20px;
 }
+#bottomRow {
+  flex: 1 1 0; min-height: 250px;
+  display: flex; align-items: stretch;
+  --synth-ui-w: 58%;
+}
 #scrollCard {
-  flex: 1 1 auto;
+  flex: 1 1 0; min-width: 240px;
   display: flex; flex-direction: column; min-height: 250px;
 }
 #scrollContainer {
@@ -813,6 +818,81 @@ button {
   position: relative; width: 100%;
   background: #090614; border: 1px solid var(--border);
   border-radius: var(--radius-btn); overflow: hidden;
+}
+#synthUiDivider {
+  flex: 0 0 10px; align-self: stretch; cursor: col-resize; touch-action: none;
+  position: relative; margin: 0 2px;
+}
+#synthUiDivider::after {
+  content: ''; position: absolute; top: 0; bottom: 0; left: 4px; width: 2px;
+  background: var(--border); border-radius: 1px; transition: background var(--transition);
+}
+#synthUiDivider:hover::after, #synthUiDivider.dragging::after { background: var(--accent); }
+#synthUiCard {
+  flex: 0 0 var(--synth-ui-w); width: var(--synth-ui-w); min-width: 260px;
+  display: flex; flex-direction: column; min-height: 250px; overflow: hidden;
+}
+#bottomRow.synth-ui-hidden #synthUiCard,
+#bottomRow.synth-ui-hidden #synthUiDivider { display: none; }
+.synth-ui-titlebar {
+  justify-content: space-between;
+  gap: 8px;
+}
+.synth-ui-title-left {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+}
+.synth-ui-preset {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  color: var(--cyan); text-transform: none; letter-spacing: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.synth-ui-controls {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.btn-synth-ui-ctrl {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px; font-weight: 600;
+  background: rgba(110, 70, 240, 0.12);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.btn-synth-ui-ctrl:hover {
+  border-color: var(--accent); color: var(--text-primary);
+}
+.btn-synth-ui-ctrl.active {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: rgba(6, 182, 212, 0.55);
+  color: var(--cyan);
+}
+#synthUiBody {
+  flex: 1 1 0; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  background: #090614; border: 1px solid var(--border);
+  border-radius: var(--radius-btn); overflow: hidden;
+}
+#synthUiViewport {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  align-items: center; justify-content: center;
+  overflow: hidden;
+}
+#synthUiStream {
+  max-width: 100%; max-height: 100%;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  user-select: none;
+  cursor: pointer;
+}
+.row-selected td {
+  background: rgba(6, 182, 212, 0.11) !important;
+}
+.row-selected td:first-child {
+  box-shadow: inset 3px 0 0 var(--cyan);
 }
 #graphDivider {
   flex: 0 0 10px; align-self: stretch; cursor: col-resize; touch-action: none;

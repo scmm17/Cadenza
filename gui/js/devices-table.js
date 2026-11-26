@@ -8,6 +8,7 @@ import {
   syncPatchSetButton,
 } from './state.js';
 import { DEVICE_COLORS, clearDrumCache, isDrumDevice } from './piano-roll.js';
+import { getSelectedSynthUiDevIdx, selectDeviceForSynthUi, syncAuHostDevicesFromState } from './synth-ui.js';
 
 let activeDrag = null;
 let activeInlineEdit = null;
@@ -202,6 +203,7 @@ export function render() {
   const activeSelect = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('cell-select');
   if (!state.isDragging && !activeSelect) renderDevicesTable();
   syncModeButtons();
+  syncAuHostDevicesFromState();
 }
 
 function valToAngle(param, val) {
@@ -263,6 +265,7 @@ export function renderDevicesTable() {
       dev.active === 1 ? 'row-active' : '',
       dev.playing === 1 ? 'row-playing' : '',
       dev.muted === 1 ? 'row-muted' : '',
+      getSelectedSynthUiDevIdx() === dev.index ? 'row-selected' : '',
     ].filter(Boolean).join(' ');
 
     const devColor = DEVICE_COLORS[(dev.index - 1) % DEVICE_COLORS.length];
@@ -693,6 +696,17 @@ export function initDevicesEvents() {
           const max = parseInt(actionEl.dataset.max, 10);
           editParamInline(actionEl, devIdx, param, min, max);
           return;
+        }
+      }
+      if (e.target.closest('select, input, button, .knob-svg, .editable-num, .patch-title-clickable')) {
+        return;
+      }
+      const row = e.target.closest('tr[data-dev]');
+      if (row) {
+        const devIdx = parseInt(row.dataset.dev, 10);
+        if (!isNaN(devIdx)) {
+          send('device', devIdx);
+          selectDeviceForSynthUi(devIdx, { toggleIfSame: Boolean(e.target.closest('.device-badge')) });
         }
       }
     });

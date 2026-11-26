@@ -5,6 +5,7 @@ const path = require('path');
 const { spawn, exec, execFile } = require('child_process');
 const { Client, Server: OscServer } = require('node-osc');
 const patchSets = require('./patch-sets');
+const auHost = require('./au-host-bridge');
 
 const ARTURIA_APPS_DIR = '/Applications/Arturia';
 const ARTURIA_LIB_ROOT = '/Library/Arturia';
@@ -214,28 +215,40 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
     if (process.platform !== 'darwin' || !Array.isArray(devices)) return;
     const catalog = loadPresetCatalog();
     const synthMeta = (catalog && catalog.synthMeta) || {};
-    const activeApps = new Map();
+    const activeArturiaList = [];
+    const seenApps = new Set();
 
     for (const dev of devices) {
       if (!dev || !dev.uiName) continue;
       const meta = synthMeta[dev.uiName];
-      if (meta && meta.appName && !activeApps.has(meta.appName)) {
-        activeApps.set(meta.appName, dev.uiName);
+      if (meta && meta.appName && !seenApps.has(meta.appName)) {
+        seenApps.add(meta.appName);
+        activeArturiaList.push({
+          uiName: dev.uiName,
+          appName: meta.appName,
+          deviceName: meta.deviceName || '',
+          bank: dev.bank != null ? dev.bank : -1,
+          program: dev.program != null ? dev.program : -1,
+          volume: dev.volume != null ? dev.volume : -1,
+          volumeCc: meta.volumeCc != null ? meta.volumeCc : 7,
+          cutoff: dev.filterCutoff != null ? dev.filterCutoff : -1,
+          resonance: dev.filterResonance != null ? dev.filterResonance : -1,
+        });
       }
     }
 
+    // Stop any standalone Arturia .app processes so au-host is the single audio engine
     const handledApps = new Set();
     for (const meta of Object.values(synthMeta)) {
       if (!meta || !meta.appName || handledApps.has(meta.appName)) continue;
       handledApps.add(meta.appName);
-      const activeUiName = activeApps.get(meta.appName);
-      if (activeUiName) {
-        desiredRunning.set(meta.appName, true);
-        ensureVirtualSynthRunning(activeUiName);
-      } else {
-        stopVirtualSynthIfRunning(meta.appName);
-      }
+      stopVirtualSynthIfRunning(meta.appName);
     }
+
+    auHost.ensureAuHostRunning().then((ok) => {
+      if (!ok) return;
+      return auHost.httpRequest('POST', '/sync', { devices: activeArturiaList }, 5000);
+    }).catch(() => {});
   }
 
   oscServer.on('message', (msg) => {
@@ -498,6 +511,38 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
         } else {
           console.warn('setParam: unknown param', param);
         }
+        break;
+      }
+      case 'selectSynthUi': {
+        const { uiName, appName, deviceName, bank, program, volume, volumeCc, cutoff, resonance } = cmd.value || {};
+        auHost.ensureAuHostRunning().then((ok) => {
+          if (!ok) {
+            ws.send(JSON.stringify({ type: 'synthUiStatus', data: { ok: false, error: 'AU Host unavailable' } }));
+            return;
+          }
+          return auHost.httpRequest('POST', '/select', { uiName, appName, deviceName, bank, program, volume, volumeCc, cutoff, resonance }, 10000)
+            .then((res) => {
+              ws.send(JSON.stringify({ type: 'synthUiStatus', data: res.data }));
+            });
+        }).catch((err) => {
+          ws.send(JSON.stringify({ type: 'synthUiStatus', data: { ok: false, error: err.message } }));
+        });
+        break;
+      }
+      case 'synthUiMouse': {
+        auHost.httpRequest('POST', '/mouse', cmd.value || {}, 500).catch(() => {});
+        break;
+      }
+      case 'synthUiMidi': {
+        auHost.httpRequest('POST', '/midi', cmd.value || {}, 1000)
+          .then((res) => ws.send(JSON.stringify({ type: 'synthUiStatus', data: res.data })))
+          .catch(() => {});
+        break;
+      }
+      case 'synthUiPopout': {
+        auHost.httpRequest('POST', '/popout', {}, 1000)
+          .then((res) => ws.send(JSON.stringify({ type: 'synthUiStatus', data: res.data })))
+          .catch(() => {});
         break;
       }
       default:
