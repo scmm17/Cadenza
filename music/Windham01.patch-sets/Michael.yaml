@@ -27,15 +27,15 @@ song:
     Augmented Grand Piano-0:
       deviceName: "IAC Driver Augmented Grand Piano"
       midiChannel: 0
-      patchName: "Lost Soul"
+      patchName: "Abdict"
       uiName: "Augmented Grand Piano"
       muted: 0
-      volume: 45
+      volume: 43
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      program: 9
-      bank: 0
+      program: 2
+      bank: 4
     Augmented Strings-0:
       deviceName: "IAC Driver Augmented Strings"
       midiChannel: 0

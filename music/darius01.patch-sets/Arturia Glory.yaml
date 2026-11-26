@@ -6,7 +6,7 @@ song:
       patchName: "Reversed Percussive"
       uiName: "Augmented Mallets"
       muted: 0
-      volume: 40
+      volume: 46
       filterCutoff: 84
       filterResonance: 63
       pan: 64
@@ -48,17 +48,18 @@ song:
       pan: 75
       program: 1
       bank: 5
-    Hydrasynth-0:
-      deviceName: "HYDRASYNTH EXPLORER"
+    Modular V3-0:
+      deviceName: "IAC Driver Modular V3"
       midiChannel: 0
-      patchName: "M12 XyloPad RA"
-      uiName: "Hydrasynth"
+      patchName: "Clock Bell"
+      uiName: "Modular V3"
       muted: 0
-      volume: 81
+      volume: 36
       filterCutoff: -1
       filterResonance: -1
       pan: 64
-      presetName: "E004"
+      program: 8
+      bank: 3
     Augmented Strings-0:
       deviceName: "IAC Driver Augmented Strings"
       midiChannel: 0
@@ -74,14 +75,14 @@ song:
     Moog-0:
       deviceName: "Moog Messenger"
       midiChannel: 0
-      patchName: "Messenger: 1"
+      patchName: "Messenger: 6"
       uiName: "Moog"
       muted: 0
-      volume: 92
+      volume: 51
       filterCutoff: 24
       filterResonance: -1
       pan: 62
-      program: 0
+      program: 5
       bank: 0
     SH-4d-9:
       deviceName: "SH-4d"
@@ -89,7 +90,7 @@ song:
       patchName: "Drums"
       uiName: "SH-4d"
       muted: 0
-      volume: 76
+      volume: 70
       filterCutoff: -1
       filterResonance: -1
       pan: 64
