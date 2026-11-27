@@ -32,6 +32,7 @@ export const state = {
   songLoadingSpawned: false,
   pendingPatchSetLoad: null,
   patchSetLoadTimer: null,
+  auUiEdits: {},
 };
 
 const ui = {
@@ -200,12 +201,26 @@ export function computeYamlDiffs() {
         });
       }
     }
+    const synthEdits = state.auUiEdits && state.auUiEdits[dev.uiName];
+    if (synthEdits && Array.isArray(synthEdits.unsavedParams)) {
+      for (const p of synthEdits.unsavedParams) {
+        diffs.push({
+          devIndex: dev.index,
+          synthName: dev.uiName,
+          channel: dev.channel,
+          field: 'UI: ' + (p.name || p.key),
+          oldValue: Number(p.oldValue).toFixed(3),
+          newValue: Number(p.newValue).toFixed(3),
+        });
+      }
+    }
   }
   return diffs;
 }
 
 export function resetYamlBaseline(s = state.chuckState) {
   state.baselineState = createYamlSnapshot(s);
+  state.auUiEdits = {};
   syncPatchSetButton();
 }
 
@@ -213,6 +228,7 @@ export function beginPatchSetLoad(targetName = null) {
   clearTimeout(state.patchSetLoadTimer);
   state.pendingPatchSetLoad = { targetName: targetName || null };
   state.baselineState = null;
+  state.auUiEdits = {};
   syncPatchSetButton();
   state.patchSetLoadTimer = setTimeout(() => {
     state.pendingPatchSetLoad = null;
@@ -229,6 +245,7 @@ export function beginSongLoad() {
   state.pendingSongLoad = true;
   state.songLoadingSpawned = false;
   state.baselineState = null;
+  state.auUiEdits = {};
   syncPatchSetButton();
 }
 
@@ -497,6 +514,10 @@ export function connect() {
         }
       } else if (msg.type === 'synthUiStatus') {
         ui.onSynthUiStatus(msg.data);
+      } else if (msg.type === 'auUiEdits') {
+        state.auUiEdits = msg.data || {};
+        syncPatchSetButton();
+        ui.onSynthUiStatus({ auUiEdits: state.auUiEdits });
       }
     } catch (e) {
       console.error('Parse error:', e);

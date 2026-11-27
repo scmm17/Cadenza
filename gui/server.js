@@ -52,6 +52,9 @@ wss.on('connection', (ws) => {
       ws.send(JSON.stringify({ type: 'patchSets', data: ensurePatchSetsDir(shared.lastState.songName) }));
     }
   }
+  if (shared.lastAuUiEdits && Object.keys(shared.lastAuUiEdits).length > 0) {
+    ws.send(JSON.stringify({ type: 'auUiEdits', data: shared.lastAuUiEdits }));
+  }
 
   ws.on('message', (raw) => {
     try {

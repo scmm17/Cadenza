@@ -1,0 +1,99 @@
+song:
+  devices:
+    Hydrasynth-0:
+      deviceName: "HYDRASYNTH EXPLORER"
+      midiChannel: 0
+      patchName: "Etherpad RJ"
+      uiName: "Hydrasynth"
+      muted: 0
+      volume: 107
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      presetName: "A016"
+    V3-5:
+      deviceName: "U2MIDI Pro"
+      midiChannel: 5
+      patchName: "Organ 776555678 slow 4"
+      uiName: "V3"
+      muted: 0
+      volume: 96
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 58
+      bank: 0
+      programChange: 1
+    Augmented Grand Piano-0:
+      deviceName: "IAC Driver Augmented Grand Piano"
+      midiChannel: 0
+      patchName: "Abdict"
+      uiName: "Augmented Grand Piano"
+      muted: 0
+      volume: 43
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 2
+      bank: 4
+    Augmented Strings-0:
+      deviceName: "IAC Driver Augmented Strings"
+      midiChannel: 0
+      patchName: "Baited Breath"
+      uiName: "Augmented Strings"
+      muted: 0
+      volume: 66
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 4
+      bank: 2
+    Synclavier V-0:
+      deviceName: "IAC Driver Synclavier V"
+      midiChannel: 0
+      patchName: "Orange Aurora"
+      uiName: "Synclavier V"
+      muted: 0
+      volume: 110
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 27
+      bank: 0
+    Augmented Woodwinds-0:
+      deviceName: "IAC Driver Augmented Woodwinds"
+      midiChannel: 0
+      patchName: "Dark to Light"
+      uiName: "Augmented Woodwinds"
+      muted: 0
+      volume: 37
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 6
+      bank: 4
+    Synthi V-0:
+      deviceName: "IAC Driver Synthi V"
+      midiChannel: 0
+      patchName: "Bladelores"
+      uiName: "Synthi V"
+      muted: 0
+      volume: 54
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 3
+      bank: 6
+    Analog Lab V-0:
+      deviceName: "IAC Driver Analog Lab V"
+      midiChannel: 0
+      patchName: "Under The Sea"
+      uiName: "Analog Lab V"
+      muted: 0
+      volume: 118
+      filterCutoff: -1
+      filterResonance: -1
+      pan: 64
+      program: 39
+      bank: 7
+  bpm: 72.000000

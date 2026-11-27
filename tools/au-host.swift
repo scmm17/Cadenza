@@ -188,12 +188,15 @@ struct SynthLoadRequest {
     let uiName: String
     let appName: String
     let deviceName: String
+    let patchName: String
     let bank: Int
     let program: Int
     let volume: Int
     let volumeCc: Int
     let cutoff: Int
     let resonance: Int
+    let auParams: [String: Float]
+    let auState: [String]
     let makeActive: Bool
 }
 
@@ -219,6 +222,21 @@ final class HostedSynth {
     var lastSyncedBank: Int = -1
     var lastSyncedProgram: Int = -1
     var volumeSyncGen: Int = 0
+    var volumeCc: Int = 7
+    var paramNames: [UInt64: String] = [:]
+    var rawPresetBaselineParams: [UInt64: Float] = [:]
+    var savedBaselineParams: [UInt64: Float] = [:]
+    var savedAuParams: [UInt64: Float] = [:]
+    var unsavedParams: [UInt64: Float] = [:]
+    var baselinePresetName: String = ""
+    var currentPresetName: String = ""
+    var presetChangedInUi: Bool = false
+    var lastUserInteractionTime: TimeInterval = 0
+    var programmaticSyncUntil: TimeInterval = 0
+    var pendingControllerUpdates: [String: Int] = [:]
+    var lastAppliedLoadSig: String = ""
+    var inspectDebounceGen: Int = 0
+    var overrideReapplyGen: Int = 0
 
     init(
         key: String,
@@ -274,6 +292,7 @@ final class AUHostController {
     private var mjpegClients: [NWConnection] = []
     private var eventCounter = 1
     private var lastDownPoint: NSPoint?
+    private var editRevision = 0
 
     init() {
         setupMIDI()
@@ -353,13 +372,18 @@ final class AUHostController {
                 let ch = bytes[0] & 0x0F
                 let cc = bytes[1]
                 let val = bytes[2]
+                // Drop Bank Select (CC 0 / CC 32) from IAC; preset changes are handled via /sync and /select.
+                if cc == 0 || cc == 32 {
+                    continue
+                }
                 let cacheKey = "\(ch):\(cc)"
                 if let recent = hosted.recentOutgoingCC[cacheKey], recent.val == val, (now - recent.time) < 0.15 {
                     continue
                 }
                 hosted.suppressOutgoingUntil = now + 0.08
             } else if bytes.count >= 2 && (bytes[0] & 0xF0) == 0xC0 {
-                hosted.suppressOutgoingUntil = now + 0.25
+                // Drop Program Change from IAC so it never races with post-preset auParams overrides.
+                continue
             }
             bytes.withUnsafeBufferPointer { buf in
                 if let base = buf.baseAddress {
@@ -458,18 +482,229 @@ final class AUHostController {
         return result
     }
 
+    private func extractPresetName(from avUnit: AVAudioUnit) -> String? {
+        guard let data = avUnit.auAudioUnit.fullState?["Controller State"] as? Data else { return nil }
+        let prefix = data.prefix(512)
+        guard let str = String(data: prefix, encoding: .utf8) ?? String(data: prefix, encoding: .ascii) else {
+            return nil
+        }
+        let pattern = "^22 serialization::archive \\d+ \\d+ \\d+ \\d+ \\d+ (\\d+) "
+        let ns = str as NSString
+        guard let re = try? NSRegularExpression(pattern: pattern),
+              let match = re.firstMatch(in: str, range: NSRange(location: 0, length: ns.length)) else {
+            return nil
+        }
+        let len = Int(ns.substring(with: match.range(at: 1))) ?? 0
+        let start = match.range.upperBound
+        guard len > 0, start + len <= ns.length else { return nil }
+        return ns.substring(with: NSRange(location: start, length: len))
+    }
+
+    private func sanitizeParamKey(address: UInt64, name: String) -> String {
+        var cleaned = ""
+        var prevUnderscore = false
+        for scalar in name.unicodeScalars {
+            let isAlnum = (scalar.value >= 48 && scalar.value <= 57)
+                || (scalar.value >= 65 && scalar.value <= 90)
+                || (scalar.value >= 97 && scalar.value <= 122)
+            if isAlnum {
+                cleaned.append(Character(scalar))
+                prevUnderscore = false
+            } else if !prevUnderscore && !cleaned.isEmpty {
+                cleaned.append("_")
+                prevUnderscore = true
+            }
+            if cleaned.count >= 40 { break }
+        }
+        while cleaned.hasSuffix("_") { cleaned.removeLast() }
+        return cleaned.isEmpty ? "p\(address)" : "p\(address)_\(cleaned)"
+    }
+
+    private func parseParamAddress(fromKey key: String) -> UInt64? {
+        if let raw = UInt64(key) { return raw }
+        guard key.hasPrefix("p") else { return nil }
+        let rest = key.dropFirst()
+        let digits = rest.prefix(while: { $0.isNumber })
+        return UInt64(String(digits))
+    }
+
+    private func convertAuParamsToAddresses(_ raw: [String: Float]) -> [UInt64: Float] {
+        var result: [UInt64: Float] = [:]
+        for (k, v) in raw where v.isFinite {
+            if let addr = parseParamAddress(fromKey: k) {
+                result[addr] = v
+            }
+        }
+        return result
+    }
+
+    private func serializeFullStateChunks(for hosted: HostedSynth) -> [String] {
+        guard let fullState = hosted.avUnit.auAudioUnit.fullState,
+              let plistData = try? PropertyListSerialization.data(fromPropertyList: fullState, format: .binary, options: 0),
+              let compressed = try? (plistData as NSData).compressed(using: .zlib) as Data else {
+            return []
+        }
+        let b64 = compressed.base64EncodedString()
+        var chunks: [String] = []
+        var idx = b64.startIndex
+        while idx < b64.endIndex {
+            let next = b64.index(idx, offsetBy: 120, limitedBy: b64.endIndex) ?? b64.endIndex
+            chunks.append(String(b64[idx..<next]))
+            idx = next
+        }
+        return chunks
+    }
+
+    private func restoreFullState(for hosted: HostedSynth, chunks: [String]) -> Bool {
+        let joined = chunks.joined()
+        guard !joined.isEmpty,
+              let compressed = Data(base64Encoded: joined),
+              let plistData = try? (compressed as NSData).decompressed(using: .zlib) as Data,
+              let dict = try? PropertyListSerialization.propertyList(from: plistData, options: [], format: nil) as? [String: Any] else {
+            return false
+        }
+        let until = CACurrentMediaTime() + 0.8
+        hosted.suppressOutgoingUntil = max(hosted.suppressOutgoingUntil, until)
+        hosted.programmaticSyncUntil = max(hosted.programmaticSyncUntil, until)
+        hosted.avUnit.auAudioUnit.fullState = dict
+        return true
+    }
+
+    private func applyParamOverrides(to hosted: HostedSynth, params: [UInt64: Float]) {
+        guard !params.isEmpty, let tree = hosted.avUnit.auAudioUnit.parameterTree else { return }
+        let until = CACurrentMediaTime() + 0.35
+        hosted.suppressOutgoingUntil = max(hosted.suppressOutgoingUntil, until)
+        hosted.programmaticSyncUntil = max(hosted.programmaticSyncUntil, until)
+        let v2 = hosted.avUnit.audioUnit
+        for (addr, val) in params {
+            if let p = tree.parameter(withAddress: addr) {
+                p.value = val
+                AudioUnitSetParameter(v2, AudioUnitParameterID(addr), kAudioUnitScope_Global, 0, val, 0)
+                var ev = AudioUnitParameter(
+                    mAudioUnit: v2,
+                    mParameterID: AudioUnitParameterID(addr),
+                    mScope: kAudioUnitScope_Global,
+                    mElement: 0
+                )
+                AUParameterListenerNotify(nil, nil, &ev)
+            }
+        }
+    }
+
+    private func snapshotBaselines(for hosted: HostedSynth, preserveSavedOverrides: Bool) {
+        if let allParams = hosted.avUnit.auAudioUnit.parameterTree?.allParameters {
+            for p in allParams {
+                hosted.paramNames[p.address] = p.displayName
+                hosted.savedBaselineParams[p.address] = p.value
+                if !preserveSavedOverrides || hosted.savedAuParams[p.address] == nil {
+                    hosted.rawPresetBaselineParams[p.address] = p.value
+                }
+            }
+        }
+        if let name = extractPresetName(from: hosted.avUnit), !name.isEmpty {
+            hosted.currentPresetName = name
+            hosted.baselinePresetName = name
+        }
+    }
+
+    private func scheduleUiStateInspection(for hosted: HostedSynth, delay: TimeInterval) {
+        hosted.inspectDebounceGen += 1
+        let gen = hosted.inspectDebounceGen
+        runOnMainCommonModesAfter(delay) { [weak self, weak hosted] in
+            guard let self = self, let hosted = hosted, hosted.inspectDebounceGen == gen else { return }
+            self.inspectHostedSynthPreset(hosted)
+        }
+    }
+
+    private func inspectHostedSynthPreset(_ hosted: HostedSynth) {
+        guard let newPreset = extractPresetName(from: hosted.avUnit), !newPreset.isEmpty else { return }
+        if newPreset != hosted.currentPresetName {
+            hosted.currentPresetName = newPreset
+            hosted.presetChangedInUi = true
+            hosted.savedAuParams.removeAll()
+            hosted.unsavedParams.removeAll()
+            hosted.programmaticSyncUntil = max(hosted.programmaticSyncUntil, CACurrentMediaTime() + 0.7)
+            if let allParams = hosted.avUnit.auAudioUnit.parameterTree?.allParameters {
+                for p in allParams {
+                    hosted.paramNames[p.address] = p.displayName
+                    hosted.rawPresetBaselineParams[p.address] = p.value
+                    hosted.savedBaselineParams[p.address] = p.value
+                }
+            }
+            editRevision += 1
+            runOnMainCommonModesAfter(0.65) { [weak self, weak hosted] in
+                guard let self = self, let hosted = hosted, hosted.unsavedParams.isEmpty else { return }
+                if let allParams = hosted.avUnit.auAudioUnit.parameterTree?.allParameters {
+                    for p in allParams {
+                        hosted.paramNames[p.address] = p.displayName
+                        hosted.rawPresetBaselineParams[p.address] = p.value
+                        hosted.savedBaselineParams[p.address] = p.value
+                    }
+                }
+                self.editRevision += 1
+            }
+        }
+    }
+
     private func installParameterObserver(for hosted: HostedSynth) {
         guard hosted.paramObserverToken == nil,
               let tree = hosted.avUnit.auAudioUnit.parameterTree else {
             return
         }
+        for p in tree.allParameters {
+            hosted.paramNames[p.address] = p.displayName
+        }
         hosted.paramObserverToken = tree.token(byAddingParameterObserver: { [weak self, weak hosted] address, value in
             DispatchQueue.main.async {
                 guard let self = self, let hosted = hosted else { return }
+                // Ignore transient MIDI performance parameters (Pitch Bend, AfterTouch, Hold, All Notes/Sounds Off)
+                if address >= 64 && address <= 69 { return }
+
+                let now = CACurrentMediaTime()
+                if now <= hosted.programmaticSyncUntil {
+                    if let savedVal = hosted.savedAuParams[address], abs(value - savedVal) > 1e-4 {
+                        hosted.overrideReapplyGen += 1
+                        let gen = hosted.overrideReapplyGen
+                        runOnMainCommonModesAfter(0.08) { [weak self, weak hosted] in
+                            guard let self = self, let hosted = hosted, hosted.overrideReapplyGen == gen else { return }
+                            guard !hosted.savedAuParams.isEmpty else { return }
+                            self.applyParamOverrides(to: hosted, params: hosted.savedAuParams)
+                        }
+                    }
+                    return
+                }
+
+                let allowEditTrack = now > hosted.suppressOutgoingUntil
+                    && ((now - hosted.lastUserInteractionTime) < 3.5 || hosted.isPoppedOut)
+
+                if allowEditTrack {
+                    let baseVal = hosted.savedBaselineParams[address]
+                    if baseVal == nil || abs(value - baseVal!) > 1e-4 {
+                        hosted.unsavedParams[address] = value
+                    } else {
+                        hosted.unsavedParams.removeValue(forKey: address)
+                    }
+                    if let mapping = hosted.paramToCC[address] {
+                        let span = mapping.maxVal - mapping.minVal
+                        let norm: Float = abs(span) > 0.0001 ? ((value - mapping.minVal) / span) : value
+                        let clamped = max(0.0, min(1.0, norm))
+                        let ccVal = Int(max(0, min(127, Int((clamped * 127.0).rounded()))))
+                        if Int(mapping.cc) == hosted.volumeCc {
+                            hosted.pendingControllerUpdates["volume"] = ccVal
+                        } else if mapping.cc == 74 {
+                            hosted.pendingControllerUpdates["cutoff"] = ccVal
+                        } else if mapping.cc == 71 {
+                            hosted.pendingControllerUpdates["resonance"] = ccVal
+                        }
+                    }
+                    self.editRevision += 1
+                    self.scheduleUiStateInspection(for: hosted, delay: 0.25)
+                }
+
                 // When AU Audio is enabled, au-host is the synth engine itself;
                 // do not echo parameter changes back onto the IAC bus.
                 guard !self.midiEnabled else { return }
-                guard CACurrentMediaTime() > hosted.suppressOutgoingUntil else { return }
+                guard now > hosted.suppressOutgoingUntil else { return }
                 guard let mapping = hosted.paramToCC[address] else { return }
                 let span = mapping.maxVal - mapping.minVal
                 let norm: Float = abs(span) > 0.0001 ? ((value - mapping.minVal) / span) : value
@@ -577,6 +812,31 @@ final class AUHostController {
     }
 
     func statusDict() -> [String: Any] {
+        var synthsDict: [String: Any] = [:]
+        for hosted in hostedByKey.values {
+            let sortedAddrs = hosted.unsavedParams.keys.sorted()
+            var unsavedList: [[String: Any]] = []
+            for addr in sortedAddrs {
+                guard let newVal = hosted.unsavedParams[addr], newVal.isFinite else { continue }
+                let rawName = hosted.paramNames[addr] ?? "Param \(addr)"
+                let oldVal = hosted.savedBaselineParams[addr] ?? hosted.rawPresetBaselineParams[addr] ?? newVal
+                unsavedList.append([
+                    "address": addr,
+                    "key": sanitizeParamKey(address: addr, name: rawName),
+                    "name": rawName,
+                    "oldValue": Double(oldVal.isFinite ? oldVal : 0.0),
+                    "newValue": Double(newVal)
+                ])
+            }
+            let isDirty = !unsavedList.isEmpty || hosted.presetChangedInUi || (!hosted.baselinePresetName.isEmpty && hosted.currentPresetName != hosted.baselinePresetName)
+            synthsDict[hosted.displayName] = [
+                "presetName": hosted.currentPresetName,
+                "presetChangedInUi": hosted.presetChangedInUi,
+                "isDirty": isDirty,
+                "unsavedParams": unsavedList,
+                "controllers": hosted.pendingControllerUpdates
+            ]
+        }
         return [
             "ok": true,
             "activeSynth": activeSynth?.displayName as Any,
@@ -592,8 +852,97 @@ final class AUHostController {
             "openPopups": openPopupWindows().count,
             "poppedOut": activeSynth?.isPoppedOut ?? false,
             "captureMode": lastCaptureMode,
-            "hasFrame": latestJpegData != nil
+            "hasFrame": latestJpegData != nil,
+            "editRevision": editRevision,
+            "synths": synthsDict
         ]
+    }
+
+    func ackControllers(uiName: String, clearControllers: Bool, clearPresetChanged: Bool) {
+        let key = normalizeSynthKey(uiName)
+        guard let hosted = hostedByKey[key] ?? hostedByKey.values.first(where: { $0.displayName == uiName }) else {
+            return
+        }
+        if clearControllers {
+            hosted.pendingControllerUpdates.removeAll()
+        }
+        if clearPresetChanged {
+            hosted.presetChangedInUi = false
+        }
+        editRevision += 1
+    }
+
+    func commitSave() -> [String: Any] {
+        var patchStates: [String: Any] = [:]
+        for hosted in hostedByKey.values {
+            for (addr, val) in hosted.unsavedParams {
+                if let rawBase = hosted.rawPresetBaselineParams[addr], abs(val - rawBase) <= 1e-4 {
+                    hosted.savedAuParams.removeValue(forKey: addr)
+                } else {
+                    hosted.savedAuParams[addr] = val
+                }
+            }
+            if let allParams = hosted.avUnit.auAudioUnit.parameterTree?.allParameters {
+                for p in allParams {
+                    hosted.paramNames[p.address] = p.displayName
+                    hosted.savedBaselineParams[p.address] = p.value
+                }
+            }
+            hosted.unsavedParams.removeAll()
+            hosted.pendingControllerUpdates.removeAll()
+            hosted.presetChangedInUi = false
+            if !hosted.currentPresetName.isEmpty {
+                hosted.baselinePresetName = hosted.currentPresetName
+            }
+
+            if !hosted.savedAuParams.isEmpty {
+                var paramsMap: [String: Double] = [:]
+                for addr in hosted.savedAuParams.keys.sorted() {
+                    guard let val = hosted.savedAuParams[addr], val.isFinite else { continue }
+                    let key = sanitizeParamKey(address: addr, name: hosted.paramNames[addr] ?? "param_\(addr)")
+                    paramsMap[key] = Double(val)
+                }
+                let chunks = serializeFullStateChunks(for: hosted)
+                patchStates[hosted.displayName] = [
+                    "auParams": paramsMap,
+                    "auState": chunks
+                ]
+            } else {
+                patchStates[hosted.displayName] = [
+                    "auParams": [:],
+                    "auState": []
+                ]
+            }
+        }
+        editRevision += 1
+        return [
+            "ok": true,
+            "editRevision": editRevision,
+            "patchStates": patchStates
+        ]
+    }
+
+    func clearEdits(uiName: String) {
+        let targets: [HostedSynth]
+        if uiName.isEmpty {
+            targets = Array(hostedByKey.values)
+        } else {
+            let key = normalizeSynthKey(uiName)
+            if let h = hostedByKey[key] ?? hostedByKey.values.first(where: { $0.displayName == uiName }) {
+                targets = [h]
+            } else {
+                targets = []
+            }
+        }
+        for hosted in targets {
+            hosted.unsavedParams.removeAll()
+            hosted.savedAuParams.removeAll()
+            hosted.pendingControllerUpdates.removeAll()
+            hosted.presetChangedInUi = false
+            hosted.lastAppliedLoadSig = ""
+            snapshotBaselines(for: hosted, preserveSavedOverrides: false)
+        }
+        editRevision += 1
     }
 
     func listArturiaComponents() -> [AVAudioUnitComponent] {
@@ -672,11 +1021,12 @@ final class AUHostController {
         volume: Int,
         volumeCc: Int,
         cutoff: Int,
-        resonance: Int
+        resonance: Int,
+        auParams: [UInt64: Float] = [:]
     ) {
         hosted.volumeSyncGen += 1
         let gen = hosted.volumeSyncGen
-        for delay in [0.45, 1.1, 2.2] {
+        for delay in [0.15, 0.45, 0.9, 1.5, 2.2, 3.0] {
             runOnMainCommonModesAfter(delay) { [weak self, weak hosted] in
                 guard let self = self, let hosted = hosted, hosted.volumeSyncGen == gen else { return }
                 self.syncDeviceState(
@@ -690,8 +1040,125 @@ final class AUHostController {
                     resonance: resonance,
                     includePreset: false
                 )
+                if !auParams.isEmpty {
+                    self.applyParamOverrides(to: hosted, params: auParams)
+                }
+                if delay >= 1.4 && hosted.unsavedParams.isEmpty && !hosted.presetChangedInUi {
+                    self.snapshotBaselines(for: hosted, preserveSavedOverrides: !auParams.isEmpty)
+                }
             }
         }
+    }
+
+    func parseAuParamsFromJson(_ raw: Any?) -> [String: Float] {
+        var out: [String: Float] = [:]
+        guard let dict = raw as? [String: Any] else { return out }
+        for (k, v) in dict {
+            if let n = v as? NSNumber {
+                let f = n.floatValue
+                if f.isFinite { out[k] = f }
+            } else if let d = v as? Double, d.isFinite {
+                out[k] = Float(d)
+            } else if let f = v as? Float, f.isFinite {
+                out[k] = f
+            }
+        }
+        return out
+    }
+
+    private func computeLoadSignature(_ req: SynthLoadRequest) -> String {
+        let paramPart = req.auParams.keys.sorted().map { "\($0)=\(req.auParams[$0] ?? 0)" }.joined(separator: ",")
+        let joinedState = req.auState.joined()
+        let statePart = req.auState.isEmpty ? "" : "\(req.auState.count):\(joinedState.prefix(48)):\(joinedState.suffix(32))"
+        return "\(req.bank):\(req.program):\(req.patchName)|\(paramPart)|\(statePart)"
+    }
+
+    private func applyRestoredPatchState(to hosted: HostedSynth, req: SynthLoadRequest, loadSig: String) {
+        let addrParams = convertAuParamsToAddresses(req.auParams)
+        let sameBasePreset = (req.bank >= 0 && req.program >= 0)
+            && (hosted.lastSyncedBank == req.bank && hosted.lastSyncedProgram == req.program)
+
+        var resetParams: [UInt64: Float] = [:]
+        if sameBasePreset {
+            for addr in hosted.savedAuParams.keys where addrParams[addr] == nil {
+                if let rawVal = hosted.rawPresetBaselineParams[addr] {
+                    resetParams[addr] = rawVal
+                }
+            }
+            for addr in hosted.unsavedParams.keys where addrParams[addr] == nil {
+                if let rawVal = hosted.rawPresetBaselineParams[addr] {
+                    resetParams[addr] = rawVal
+                }
+            }
+        }
+
+        hosted.volumeCc = req.volumeCc
+        hosted.savedAuParams = addrParams
+        hosted.unsavedParams.removeAll()
+        hosted.pendingControllerUpdates.removeAll()
+        hosted.presetChangedInUi = false
+        hosted.lastSyncedBank = req.bank
+        hosted.lastSyncedProgram = req.program
+        hosted.lastAppliedLoadSig = loadSig
+
+        if sameBasePreset {
+            hosted.programmaticSyncUntil = max(hosted.programmaticSyncUntil, CACurrentMediaTime() + 0.5)
+            if !resetParams.isEmpty {
+                applyParamOverrides(to: hosted, params: resetParams)
+            }
+            syncDeviceState(
+                to: hosted,
+                avUnit: hosted.avUnit,
+                bank: -1,
+                program: -1,
+                volume: req.volume,
+                volumeCc: req.volumeCc,
+                cutoff: req.cutoff,
+                resonance: req.resonance,
+                includePreset: false
+            )
+            if !addrParams.isEmpty {
+                applyParamOverrides(to: hosted, params: addrParams)
+            }
+            snapshotBaselines(for: hosted, preserveSavedOverrides: true)
+            return
+        }
+
+        hosted.programmaticSyncUntil = max(hosted.programmaticSyncUntil, CACurrentMediaTime() + 3.5)
+        if req.bank >= 0 && req.program >= 0 {
+            syncDeviceState(
+                to: hosted,
+                avUnit: hosted.avUnit,
+                bank: req.bank,
+                program: req.program,
+                volume: req.volume,
+                volumeCc: req.volumeCc,
+                cutoff: req.cutoff,
+                resonance: req.resonance,
+                includePreset: true
+            )
+        } else if !req.auState.isEmpty {
+            _ = restoreFullState(for: hosted, chunks: req.auState)
+            syncDeviceState(
+                to: hosted,
+                avUnit: hosted.avUnit,
+                bank: -1,
+                program: -1,
+                volume: req.volume,
+                volumeCc: req.volumeCc,
+                cutoff: req.cutoff,
+                resonance: req.resonance,
+                includePreset: false
+            )
+        }
+        schedulePostPresetControllerSync(
+            hosted: hosted,
+            volume: req.volume,
+            volumeCc: req.volumeCc,
+            cutoff: req.cutoff,
+            resonance: req.resonance,
+            auParams: addrParams
+        )
     }
 
     private func dismissOpenPopups() {
@@ -736,6 +1203,7 @@ final class AUHostController {
             let uiName = (dev["uiName"] as? String) ?? ""
             let appName = (dev["appName"] as? String) ?? ""
             let deviceName = (dev["deviceName"] as? String) ?? ""
+            let patchName = (dev["patchName"] as? String) ?? ""
             let lookupName = !appName.isEmpty ? appName : uiName
             let key = normalizeSynthKey(lookupName)
             guard !key.isEmpty else { continue }
@@ -746,12 +1214,15 @@ final class AUHostController {
                     uiName: uiName,
                     appName: appName,
                     deviceName: deviceName,
+                    patchName: patchName,
                     bank: (dev["bank"] as? Int) ?? -1,
                     program: (dev["program"] as? Int) ?? -1,
                     volume: (dev["volume"] as? Int) ?? -1,
                     volumeCc: (dev["volumeCc"] as? Int) ?? 7,
                     cutoff: (dev["cutoff"] as? Int) ?? -1,
                     resonance: (dev["resonance"] as? Int) ?? -1,
+                    auParams: parseAuParamsFromJson(dev["auParams"]),
+                    auState: (dev["auState"] as? [String]) ?? [],
                     makeActive: activeSynth == nil && idx == 0
                 )
             )
@@ -778,12 +1249,15 @@ final class AUHostController {
         uiName: String,
         appName: String,
         deviceName: String,
+        patchName: String = "",
         bank: Int = -1,
         program: Int = -1,
         volume: Int = -1,
         volumeCc: Int = 7,
         cutoff: Int = -1,
         resonance: Int = -1,
+        auParams: [String: Float] = [:],
+        auState: [String] = [],
         completion: @escaping ([String: Any]) -> Void
     ) {
         dismissOpenPopups()
@@ -791,12 +1265,15 @@ final class AUHostController {
             uiName: uiName,
             appName: appName,
             deviceName: deviceName,
+            patchName: patchName,
             bank: bank,
             program: program,
             volume: volume,
             volumeCc: volumeCc,
             cutoff: cutoff,
             resonance: resonance,
+            auParams: auParams,
+            auState: auState,
             makeActive: true
         )
         enqueueSynthLoad(req, completion: completion)
@@ -806,29 +1283,21 @@ final class AUHostController {
         let lookupName = !req.appName.isEmpty ? req.appName : req.uiName
         let key = normalizeSynthKey(lookupName)
         stopStandaloneAppIfRunning(appName: req.appName)
+        let loadSig = computeLoadSignature(req)
 
         if let existing = hostedByKey[key] {
+            let hasUnsaved = !existing.unsavedParams.isEmpty || existing.presetChangedInUi
+            let sameUiPreset = !req.patchName.isEmpty && existing.currentPresetName == req.patchName
             let presetChanged = (req.bank >= 0 && req.program >= 0)
                 && (existing.lastSyncedBank != req.bank || existing.lastSyncedProgram != req.program)
-            if presetChanged {
-                syncDeviceState(
-                    to: existing,
-                    avUnit: existing.avUnit,
-                    bank: req.bank,
-                    program: req.program,
-                    volume: req.volume,
-                    volumeCc: req.volumeCc,
-                    cutoff: req.cutoff,
-                    resonance: req.resonance,
-                    includePreset: true
-                )
-                schedulePostPresetControllerSync(
-                    hosted: existing,
-                    volume: req.volume,
-                    volumeCc: req.volumeCc,
-                    cutoff: req.cutoff,
-                    resonance: req.resonance
-                )
+                && !sameUiPreset
+            let hasExplicitAuPayload = !req.auState.isEmpty || !req.auParams.isEmpty
+            let sigChanged = loadSig != existing.lastAppliedLoadSig
+            if !hasUnsaved && (presetChanged || (sigChanged && (req.bank >= 0 || req.program >= 0 || hasExplicitAuPayload))) {
+                applyRestoredPatchState(to: existing, req: req, loadSig: loadSig)
+            } else if sameUiPreset && !hasExplicitAuPayload && existing.savedAuParams.isEmpty {
+                existing.lastSyncedBank = req.bank
+                existing.lastSyncedProgram = req.program
             }
             syncMIDIConnections()
             if req.makeActive || activeSynth == nil {
@@ -859,12 +1328,15 @@ final class AUHostController {
                 uiName: req.uiName.isEmpty ? prev.uiName : req.uiName,
                 appName: req.appName.isEmpty ? prev.appName : req.appName,
                 deviceName: req.deviceName.isEmpty ? prev.deviceName : req.deviceName,
+                patchName: req.patchName.isEmpty ? prev.patchName : req.patchName,
                 bank: req.bank >= 0 ? req.bank : prev.bank,
                 program: req.program >= 0 ? req.program : prev.program,
                 volume: req.volume >= 0 ? req.volume : prev.volume,
                 volumeCc: req.volumeCc,
                 cutoff: req.cutoff >= 0 ? req.cutoff : prev.cutoff,
                 resonance: req.resonance >= 0 ? req.resonance : prev.resonance,
+                auParams: req.auParams.isEmpty ? prev.auParams : req.auParams,
+                auState: req.auState.isEmpty ? prev.auState : req.auState,
                 makeActive: req.makeActive || prev.makeActive
             )
             if merged.makeActive {
@@ -947,17 +1419,6 @@ final class AUHostController {
                 self.engine.attach(avUnit)
                 self.engine.connect(avUnit, to: self.engine.mainMixerNode, format: nil)
                 self.ensureEngineRunning(appName: req.appName)
-                self.syncDeviceState(
-                    to: nil,
-                    avUnit: avUnit,
-                    bank: req.bank,
-                    program: req.program,
-                    volume: req.volume,
-                    volumeCc: req.volumeCc,
-                    cutoff: req.cutoff,
-                    resonance: req.resonance,
-                    includePreset: true
-                )
 
                 self.loadViewForAudioUnit(avUnit) { viewController, rootView in
                     runOnMainCommonModes {
@@ -1003,8 +1464,7 @@ final class AUHostController {
                             rootView: container,
                             window: win
                         )
-                        hosted.lastSyncedBank = req.bank
-                        hosted.lastSyncedProgram = req.program
+                        hosted.volumeCc = req.volumeCc
                         hosted.paramToCC = self.loadDefaultMidiMap(appName: req.appName)
                         self.installParameterObserver(for: hosted)
                         self.hostedByKey[key] = hosted
@@ -1012,26 +1472,10 @@ final class AUHostController {
                         if req.makeActive || self.activeSynth == nil {
                             self.activateHostedSynth(hosted)
                         }
+                        let loadSig = self.computeLoadSignature(req)
                         runOnMainCommonModesAfter(0.35) { [weak self, weak hosted] in
                             guard let self = self, let hosted = hosted else { return }
-                            self.syncDeviceState(
-                                to: hosted,
-                                avUnit: avUnit,
-                                bank: req.bank,
-                                program: req.program,
-                                volume: req.volume,
-                                volumeCc: req.volumeCc,
-                                cutoff: req.cutoff,
-                                resonance: req.resonance,
-                                includePreset: true
-                            )
-                            self.schedulePostPresetControllerSync(
-                                hosted: hosted,
-                                volume: req.volume,
-                                volumeCc: req.volumeCc,
-                                cutoff: req.cutoff,
-                                resonance: req.resonance
-                            )
+                            self.applyRestoredPatchState(to: hosted, req: req, loadSig: loadSig)
                         }
 
                         self.isLoadingSynth = false
@@ -1278,6 +1722,10 @@ final class AUHostController {
         let ts = ProcessInfo.processInfo.systemUptime
         eventCounter += 1
 
+        if type == "down" || type == "drag" || type == "up" || type == "wheel" {
+            hosted.lastUserInteractionTime = CACurrentMediaTime()
+        }
+
         switch type {
         case "down":
             hadPopupsOnDown = !popups.isEmpty
@@ -1364,6 +1812,7 @@ final class AUHostController {
                     targetView.mouseUp(with: ev)
                 }
             }
+            scheduleUiStateInspection(for: hosted, delay: 0.22)
         case "move":
             if let ev = NSEvent.mouseEvent(
                 with: .mouseMoved,
@@ -1395,6 +1844,7 @@ final class AUHostController {
                 }
             }
             refreshFramesAfterInteraction()
+            scheduleUiStateInspection(for: hosted, delay: 0.22)
         default:
             break
         }
@@ -1790,22 +2240,28 @@ final class LocalHTTPServer: @unchecked Sendable {
                 let uiName = (json["uiName"] as? String) ?? ""
                 let appName = (json["appName"] as? String) ?? ""
                 let deviceName = (json["deviceName"] as? String) ?? ""
+                let patchName = (json["patchName"] as? String) ?? ""
                 let bank = (json["bank"] as? Int) ?? -1
                 let program = (json["program"] as? Int) ?? -1
                 let volume = (json["volume"] as? Int) ?? -1
                 let volumeCc = (json["volumeCc"] as? Int) ?? 7
                 let cutoff = (json["cutoff"] as? Int) ?? -1
                 let resonance = (json["resonance"] as? Int) ?? -1
+                let auParams = controller.parseAuParamsFromJson(json["auParams"])
+                let auState = (json["auState"] as? [String]) ?? []
                 controller.selectSynth(
                     uiName: uiName,
                     appName: appName,
                     deviceName: deviceName,
+                    patchName: patchName,
                     bank: bank,
                     program: program,
                     volume: volume,
                     volumeCc: volumeCc,
                     cutoff: cutoff,
-                    resonance: resonance
+                    resonance: resonance,
+                    auParams: auParams,
+                    auState: auState
                 ) { res in
                     self.sendJSON(conn, status: (res["ok"] as? Bool) == true ? 200 : 404, dict: res)
                 }
@@ -1815,6 +2271,23 @@ final class LocalHTTPServer: @unchecked Sendable {
                 let devices = (json["devices"] as? [[String: Any]]) ?? []
                 controller.syncActiveSynths(devices: devices)
                 sendJSON(conn, dict: ["ok": true, "queued": devices.count])
+
+            case ("POST", "/ack-controllers"):
+                let json = parseJSONBody(body)
+                let uiName = (json["uiName"] as? String) ?? ""
+                let clearControllers = (json["clearControllers"] as? Bool) ?? true
+                let clearPresetChanged = (json["clearPresetChanged"] as? Bool) ?? true
+                controller.ackControllers(uiName: uiName, clearControllers: clearControllers, clearPresetChanged: clearPresetChanged)
+                sendJSON(conn, dict: ["ok": true])
+
+            case ("POST", "/commit-save"):
+                sendJSON(conn, dict: controller.commitSave())
+
+            case ("POST", "/clear-edits"):
+                let json = parseJSONBody(body)
+                let uiName = (json["uiName"] as? String) ?? ""
+                controller.clearEdits(uiName: uiName)
+                sendJSON(conn, dict: ["ok": true])
 
             case ("GET", "/frame.jpg"):
                 controller.captureCurrentWindow()

@@ -78,7 +78,7 @@ song:
       patchName: "Bladelores"
       uiName: "Synthi V"
       muted: 0
-      volume: 45
+      volume: 39
       filterCutoff: -1
       filterResonance: -1
       pan: 64
@@ -90,7 +90,7 @@ song:
       patchName: "Under The Sea"
       uiName: "Analog Lab V"
       muted: 0
-      volume: 118
+      volume: 87
       filterCutoff: -1
       filterResonance: -1
       pan: 64

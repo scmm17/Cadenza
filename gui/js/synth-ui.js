@@ -11,7 +11,7 @@ let midiAudioEnabled = true;
 let nativePoppedOut = false;
 let isDraggingMouse = false;
 let lastMoveSentAt = 0;
-let lastSyncedDevicesSig = '';
+let pendingSelectSynthUi = false;
 
 function bottomRow() { return document.getElementById('bottomRow'); }
 function synthUiCard() { return document.getElementById('synthUiCard'); }
@@ -68,7 +68,12 @@ function updateHeaderForDevice(dev) {
     badge.style.setProperty('--dev-border', devColor + '66');
   }
   if (title) title.textContent = dev ? dev.uiName : 'Synth UI';
-  if (preset) preset.textContent = dev && dev.patchName ? dev.patchName : '';
+  if (preset) {
+    const edits = (state.auUiEdits && dev) ? state.auUiEdits[dev.uiName] : null;
+    const isEdited = Boolean(edits && (edits.isDirty || (Array.isArray(edits.unsavedParams) && edits.unsavedParams.length > 0)));
+    const presetText = (edits && edits.presetName) || (dev && dev.patchName) || '';
+    preset.textContent = presetText ? (isEdited ? `${presetText} • Edited` : presetText) : '';
+  }
 }
 
 function updateControlButtons() {
@@ -114,49 +119,35 @@ export function onSynthUiStatus(data) {
     activeViewWidth = data.width;
     activeViewHeight = data.height;
   }
+  if (pendingSelectSynthUi && (data.synth || data.ok === false)) {
+    pendingSelectSynthUi = false;
+    if (data.ok === false) {
+      setStatusMessage(data.error || 'Failed to load AudioUnit', true);
+    } else if (data.ok) {
+      const img = streamImg();
+      if (img) {
+        img.onload = () => showStream();
+        img.src = `${AU_HOST_BASE}/stream.mjpeg?t=${Date.now()}`;
+      }
+    }
+  }
+  if (selectedDevIdx != null) {
+    const devices = (state.chuckState && Array.isArray(state.chuckState.devices)) ? state.chuckState.devices : [];
+    const dev = devices.find((d) => d && d.index === selectedDevIdx);
+    if (dev) updateHeaderForDevice(dev);
+  }
   updateControlButtons();
 }
 
 export function closeSynthUi() {
   selectedDevIdx = null;
+  pendingSelectSynthUi = false;
   setSynthUiVisible(false);
   document.querySelectorAll('#devicesWrap tr.row-selected').forEach((tr) => tr.classList.remove('row-selected'));
 }
 
 export function syncAuHostDevicesFromState() {
-  const devices = (state.chuckState && Array.isArray(state.chuckState.devices)) ? state.chuckState.devices : [];
-  const metaMap = state.presetCatalog && state.presetCatalog.synthMeta;
-  if (!metaMap) return;
-
-  const arturiaDevices = [];
-  const seenApps = new Set();
-  const sigParts = [];
-
-  for (const dev of devices) {
-    if (!dev || !dev.uiName) continue;
-    const meta = metaMap[dev.uiName];
-    if (!meta || !meta.appName || seenApps.has(meta.appName)) continue;
-    seenApps.add(meta.appName);
-    const bank = dev.bank != null ? dev.bank : -1;
-    const program = dev.program != null ? dev.program : -1;
-    sigParts.push(`${meta.appName}:${bank}:${program}`);
-    arturiaDevices.push({
-      uiName: dev.uiName,
-      appName: meta.appName,
-      deviceName: meta.deviceName || '',
-      bank,
-      program,
-      volume: dev.volume != null ? dev.volume : -1,
-      volumeCc: meta.volumeCc != null ? meta.volumeCc : 7,
-      cutoff: dev.filterCutoff != null ? dev.filterCutoff : -1,
-      resonance: dev.filterResonance != null ? dev.filterResonance : -1,
-    });
-  }
-
-  const sig = sigParts.join('|');
-  if (sig === lastSyncedDevicesSig) return;
-  lastSyncedDevicesSig = sig;
-  postAuHost('/sync', { devices: arturiaDevices }).catch(() => {});
+  // Handled directly by the Node bridge (gui/server/osc-bridge.js) with YAML auParams/auState.
 }
 
 export async function selectDeviceForSynthUi(devIdx, { toggleIfSame = false } = {}) {
@@ -177,6 +168,7 @@ export async function selectDeviceForSynthUi(devIdx, { toggleIfSame = false } = 
   const metaMap = state.presetCatalog && state.presetCatalog.synthMeta;
   const meta = metaMap && metaMap[dev.uiName];
   if (!meta || !meta.appName) {
+    pendingSelectSynthUi = false;
     setSynthUiVisible(true);
     updateHeaderForDevice(dev);
     setStatusMessage(`${dev.uiName} is a hardware synth (no Arturia AU plugin).`);
@@ -191,6 +183,7 @@ export async function selectDeviceForSynthUi(devIdx, { toggleIfSame = false } = 
     uiName: dev.uiName,
     appName: meta.appName,
     deviceName: meta.deviceName || '',
+    patchName: dev.patchName || '',
     bank: dev.bank != null ? dev.bank : -1,
     program: dev.program != null ? dev.program : -1,
     volume: dev.volume != null ? dev.volume : -1,
@@ -199,26 +192,8 @@ export async function selectDeviceForSynthUi(devIdx, { toggleIfSame = false } = 
     resonance: dev.filterResonance != null ? dev.filterResonance : -1,
   };
 
-  // Notify Node bridge if updated server.js is running; also hit local AU host directly for PoC
+  pendingSelectSynthUi = true;
   send('selectSynthUi', selectPayload);
-
-  try {
-    const data = await postAuHost('/select', selectPayload);
-    if (selectedDevIdx !== devIdx) return;
-    if (!data || !data.ok) {
-      setStatusMessage((data && data.error) || `Failed to load ${dev.uiName} AudioUnit`, true);
-      return;
-    }
-    onSynthUiStatus(data);
-    const img = streamImg();
-    if (img) {
-      img.onload = () => showStream();
-      img.src = `${AU_HOST_BASE}/stream.mjpeg?t=${Date.now()}`;
-    }
-  } catch (err) {
-    if (selectedDevIdx !== devIdx) return;
-    setStatusMessage(`AU Host not running on ${AU_HOST_BASE} (${err.message}). Start tools/au-host.`, true);
-  }
 }
 
 export async function toggleSynthUiAudio() {

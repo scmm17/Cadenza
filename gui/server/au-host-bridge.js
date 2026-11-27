@@ -3,7 +3,7 @@
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, execFile } = require('child_process');
 
 const AU_HOST_PORT = parseInt(process.env.CADENZA_AU_HOST_PORT || '3099', 10);
 const AU_HOST_BIN = path.join(__dirname, '..', '..', 'tools', 'au-host');
@@ -50,21 +50,39 @@ function httpRequest(method, urlPath, bodyObj = null, timeoutMs = 1500) {
   });
 }
 
-async function isAuHostAlive() {
+async function getAuHostHealth() {
   try {
     const res = await httpRequest('GET', '/status', null, 500);
-    return res.status === 200;
+    if (res.status === 200 && res.data) {
+      return typeof res.data.editRevision === 'number' ? 'ok' : 'stale';
+    }
+    return 'down';
   } catch (_) {
-    return false;
+    return 'down';
   }
+}
+
+async function isAuHostAlive() {
+  return (await getAuHostHealth()) === 'ok';
 }
 
 async function ensureAuHostRunning() {
   if (process.platform !== 'darwin') return false;
-  if (await isAuHostAlive()) return true;
+  const health = await getAuHostHealth();
+  if (health === 'ok') return true;
   if (startPromise) return startPromise;
 
   startPromise = (async () => {
+    if (health === 'stale') {
+      console.log(`→ Replacing stale AU Host process on port ${AU_HOST_PORT}`);
+      if (auHostProc) {
+        auHostProc.kill('SIGTERM');
+        auHostProc = null;
+      } else {
+        await new Promise((resolve) => execFile('pkill', ['-x', 'au-host'], () => resolve()));
+      }
+      await new Promise((r) => setTimeout(r, 250));
+    }
     if (!fs.existsSync(AU_HOST_BIN)) {
       console.warn(`→ AU Host binary not found at ${AU_HOST_BIN}`);
       return false;

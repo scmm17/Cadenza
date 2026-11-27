@@ -16,6 +16,8 @@ public class ArturiaSynth extends Patch
     1 => int maxChannels;
     int volumeSyncGen;
     int pendingVolumeOnNote;
+    YamlNode @ auParamsNode;
+    YamlNode @ auStateNode;
 
     fun void initArturia(
         string devName,
@@ -204,6 +206,8 @@ public class ArturiaSynth extends Patch
     fun void applyPresetObject(Preset preset, int vol)
     {
         if (preset == null) return;
+        null @=> auParamsNode;
+        null @=> auStateNode;
         sendProgramChange(0, preset.bank, preset.program);
         preset.name => patchName;
         preset.program => program;
@@ -220,11 +224,39 @@ public class ArturiaSynth extends Patch
         saveCommonConfig(config);
         config.SetInt("program", program);
         config.SetInt("bank", bank);
+        if (auParamsNode != null && auParamsNode.GetType() == YamlNode.TYPE_MAP() && auParamsNode.arrayValue.cap() > 0) {
+            "auParams" => auParamsNode.name;
+            config.findChild("auParams") => int existingParamsIdx;
+            if (existingParamsIdx >= 0) {
+                auParamsNode @=> config.arrayValue[existingParamsIdx];
+            } else {
+                config.arrayValue << auParamsNode;
+            }
+        }
+        if (auStateNode != null && auStateNode.GetType() == YamlNode.TYPE_ARRAY() && auStateNode.arrayValue.cap() > 0) {
+            "auState" => auStateNode.name;
+            config.findChild("auState") => int existingStateIdx;
+            if (existingStateIdx >= 0) {
+                auStateNode @=> config.arrayValue[existingStateIdx];
+            } else {
+                config.arrayValue << auStateNode;
+            }
+        }
     }
 
     fun void loadConfig(YamlNode @config)
     {
         loadCommonConfig(config);
+        if (config.findChild("auParams") >= 0) {
+            config.GetValue("auParams") @=> auParamsNode;
+        } else {
+            null @=> auParamsNode;
+        }
+        if (config.findChild("auState") >= 0) {
+            config.GetValue("auState") @=> auStateNode;
+        } else {
+            null @=> auStateNode;
+        }
         if (deviceName == "" || deviceName == "IAC Driver Bus 1") {
             defaultDeviceName => deviceName;
         }

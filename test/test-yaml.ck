@@ -367,6 +367,45 @@ fun void testObjectArraysRoundtrip()
     assertNodesEqual("object-arrays roundtrip", root, again);
 }
 
+// Round-trip test for Arturia device auParams (map) and auState (array of base64 chunks)
+fun void testArturiaAuStateRoundtrip()
+{
+    YamlNode dev("MiniBrute V-0");
+    YamlNode emptyDev[0];
+    dev.SetMap(emptyDev);
+    dev.SetString("deviceName", "IAC Driver MiniBrute V");
+    dev.SetInt("midiChannel", 0);
+    dev.SetString("patchName", "Dark Atmos");
+    dev.SetString("uiName", "MiniBrute V");
+    dev.SetInt("program", 4);
+    dev.SetInt("bank", 0);
+
+    YamlNode auParams("auParams");
+    YamlNode emptyParams[0];
+    auParams.SetMap(emptyParams);
+    auParams.SetFloat("p75_FX1_Dry_Wet", 0.77);
+    auParams.SetFloat("p74_FX_Routing", 0.125);
+    dev.arrayValue << auParams;
+
+    YamlNode chunk1("");
+    chunk1.SetString("eJztwTEBAAAAwqD1T20Hb6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    YamlNode chunk2("");
+    chunk2.SetString("AAA4GAB4nO2dXWhcVx3H/3fOvbNzN7tJbdI2TY22aau2tWmbtmnTNE1b07Rt0zRt27Zt27Zt27Zt27Zt27Zt27Zt27Ztm20=");
+    YamlNode chunks[0];
+    chunks << chunk1;
+    chunks << chunk2;
+    YamlNode auState("auState");
+    auState.SetArray(chunks);
+    dev.arrayValue << auState;
+
+    string outFile;
+    if (gYamlParseUsedFallback == 1) { "test-yaml-au-out.yaml" => outFile; }
+    else { "test/test-yaml-au-out.yaml" => outFile; }
+    dev.WriteFile(outFile);
+    YamlNode.ParseFile(outFile) @=> YamlNode again;
+    assertNodesEqual("arturia auParams+auState roundtrip", dev, again);
+}
+
 fun void main()
 {
     testScalarString();
@@ -379,6 +418,7 @@ fun void main()
     testReadWriteNesting();
     testReadWriteNesting2();
     testObjectArraysRoundtrip();
+    testArturiaAuStateRoundtrip();
 }
 
 main();

@@ -19,7 +19,6 @@ const SIMPLE_OSC_COMMANDS = {
   device:        { addr: '/cadenza/device',        type: 'int' },
   golden:        { addr: '/cadenza/golden',        constVal: 1 },
   allMode:       { addr: '/cadenza/allMode',       constVal: 1 },
-  save:          { addr: '/cadenza/save',          constVal: 1 },
   shutdown:      { addr: '/cadenza/shutdown',      constVal: 1 },
   play:          { addr: '/cadenza/play',          constVal: 1 },
   pause:         { addr: '/cadenza/pause',         constVal: 1 },
@@ -28,11 +27,14 @@ const SIMPLE_OSC_COMMANDS = {
   loopFragment:  { addr: '/cadenza/loopFragment',  type: 'str' },
   muteDevice:    { addr: '/cadenza/muteDevice',    type: 'int' },
   soloDevice:    { addr: '/cadenza/soloDevice',    type: 'int' },
-  prevPresetCat: { addr: '/cadenza/prevPresetCat', constVal: 1 },
-  prevPreset:    { addr: '/cadenza/prevPreset',    constVal: 1 },
-  nextPreset:    { addr: '/cadenza/nextPreset',    constVal: 1 },
-  nextPresetCat: { addr: '/cadenza/nextPresetCat', constVal: 1 },
   setTempo:      { addr: '/cadenza/tempo',         type: 'int' },
+};
+
+const PRESET_STEP_COMMANDS = {
+  prevPresetCat: '/cadenza/prevPresetCat',
+  prevPreset:    '/cadenza/prevPreset',
+  nextPreset:    '/cadenza/nextPreset',
+  nextPresetCat: '/cadenza/nextPresetCat',
 };
 
 const PARAM_ADDRS = {
@@ -57,7 +59,104 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
     lastBroadcastSong: null,
     lastPatchSetInfo: null,
     lastSyncedSynthSig: '',
+    lastAuUiEdits: {},
   };
+
+  let lastAuEditRevision = -1;
+
+  function getActivePatchSetName(stateOverride = null) {
+    const st = stateOverride || shared.lastState;
+    return (st && st.patchSetName)
+      || (shared.lastPatchSetInfo && shared.lastPatchSetInfo.defaultPatchSet)
+      || 'Default';
+  }
+
+  function findAuEntryForDevice(auData, dev) {
+    if (!auData || !dev) return null;
+    const ch0 = Math.max(0, Math.min(15, (parseInt(dev.channel, 10) || 1) - 1));
+    const key = `${dev.uiName}-${ch0}`;
+    const entry = (auData.byDeviceKey && auData.byDeviceKey[key])
+      || (auData.byUiName && auData.byUiName[dev.uiName])
+      || null;
+    if (!entry) return null;
+    if (dev.patchName && entry.patchName && dev.patchName !== entry.patchName) {
+      return null;
+    }
+    return entry;
+  }
+
+  function clearAuEdits(uiName = '') {
+    auHost.httpRequest('POST', '/clear-edits', { uiName }, 1000).catch(() => {});
+    if (!uiName) {
+      shared.lastAuUiEdits = {};
+    } else if (shared.lastAuUiEdits && shared.lastAuUiEdits[uiName]) {
+      const next = { ...shared.lastAuUiEdits };
+      delete next[uiName];
+      shared.lastAuUiEdits = next;
+    }
+    broadcast({ type: 'auUiEdits', data: shared.lastAuUiEdits });
+  }
+
+  async function pollAuHostStatus() {
+    if (process.platform === 'darwin') {
+      try {
+        const res = await auHost.httpRequest('GET', '/status', null, 800);
+        const st = res && res.data;
+        if (st && st.ok && typeof st.editRevision === 'number' && st.editRevision !== lastAuEditRevision) {
+          lastAuEditRevision = st.editRevision;
+          const synths = st.synths || {};
+          shared.lastAuUiEdits = synths;
+
+          const devices = (shared.lastState && Array.isArray(shared.lastState.devices))
+            ? shared.lastState.devices
+            : [];
+          for (const [uiName, info] of Object.entries(synths)) {
+            if (!info) continue;
+            const matching = devices.filter(d => d && d.uiName === uiName);
+            let clearControllers = false;
+            let clearPresetChanged = false;
+
+            if (info.controllers && Object.keys(info.controllers).length > 0) {
+              for (const dev of matching) {
+                const idx = parseInt(dev.index, 10);
+                if (info.controllers.volume != null) {
+                  chuckClient.send('/cadenza/volume', idx, parseInt(info.controllers.volume, 10));
+                }
+                if (info.controllers.cutoff != null) {
+                  chuckClient.send('/cadenza/cutoff', idx, parseInt(info.controllers.cutoff, 10));
+                }
+                if (info.controllers.resonance != null) {
+                  chuckClient.send('/cadenza/resonance', idx, parseInt(info.controllers.resonance, 10));
+                }
+              }
+              clearControllers = true;
+            }
+
+            if (info.presetChangedInUi && info.presetName) {
+              for (const dev of matching) {
+                chuckClient.send('/cadenza/setPreset', parseInt(dev.index, 10), String(info.presetName));
+              }
+              clearPresetChanged = true;
+            }
+
+            if (clearControllers || clearPresetChanged) {
+              auHost.httpRequest('POST', '/ack-controllers', {
+                uiName,
+                clearControllers,
+                clearPresetChanged,
+              }, 800).catch(() => {});
+            }
+          }
+
+          broadcast({ type: 'auUiEdits', data: synths });
+        }
+      } catch (_) {
+        // AU Host not running yet or busy
+      }
+    }
+    setTimeout(pollAuHostStatus, 400);
+  }
+  setTimeout(pollAuHostStatus, 1000);
 
   const lastLaunchAttempt = new Map();
   const lastStopCheck = new Map();
@@ -211,28 +310,38 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
     });
   }
 
-  function syncVirtualSynths(devices) {
+  function syncVirtualSynths(devices, stateOverride = null) {
     if (process.platform !== 'darwin' || !Array.isArray(devices)) return;
     const catalog = loadPresetCatalog();
     const synthMeta = (catalog && catalog.synthMeta) || {};
     const activeArturiaList = [];
     const seenApps = new Set();
+    const st = stateOverride || shared.lastState;
+    const songName = patchSets.getActiveSongName(null, st, shared.lastLoadedSong);
+    const patchSetName = getActivePatchSetName(st);
+    const auData = (songName && patchSetName)
+      ? patchSets.readPatchSetAuData(songName, patchSetName)
+      : { byDeviceKey: {}, byUiName: {} };
 
     for (const dev of devices) {
       if (!dev || !dev.uiName) continue;
       const meta = synthMeta[dev.uiName];
       if (meta && meta.appName && !seenApps.has(meta.appName)) {
         seenApps.add(meta.appName);
+        const auEntry = findAuEntryForDevice(auData, dev);
         activeArturiaList.push({
           uiName: dev.uiName,
           appName: meta.appName,
           deviceName: meta.deviceName || '',
+          patchName: dev.patchName || '',
           bank: dev.bank != null ? dev.bank : -1,
           program: dev.program != null ? dev.program : -1,
           volume: dev.volume != null ? dev.volume : -1,
           volumeCc: meta.volumeCc != null ? meta.volumeCc : 7,
           cutoff: dev.filterCutoff != null ? dev.filterCutoff : -1,
           resonance: dev.filterResonance != null ? dev.filterResonance : -1,
+          auParams: (auEntry && auEntry.auParams) || {},
+          auState: (auEntry && auEntry.auState) || [],
         });
       }
     }
@@ -258,12 +367,16 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
       try {
         const state = JSON.parse(jsonStr);
         shared.lastState = state;
-        const synthSig = Array.isArray(state.devices)
-          ? state.devices.map(d => (d && d.uiName) || '').join('|')
-          : '';
+        const synthSig = [
+          state.songName || '',
+          state.patchSetName || '',
+          ...(Array.isArray(state.devices)
+            ? state.devices.map(d => d ? `${d.uiName || ''}:${d.bank}:${d.program}:${d.patchName || ''}` : '')
+            : []),
+        ].join('|');
         if (synthSig !== shared.lastSyncedSynthSig) {
           shared.lastSyncedSynthSig = synthSig;
-          syncVirtualSynths(state.devices);
+          syncVirtualSynths(state.devices, state);
         }
         if (state.songName) {
           if (shared.lastBroadcastSong !== state.songName) {
@@ -284,7 +397,7 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
         console.error('Raw:', jsonStr);
       }
     } else if (address === '/cadenza/activateSynth') {
-      if (msg[1]) ensureVirtualSynthRunning(String(msg[1]));
+      if (msg[1]) auHost.ensureAuHostRunning().catch(() => {});
     } else if (address === '/cadenza/noteOn') {
       broadcast({ type: 'noteOn', dev: msg[1], note: msg[2], vel: msg[3] });
     } else if (address === '/cadenza/noteOff') {
@@ -335,7 +448,41 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
       return;
     }
 
+    const presetStepAddr = PRESET_STEP_COMMANDS[cmd.type];
+    if (presetStepAddr) {
+      const devices = (shared.lastState && Array.isArray(shared.lastState.devices)) ? shared.lastState.devices : [];
+      const curDev = devices.find(d => d && d.active === 1) || devices[shared.lastState && shared.lastState.currentDeviceIndex];
+      if (curDev && curDev.uiName) {
+        clearAuEdits(curDev.uiName);
+      }
+      console.log(`→ ChucK: ${presetStepAddr} 1`);
+      chuckClient.send(presetStepAddr, 1);
+      return;
+    }
+
     switch (cmd.type) {
+      case 'save': {
+        console.log('→ ChucK: /cadenza/save 1');
+        chuckClient.send('/cadenza/save', 1);
+        const songName = patchSets.getActiveSongName(null, shared.lastState, shared.lastLoadedSong);
+        const patchSetName = getActivePatchSetName();
+        auHost.httpRequest('POST', '/commit-save', {}, 4000)
+          .then((res) => {
+            const patchStates = (res && res.data && res.data.patchStates) || {};
+            setTimeout(() => {
+              if (songName && patchSetName) {
+                patchSets.writePatchSetAuData(songName, patchSetName, patchStates);
+              }
+              shared.lastAuUiEdits = {};
+              broadcast({ type: 'auUiEdits', data: {} });
+            }, 120);
+          })
+          .catch(() => {
+            shared.lastAuUiEdits = {};
+            broadcast({ type: 'auUiEdits', data: {} });
+          });
+        break;
+      }
       case 'getSongs': {
         const musicDir = path.join(__dirname, '..', '..', 'music');
         const songs = [];
@@ -369,6 +516,7 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
       case 'loadSong': {
         console.log(`→ ChucK: shutdown & load ${cmd.value}`);
         shared.lastLoadedSong = cmd.value;
+        clearAuEdits('');
         const info = patchSets.ensurePatchSetsDir(cmd.value);
         broadcast({ type: 'patchSets', data: info });
 
@@ -416,8 +564,14 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
       case 'setPreset': {
         const { devIdx, presetName } = cmd.value || {};
         if (devIdx != null && presetName) {
+          const idxNum = parseInt(devIdx, 10);
+          const devices = (shared.lastState && Array.isArray(shared.lastState.devices)) ? shared.lastState.devices : [];
+          const targetDev = devices.find(d => d && parseInt(d.index, 10) === idxNum);
+          if (targetDev && targetDev.uiName) {
+            clearAuEdits(targetDev.uiName);
+          }
           console.log(`→ ChucK: /cadenza/setPreset dev=${devIdx} preset="${presetName}"`);
-          chuckClient.send('/cadenza/setPreset', parseInt(devIdx, 10), String(presetName));
+          chuckClient.send('/cadenza/setPreset', idxNum, String(presetName));
         }
         break;
       }
@@ -467,6 +621,7 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
         const { name } = cmd.value || cmd || {};
         const songName = patchSets.getActiveSongName(null, shared.lastState, shared.lastLoadedSong);
         if (name && songName) {
+          clearAuEdits('');
           console.log(`→ ChucK: /cadenza/loadPatchSet "${name}"`);
           chuckClient.send('/cadenza/loadPatchSet', String(name));
           broadcast({ type: 'patchSets', data: patchSets.ensurePatchSetsDir(songName) });
@@ -475,7 +630,20 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
       }
       case 'createPatchSet': {
         const songName = patchSets.getActiveSongName(null, shared.lastState, shared.lastLoadedSong);
-        if (songName) patchSets.createPatchSet(songName, shared.lastState, chuckClient, broadcast);
+        if (songName) {
+          auHost.httpRequest('POST', '/commit-save', {}, 4000)
+            .then((res) => {
+              const patchStates = (res && res.data && res.data.patchStates) || null;
+              patchSets.createPatchSet(songName, shared.lastState, chuckClient, broadcast, patchStates);
+              shared.lastAuUiEdits = {};
+              broadcast({ type: 'auUiEdits', data: {} });
+            })
+            .catch(() => {
+              patchSets.createPatchSet(songName, shared.lastState, chuckClient, broadcast, null);
+              shared.lastAuUiEdits = {};
+              broadcast({ type: 'auUiEdits', data: {} });
+            });
+        }
         break;
       }
       case 'renamePatchSet': {
@@ -514,13 +682,35 @@ function createOscBridge({ chuckHost, chuckOscIn, guiOscIn, broadcast, loadPrese
         break;
       }
       case 'selectSynthUi': {
-        const { uiName, appName, deviceName, bank, program, volume, volumeCc, cutoff, resonance } = cmd.value || {};
+        const { uiName, appName, deviceName, patchName, bank, program, volume, volumeCc, cutoff, resonance } = cmd.value || {};
+        const songName = patchSets.getActiveSongName(null, shared.lastState, shared.lastLoadedSong);
+        const patchSetName = getActivePatchSetName();
+        const auData = (songName && patchSetName)
+          ? patchSets.readPatchSetAuData(songName, patchSetName)
+          : { byDeviceKey: {}, byUiName: {} };
+        const matchedDev = (shared.lastState && Array.isArray(shared.lastState.devices))
+          ? shared.lastState.devices.find(d => d && d.uiName === uiName)
+          : { uiName, channel: 1, patchName: patchName || '' };
+        const auEntry = findAuEntryForDevice(auData, matchedDev || { uiName, channel: 1, patchName: patchName || '' });
         auHost.ensureAuHostRunning().then((ok) => {
           if (!ok) {
             ws.send(JSON.stringify({ type: 'synthUiStatus', data: { ok: false, error: 'AU Host unavailable' } }));
             return;
           }
-          return auHost.httpRequest('POST', '/select', { uiName, appName, deviceName, bank, program, volume, volumeCc, cutoff, resonance }, 10000)
+          return auHost.httpRequest('POST', '/select', {
+            uiName,
+            appName,
+            deviceName,
+            patchName: patchName || (matchedDev && matchedDev.patchName) || '',
+            bank,
+            program,
+            volume,
+            volumeCc,
+            cutoff,
+            resonance,
+            auParams: (auEntry && auEntry.auParams) || {},
+            auState: (auEntry && auEntry.auState) || [],
+          }, 10000)
             .then((res) => {
               ws.send(JSON.stringify({ type: 'synthUiStatus', data: res.data }));
             });
